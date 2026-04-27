@@ -1,0 +1,92 @@
+{
+  "rappels": [
+    {
+      "id": 1,
+      "titre": "📚 Examen de Mathématiques",
+      "description": "Examen de Mathématiques - Chapitres 5 à 8",
+      "date_heure": "2024-05-15 09:00",
+      "type": "unique",
+      "priorite": "haute",
+      "actif": true,
+      "complete": false,
+      "cree_le": "2026-04-26 18:34"
+    },
+    {
+      "id": 2,
+      "titre": "📚 Examen de Programmation Python",
+      "description": "Examen de Programmation Python",
+      "date_heure": "2024-05-20 14:00",
+      "type": "unique",
+      "priorite": "haute",
+      "actif": true,
+      "complete": false,
+      "cree_le": "2026-04-26 18:34"
+    },
+    {
+      "id": 3,
+      "titre": "✍️ Devoir de Physique",
+      "description": "Deadline pour le devoir de Physique : Exercices sur la mécanique quantique",
+      "date_heure": "2024-05-10 23:59",
+      "type": "unique",
+      "priorite": "normale",
+      "actif": true,
+      "complete": false,
+      "cree_le": "2026-04-26 18:34"
+    },
+    {
+      "id": 4,
+      "titre": "💧 Boire de l'eau",
+      "description": "💧 Boire de l'eau",
+      "date_heure": "2026-04-26 10:00",
+      "type": "quotidien",
+      "priorite": "normale",
+      "actif": true,
+      "complete": false,
+      "cree_le": "2026-04-26 18:34"
+    },
+    {
+      "id": 5,
+      "titre": "🏃 Pause active",
+      "description": "Faire 5 minutes de marche",
+      "date_heure": "2026-04-26 15:00",
+      "type": "quotidien",
+      "priorite": "normale",
+      "actif": true,
+      "complete": false,
+      "cree_le": "2026-04-26 18:34"
+    },
+    {
+      "id": 6,
+      "titre": "📞 Appeler le dentiste",
+      "description": "Prendre RDV pour contrôle",
+      "date_heure": "2026-04-27 11:00",
+      "type": "unique",
+      "priorite": "normale",
+      "actif": true,
+      "complete": false,
+      "cree_le": "2026-04-26 18:34"
+    },
+    {
+      "id": 7,
+      "titre": "acheter du pain",
+      "description": "Rappelle-moi d'acheter du pain demain à 17h",
+      "date_heure": "2026-04-27 17:00",
+      "type": "unique",
+      "priorite": "normale",
+      "actif": true,
+      "complete": false,
+      "cree_le": "2026-04-26 18:45"
+    },
+    {
+      "id": 8,
+      "titre": "maths",
+      "description": "J'ai un examen de maths le 15 mai à 9h",
+      "date_heure": "2026-05-15 09:00",
+      "type": "unique",
+      "priorite": "haute",
+      "actif": true,
+      "complete": false,
+      "cree_le": "2026-04-26 18:45"
+    }
+  ]
+}
