@@ -2,6 +2,7 @@
 from langchain_community.llms import Ollama
 from robot import RobotVirtuel
 from rappels import SystemeRappels
+from pomodoro import SessionPomodoro
 from datetime import datetime, timedelta
 import re
 
@@ -17,6 +18,9 @@ class AgentRobot:
         
         # Système de rappels
         self.systeme_rappels = SystemeRappels()
+        
+        # Système Pomodoro
+        self.pomodoro = SessionPomodoro()
         
         # Informations contextuelles
         self.nom_utilisateur = nom_utilisateur
@@ -45,6 +49,8 @@ Capacités du robot:
 - Converser et aider l'utilisateur
 - Créer et gérer des rappels intelligents
 - Te rappeler tes examens, devoirs et tâches
+- Gérer des sessions d'étude Pomodoro (25 min de travail + pauses)
+- Suivre ta productivité et te motiver
 
 Historique récent:
 {historique}
@@ -55,8 +61,9 @@ Règles importantes:
 3. Adapte-toi à son humeur
 4. Si on te demande de bouger, confirme l'action
 5. Si on te demande un rappel, confirme sa création
-6. Sois concis (2-3 phrases max sauf si demande détaillée)
-7. N'invente pas de capacités que tu n'as pas
+6. Si on te demande une session Pomodoro, encourage et motive
+7. Sois concis (2-3 phrases max sauf si demande détaillée)
+8. N'invente pas de capacités que tu n'as pas
 
 Message de {nom_utilisateur}: {message}
 
@@ -94,6 +101,31 @@ Réponse (naturelle et amicale):"""
         ]
         
         return any(mot in message_lower for mot in mots_rappel)
+    
+    def detecter_demande_pomodoro(self, message):
+        """Détecte si le message demande une session Pomodoro"""
+        message_lower = message.lower()
+        
+        # Mots-clés pour détecter une demande Pomodoro
+        mots_pomodoro = [
+            "pomodoro", "session", "session de travail", "session d'étude",
+            "lance une session", "démarre une session", "commence une session",
+            "travaille", "étudier", "réviser", "bosser"
+        ]
+        
+        # Détecter les demandes d'arrêt
+        if any(mot in message_lower for mot in ["arrête", "stop", "termine", "pause la session"]):
+            return "arreter"
+        
+        # Détecter les demandes d'état
+        if any(mot in message_lower for mot in ["combien de sessions", "sessions aujourd'hui", "mes sessions", "statistiques pomodoro"]):
+            return "stats"
+        
+        # Détecter les demandes de démarrage
+        if any(mot in message_lower for mot in mots_pomodoro):
+            return "demarrer"
+        
+        return None
     
     def extraire_info_rappel(self, message):
         """Extrait les informations du rappel depuis le message"""
@@ -261,6 +293,92 @@ Réponse (naturelle et amicale):"""
         
         return resultat
     
+    def gerer_demande_pomodoro(self, message, type_demande):
+        """Gère une demande liée au Pomodoro"""
+        
+        # Arrêter une session en cours
+        if type_demande == "arreter":
+            etat = self.pomodoro.etat_session()
+            if not etat['active']:
+                return "❌ Aucune session Pomodoro en cours."
+            
+            resultat = self.pomodoro.arreter_session()
+            return resultat
+        
+        # Afficher les statistiques
+        elif type_demande == "stats":
+            stats = self.pomodoro.obtenir_statistiques()
+            sessions_aujourdhui = self.pomodoro.obtenir_sessions_aujourdhui()
+            
+            resultat = "📊 TES STATISTIQUES POMODORO\n\n"
+            resultat += f"Aujourd'hui: {len(sessions_aujourdhui)} sessions\n"
+            resultat += f"Total: {stats.get('total_sessions', 0)} sessions\n"
+            resultat += f"Temps d'étude: {stats.get('temps_total_heures', 0)}h\n"
+            
+            if sessions_aujourdhui:
+                resultat += "\n📚 Sessions d'aujourd'hui:\n"
+                for s in sessions_aujourdhui:
+                    resultat += f"• {s['matiere']} ({s['duree_minutes']}min) à {s['heure_debut']}\n"
+            
+            return resultat
+        
+        # Démarrer une nouvelle session
+        elif type_demande == "demarrer":
+            # Vérifier si une session est déjà active
+            etat = self.pomodoro.etat_session()
+            if etat['active']:
+                return f"⚠️ Une session est déjà en cours ! ({etat['matiere']}, {etat['temps_restant']} restant)"
+            
+            # Extraire la matière du message
+            matiere = self._extraire_matiere(message)
+            
+            # Extraire la durée si spécifiée
+            duree = self._extraire_duree_pomodoro(message)
+            
+            # Démarrer la session
+            resultat = self.pomodoro.demarrer_session_travail(
+                matiere=matiere,
+                duree=duree
+            )
+            
+            return resultat
+        
+        return "Je n'ai pas compris ta demande concernant le Pomodoro."
+    
+    def _extraire_matiere(self, message):
+        """Extrait la matière d'étude depuis le message"""
+        message_lower = message.lower()
+        
+        # Patterns pour extraire la matière
+        patterns = [
+            r"session (?:de |d')?(.+?)(?:\s|$)",
+            r"(?:travail|étude|révision) (?:de |d')?(.+?)(?:\s|$)",
+            r"pomodoro (?:de |d')?(.+?)(?:\s|$)",
+            r"(?:en |sur |pour) (.+?)(?:\s|$)"
+        ]
+        
+        for pattern in patterns:
+            match = re.search(pattern, message_lower)
+            if match:
+                matiere = match.group(1).strip()
+                # Nettoyer
+                matiere = re.sub(r'\s+(de|pour|sur|en)\s+.*', '', matiere)
+                if len(matiere) > 2:  # Éviter les extractions trop courtes
+                    return matiere.capitalize()
+        
+        return "Étude générale"
+    
+    def _extraire_duree_pomodoro(self, message):
+        """Extrait la durée de la session si spécifiée"""
+        # Chercher des patterns comme "30 minutes", "45 min", etc.
+        match = re.search(r'(\d+)\s*(?:min|minutes)', message.lower())
+        if match:
+            duree = int(match.group(1))
+            if 5 <= duree <= 120:  # Limiter entre 5 et 120 minutes
+                return duree
+        
+        return None  # Utiliser la durée par défaut (25 min)
+    
     def formater_historique(self):
         """Formate les derniers messages pour le contexte"""
         if not self.historique_conversation:
@@ -289,6 +407,13 @@ Réponse (naturelle et amicale):"""
     
     def repondre(self, message_utilisateur):
         """Génère une réponse à partir du message de l'utilisateur"""
+        
+        # Détecter si c'est une demande Pomodoro
+        type_pomodoro = self.detecter_demande_pomodoro(message_utilisateur)
+        if type_pomodoro:
+            action_pomodoro = self.gerer_demande_pomodoro(message_utilisateur, type_pomodoro)
+            print(f"\n[POMODORO]:\n{action_pomodoro}\n")
+            return action_pomodoro
         
         # Détecter si c'est une demande de rappel
         if self.detecter_demande_rappel(message_utilisateur):
@@ -340,6 +465,8 @@ Tu peux me demander de :
 - Scanner autour de moi
 - Créer des rappels ("Rappelle-moi de réviser demain à 10h")
 - Voir tes rappels ("Quels sont mes rappels ?")
+- Lancer des sessions Pomodoro ("Session de maths", "Pomodoro de 30 min")
+- Voir tes stats Pomodoro ("Mes sessions aujourd'hui")
 - Discuter avec toi
 - Te motiver dans tes études
 
@@ -368,10 +495,10 @@ if __name__ == "__main__":
     
     messages_test = [
         "Salut ! Comment ça va ?",
+        "Lance une session Pomodoro de mathématiques",
+        "Combien de sessions j'ai faites aujourd'hui ?",
         "Rappelle-moi d'acheter du pain demain à 17h",
-        "J'ai un examen de maths le 15 mai à 9h",
-        "Quels sont mes rappels ?",
-        "Avance un peu"
+        "Quels sont mes rappels ?"
     ]
     
     for msg in messages_test:
