@@ -191,25 +191,20 @@ with col_robot:
     st.markdown("### 🤖 Statut du Robot")
     
     # Avatar du robot
-    st.markdown(f"""
+    st.markdown("""
     <div class="robot-container">
-        <h2 style="color: white; margin-bottom: 1rem;">RoboCompagnon</h2>
+        <h2 style="color: white; margin-bottom: 1rem;">🤖 RoboCompagnon</h2>
         
-        <!-- Yeux du robot -->
-        <div class="robot-eyes">
-            <div class="eye">
-                <div class="eye-inner"></div>
-            </div>
-            <div class="eye">
-                <div class="eye-inner"></div>
-            </div>
+        <div style="font-size: 4rem; margin: 20px 0;">
+            ⚫⚫
         </div>
         
-        <!-- Corps du robot -->
-        <div class="robot-body"></div>
+        <div style="font-size: 6rem; margin: 10px 0;">
+            ▬
+        </div>
         
         <p style="color: white; margin-top: 1rem; font-size: 1.2rem;">
-            État: <span class="status-online">● En ligne</span>
+            État: <span style="color: #48bb78;">● En ligne</span>
         </p>
     </div>
     """, unsafe_allow_html=True)
