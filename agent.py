@@ -3,6 +3,7 @@ from langchain_community.llms import Ollama
 from robot import RobotVirtuel
 from rappels import SystemeRappels
 from pomodoro import SessionPomodoro
+from meteo import MeteoAPI
 from datetime import datetime, timedelta
 import re
 
@@ -21,6 +22,13 @@ class AgentRobot:
         
         # Système Pomodoro
         self.pomodoro = SessionPomodoro()
+        
+        # API Météo
+        self.meteo_api = MeteoAPI(ville="Rabat", pays="MA")
+        
+        # Données IoT (sera mis à jour par l'interface)
+        self.capteurs_data = None
+        self.meteo_data = None
         
         # Informations contextuelles
         self.nom_utilisateur = nom_utilisateur
@@ -379,6 +387,126 @@ Réponse (naturelle et amicale):"""
         
         return None  # Utiliser la durée par défaut (25 min)
     
+    def mettre_a_jour_capteurs(self, capteurs_data):
+        """Met à jour les données des capteurs IoT"""
+        self.capteurs_data = capteurs_data
+    
+    def mettre_a_jour_meteo(self, meteo_data):
+        """Met à jour les données météo"""
+        self.meteo_data = meteo_data
+    
+    def detecter_question_iot(self, message):
+        """Détecte si le message demande des infos sur les capteurs ou la météo"""
+        message_lower = message.lower()
+        
+        # Questions météo
+        mots_meteo = [
+            "météo", "meteo", "temps qu'il fait", "il pleut", 
+            "température extérieure", "dehors", "température exterieure",
+            "quel temps", "temps demain", "prévi", "previ"
+        ]
+        
+        if any(mot in message_lower for mot in mots_meteo):
+            return "meteo"
+        
+        # Questions capteurs
+        mots_capteurs = [
+            "température", "temperature", "quelle température", 
+            "il fait chaud", "il fait froid",
+            "humidité", "humidite", "taux d'humidité",
+            "luminosité", "lumino", "il fait sombre", "éclairage",
+            "bruit", "niveau sonore", "c'est bruyant"
+        ]
+        
+        if any(mot in message_lower for mot in mots_capteurs):
+            return "capteurs"
+        
+        return None
+    
+    def gerer_question_meteo(self):
+        """Répond aux questions sur la météo"""
+        if not self.meteo_data:
+            # Récupérer la météo si pas encore chargée
+            try:
+                self.meteo_data = self.meteo_api.obtenir_meteo()
+            except:
+                return "Désolé, je n'arrive pas à récupérer la météo pour le moment."
+        
+        meteo = self.meteo_data
+        
+        reponse = f"📍 Météo à {meteo['ville']}:\n\n"
+        reponse += f"🌡️ Température: {meteo['temperature']}°C (ressenti {meteo['ressenti']}°C)\n"
+        reponse += f"☁️ {meteo['description']}\n"
+        reponse += f"💧 Humidité: {meteo['humidite']}%\n"
+        reponse += f"💨 Vent: {meteo['vent_kmh']} km/h\n"
+        
+        if meteo.get('precipitation_mm', 0) > 0:
+            reponse += f"🌧️ Précipitations: {meteo['precipitation_mm']} mm\n"
+        
+        # Ajouter conseil
+        conseil = self.meteo_api.obtenir_conseil_meteo(meteo)
+        reponse += f"\n💡 {conseil}"
+        
+        return reponse
+    
+    def gerer_question_capteurs(self):
+        """Répond aux questions sur les capteurs IoT"""
+        if not self.capteurs_data:
+            return "Les capteurs ne sont pas encore initialisés."
+        
+        capteurs = self.capteurs_data
+        
+        reponse = "📊 État des capteurs:\n\n"
+        
+        # Température
+        temp = capteurs.get('temperature', 0)
+        reponse += f"🌡️ Température intérieure: {temp}°C\n"
+        if temp > 26:
+            reponse += "   ⚠️ Il fait chaud, aère ta chambre !\n"
+        elif temp < 18:
+            reponse += "   ⚠️ Il fait frais, mets le chauffage !\n"
+        else:
+            reponse += "   ✅ Température confortable\n"
+        
+        # Humidité
+        hum = capteurs.get('humidite', 0)
+        reponse += f"\n💧 Humidité: {hum}%\n"
+        if hum < 35:
+            reponse += "   ⚠️ Air sec, hydrate-toi !\n"
+        elif hum > 70:
+            reponse += "   ⚠️ Air humide, aère un peu\n"
+        else:
+            reponse += "   ✅ Humidité normale\n"
+        
+        # Luminosité
+        lum = capteurs.get('luminosite', 0)
+        reponse += f"\n💡 Luminosité: {lum} lux\n"
+        if lum < 300:
+            reponse += "   ⚠️ Il fait sombre, allume la lumière !\n"
+        else:
+            reponse += "   ✅ Éclairage suffisant\n"
+        
+        # Bruit
+        bruit = capteurs.get('bruit', 0)
+        reponse += f"\n🔊 Niveau sonore: {bruit} dB\n"
+        if bruit > 65:
+            reponse += "   ⚠️ Trop bruyant ! Mets des écouteurs\n"
+        else:
+            reponse += "   ✅ Environnement calme\n"
+        
+        # Comparaison avec météo extérieure si disponible
+        if self.meteo_data:
+            temp_ext = self.meteo_data['temperature']
+            reponse += f"\n🌡️ Extérieur: {temp_ext}°C"
+            diff = temp - temp_ext
+            if abs(diff) > 3:
+                if diff > 0:
+                    reponse += f" ({abs(diff):.1f}°C plus chaud à l'intérieur)"
+                else:
+                    reponse += f" ({abs(diff):.1f}°C plus froid à l'intérieur)"
+        
+        return reponse
+    
     def formater_historique(self):
         """Formate les derniers messages pour le contexte"""
         if not self.historique_conversation:
@@ -407,6 +535,13 @@ Réponse (naturelle et amicale):"""
     
     def repondre(self, message_utilisateur):
         """Génère une réponse à partir du message de l'utilisateur"""
+        
+        # Détecter si c'est une question IoT (météo ou capteurs)
+        type_iot = self.detecter_question_iot(message_utilisateur)
+        if type_iot == "meteo":
+            return self.gerer_question_meteo()
+        elif type_iot == "capteurs":
+            return self.gerer_question_capteurs()
         
         # Détecter si c'est une demande Pomodoro
         type_pomodoro = self.detecter_demande_pomodoro(message_utilisateur)

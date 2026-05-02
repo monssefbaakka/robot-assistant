@@ -4,6 +4,7 @@ import time
 import random
 from datetime import datetime
 from agent import AgentRobot
+from meteo import MeteoAPI
 import json
 import os
 
@@ -146,6 +147,9 @@ if 'agent' not in st.session_state:
         "bruit": 35
     }
     st.session_state.robot_etat = "idle"  # idle, listening, thinking, speaking
+    st.session_state.meteo_api = MeteoAPI(ville="Rabat", pays="MA")
+    st.session_state.meteo_data = None
+    st.session_state.derniere_maj_meteo = None
 
 agent = st.session_state.agent
 
@@ -270,13 +274,57 @@ with col_robot:
 with col_sensors:
     st.markdown("### 📡 Capteurs IoT (Temps Réel)")
     
+    # Récupérer météo (une fois toutes les 30 min)
+    maintenant = datetime.now()
+    if (st.session_state.meteo_data is None or 
+        st.session_state.derniere_maj_meteo is None or
+        (maintenant - st.session_state.derniere_maj_meteo).seconds > 1800):
+        try:
+            st.session_state.meteo_data = st.session_state.meteo_api.obtenir_meteo()
+            st.session_state.derniere_maj_meteo = maintenant
+        except:
+            pass
+    
+    # Carte Météo RÉELLE
+    if st.session_state.meteo_data:
+        meteo = st.session_state.meteo_data
+        st.markdown("---")
+        st.markdown("### ⛅ Météo Rabat (Réelle)")
+        
+        meteo_temp = meteo['temperature']
+        meteo_color = "#f56565" if meteo_temp > 30 else "#48bb78" if meteo_temp > 15 else "#4299e1"
+        
+        st.markdown(f"""
+        <div class="sensor-card" style="border-left-color: #f59e0b;">
+            <div class="sensor-value" style="color: {meteo_color};">{meteo_temp}°C</div>
+            <div class="sensor-label">🌡️ {meteo['description']}</div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Détails météo
+        col_m1, col_m2 = st.columns(2)
+        with col_m1:
+            st.metric("💧 Humidité", f"{meteo['humidite']}%")
+            st.metric("💨 Vent", f"{meteo['vent_kmh']} km/h")
+        with col_m2:
+            st.metric("🌡️ Ressenti", f"{meteo['ressenti']}°C")
+            if meteo.get('precipitation_mm', 0) > 0:
+                st.metric("🌧️ Pluie", f"{meteo['precipitation_mm']} mm")
+        
+        # Conseil météo
+        conseil = st.session_state.meteo_api.obtenir_conseil_meteo(meteo)
+        st.info(conseil)
+    
+    st.markdown("---")
+    st.markdown("### 📊 Capteurs Virtuels")
+    
     # Température
     temp = st.session_state.capteurs["temperature"]
     temp_color = "#f56565" if temp > 25 else "#48bb78" if temp > 18 else "#4299e1"
     st.markdown(f"""
     <div class="sensor-card">
         <div class="sensor-value" style="color: {temp_color};">{temp}°C</div>
-        <div class="sensor-label">🌡️ Température</div>
+        <div class="sensor-label">🌡️ Température (simulée)</div>
     </div>
     """, unsafe_allow_html=True)
     
@@ -290,7 +338,7 @@ with col_sensors:
     st.markdown(f"""
     <div class="sensor-card">
         <div class="sensor-value" style="color: #4299e1;">{hum}%</div>
-        <div class="sensor-label">💧 Humidité</div>
+        <div class="sensor-label">💧 Humidité (simulée)</div>
     </div>
     """, unsafe_allow_html=True)
     
@@ -302,7 +350,7 @@ with col_sensors:
     st.markdown(f"""
     <div class="sensor-card">
         <div class="sensor-value" style="color: #ecc94b;">{lum} lux</div>
-        <div class="sensor-label">💡 Luminosité</div>
+        <div class="sensor-label">💡 Luminosité (simulée)</div>
     </div>
     """, unsafe_allow_html=True)
     
@@ -350,6 +398,11 @@ with st.form(key="chat_form", clear_on_submit=True):
         submit = st.form_submit_button("Envoyer 📤", use_container_width=True)
 
 if submit and user_input:
+    # Mettre à jour les données IoT dans l'agent
+    agent.mettre_a_jour_capteurs(st.session_state.capteurs)
+    if st.session_state.meteo_data:
+        agent.mettre_a_jour_meteo(st.session_state.meteo_data)
+    
     # Ajouter message utilisateur
     st.session_state.historique_chat.append({
         'role': 'user',
