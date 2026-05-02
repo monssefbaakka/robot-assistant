@@ -167,7 +167,7 @@ if __name__ == "__main__":
     print("="*60)
     
     # Utiliser ton token
-    TOKEN = "8687665802:AAHKqAyeFGZvnmhXO57TsTCAl17FkcUWuAI"
+    TOKEN = ""
     
     bot = TelegramBot(TOKEN)
     
