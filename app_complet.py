@@ -5,6 +5,7 @@ import random
 from datetime import datetime
 from agent import AgentRobot
 from meteo import MeteoAPI
+from tts import RobotVoix
 import json
 import os
 
@@ -150,35 +151,99 @@ if 'agent' not in st.session_state:
     st.session_state.meteo_api = MeteoAPI(ville="Rabat", pays="MA")
     st.session_state.meteo_data = None
     st.session_state.derniere_maj_meteo = None
+    st.session_state.robot_voix = RobotVoix(langue='fr')
+    st.session_state.auto_play_voice = False  # Lecture automatique désactivée par défaut
 
 agent = st.session_state.agent
 
 # Fonction pour mettre à jour les capteurs (simulation)
 def simuler_capteurs():
-    """Simule les variations des capteurs IoT"""
-    # Température varie légèrement
-    st.session_state.capteurs["temperature"] += random.uniform(-0.5, 0.5)
-    st.session_state.capteurs["temperature"] = round(
-        max(15, min(30, st.session_state.capteurs["temperature"])), 1
-    )
+    """Simule les variations des capteurs IoT de façon INTELLIGENTE"""
     
-    # Humidité
-    st.session_state.capteurs["humidite"] += random.uniform(-2, 2)
-    st.session_state.capteurs["humidite"] = int(
-        max(30, min(70, st.session_state.capteurs["humidite"]))
-    )
+    # ========== TEMPÉRATURE INTELLIGENTE ==========
+    # Basée sur plusieurs facteurs réels
     
-    # Luminosité (varie selon l'heure)
+    # 1. Base : Météo extérieure réelle
+    if st.session_state.meteo_data:
+        temp_exterieure = st.session_state.meteo_data['temperature']
+        temp_base = temp_exterieure + 5  # Chauffage intérieur
+    else:
+        temp_base = 20  # Valeur par défaut si météo indisponible
+    
+    # 2. Ajustement selon l'heure (cycle journalier naturel)
     heure = datetime.now().hour
+    if 6 <= heure < 9:
+        temp_base += 0  # Matin frais
+    elif 9 <= heure < 14:
+        temp_base += 1  # Milieu de journée
+    elif 14 <= heure < 18:
+        temp_base += 2  # Pic de chaleur après-midi
+    elif 18 <= heure < 22:
+        temp_base += 1  # Soirée
+    else:
+        temp_base -= 1  # Nuit plus fraîche
+    
+    # 3. Impact de la luminosité (soleil chauffe la pièce)
+    lum = st.session_state.capteurs.get("luminosite", 500)
+    if lum > 800:
+        temp_base += 2  # Soleil direct
+    elif lum > 600:
+        temp_base += 1  # Lumineux
+    
+    # 4. Impact de l'activité (session Pomodoro)
+    etat_pomo = agent.pomodoro.etat_session()
+    if etat_pomo.get('active', False):
+        temp_base += 1  # Activité humaine génère chaleur
+    
+    # 5. Petite variation aléatoire pour réalisme
+    temp_base += random.uniform(-0.3, 0.3)
+    
+    # Appliquer la température calculée
+    st.session_state.capteurs["temperature"] = round(
+        max(16, min(32, temp_base)), 1
+    )
+    
+    # Stocker les facteurs pour explication
+    if 'temp_facteurs' not in st.session_state:
+        st.session_state.temp_facteurs = {}
+    
+    st.session_state.temp_facteurs = {
+        'meteo_ext': st.session_state.meteo_data['temperature'] if st.session_state.meteo_data else None,
+        'chauffage': 5,
+        'heure_ajust': temp_base - (temp_exterieure + 5 if st.session_state.meteo_data else 20),
+        'soleil': 2 if lum > 800 else (1 if lum > 600 else 0),
+        'activite': 1 if etat_pomo.get('active', False) else 0
+    }
+    
+    # ========== HUMIDITÉ (avec logique) ==========
+    # Humidité liée à la météo extérieure
+    if st.session_state.meteo_data:
+        hum_ext = st.session_state.meteo_data.get('humidite', 50)
+        hum_base = hum_ext - 10  # Intérieur généralement plus sec
+    else:
+        hum_base = st.session_state.capteurs.get("humidite", 45)
+    
+    # Variation légère
+    hum_base += random.uniform(-2, 2)
+    st.session_state.capteurs["humidite"] = int(
+        max(30, min(70, hum_base))
+    )
+    
+    # ========== LUMINOSITÉ (selon heure) ==========
     if 6 <= heure < 20:
         st.session_state.capteurs["luminosite"] = random.randint(500, 1000)
     else:
         st.session_state.capteurs["luminosite"] = random.randint(50, 200)
     
-    # Bruit ambiant
-    st.session_state.capteurs["bruit"] += random.uniform(-5, 5)
+    # ========== BRUIT (plus élevé si Pomodoro actif) ==========
+    if etat_pomo.get('active', False):
+        # En session = plus de concentration = environnement plus calme
+        bruit_base = random.randint(25, 45)
+    else:
+        bruit_base = random.randint(30, 60)
+    
     st.session_state.capteurs["bruit"] = int(
-        max(20, min(80, st.session_state.capteurs["bruit"]))
+        max(20, min(80, bruit_base))
     )
 
 # Simuler les capteurs
@@ -324,9 +389,29 @@ with col_sensors:
     st.markdown(f"""
     <div class="sensor-card">
         <div class="sensor-value" style="color: {temp_color};">{temp}°C</div>
-        <div class="sensor-label">🌡️ Température (simulée)</div>
+        <div class="sensor-label">🌡️ Température Intelligente</div>
     </div>
     """, unsafe_allow_html=True)
+    
+    # Afficher les facteurs de calcul
+    if 'temp_facteurs' in st.session_state and st.session_state.temp_facteurs:
+        facteurs = st.session_state.temp_facteurs
+        with st.expander("💡 Comment est calculée cette température ?"):
+            st.markdown("**🧠 Capteur Intelligent Multi-Facteurs :**")
+            
+            if facteurs.get('meteo_ext'):
+                st.write(f"🌡️ Météo extérieure : **{facteurs['meteo_ext']}°C**")
+                st.write(f"🏠 Chauffage intérieur : **+{facteurs['chauffage']}°C**")
+            
+            if facteurs.get('soleil', 0) > 0:
+                st.write(f"☀️ Soleil par la fenêtre : **+{facteurs['soleil']}°C**")
+            
+            if facteurs.get('activite', 0) > 0:
+                st.write(f"🍅 Activité (Pomodoro) : **+{facteurs['activite']}°C**")
+            
+            st.markdown("---")
+            st.success(f"**Total calculé : {temp}°C**")
+            st.caption("📡 Capteur basé sur données réelles + logique intelligente")
     
     if temp > 26:
         st.warning("⚠️ Il fait chaud ! Pense à aérer.")
@@ -381,11 +466,21 @@ with chat_container:
     if not st.session_state.historique_chat:
         st.info("👋 Salut ! Je suis RoboCompagnon. Tape un message pour commencer !")
     
-    for msg in st.session_state.historique_chat:
+    for idx, msg in enumerate(st.session_state.historique_chat):
         if msg['role'] == 'user':
             st.markdown(f'<div class="chat-message user-message">👤 <strong>Toi:</strong> {msg["message"]}</div>', unsafe_allow_html=True)
         else:
+            # Message du robot
             st.markdown(f'<div class="chat-message robot-message">🤖 <strong>RoboCompagnon:</strong> {msg["message"]}</div>', unsafe_allow_html=True)
+            
+            # Bouton pour écouter la réponse
+            col_audio1, col_audio2 = st.columns([1, 10])
+            with col_audio1:
+                if st.button(f"🔊", key=f"speak_{idx}", help="Écouter la réponse"):
+                    # Générer l'audio
+                    audio_file = st.session_state.robot_voix.parler(msg["message"])
+                    if audio_file:
+                        st.audio(audio_file, format='audio/mp3', autoplay=True)
 
 # Input utilisateur
 with st.form(key="chat_form", clear_on_submit=True):
@@ -453,6 +548,13 @@ with st.sidebar:
     
     # Contrôles
     st.markdown("### 🎮 Contrôles")
+    
+    # Option voix
+    st.session_state.auto_play_voice = st.checkbox(
+        "🔊 Lecture vocale auto",
+        value=st.session_state.auto_play_voice,
+        help="Le robot parle automatiquement ses réponses"
+    )
     
     if st.button("🔄 Rafraîchir capteurs", use_container_width=True):
         simuler_capteurs()
