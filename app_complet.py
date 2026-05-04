@@ -4,6 +4,7 @@ from datetime import datetime
 from agent import AgentRobot
 from meteo import MeteoAPI
 from tts import RobotVoix
+from objets_connectes import MaisonConnectee
 
 
 st.set_page_config(
@@ -76,6 +77,8 @@ def init_session():
         st.session_state.robot_voix = RobotVoix(langue="fr")
         st.session_state.auto_play_voice = False
         st.session_state.last_manual_result = None
+        st.session_state.maison = MaisonConnectee()
+        st.session_state.agent.mettre_a_jour_maison(st.session_state.maison)
 
 
 def refresh_weather():
@@ -114,6 +117,15 @@ def mqtt_command(action, device_type=None, parameters=None):
     }
     result = st.session_state.agent.iot_controller.execute_command(command)
     st.session_state.last_manual_result = result
+    st.rerun()
+
+
+def legacy_light_command(command_text):
+    result = st.session_state.maison.executer_commande(command_text)
+    st.session_state.last_manual_result = {
+        "ok": result.get("succes", False),
+        "message": result.get("message", "Commande exécutée."),
+    }
     st.rerun()
 
 
@@ -255,6 +267,27 @@ with robot_col:
             st.session_state.agent.pomodoro.demarrer_session_travail(matiere, duree)
             st.rerun()
 
+    st.markdown("---")
+    st.subheader("Legacy Connected Light")
+    legacy_light = st.session_state.maison.lumiere.obtenir_etat()
+    st.markdown(
+        f"""
+        <div class="device-card">
+            <h4 style="margin-top:0;">💡 Chambre Light</h4>
+            <p class="metric-value">{legacy_light['etat_texte'].upper()}</p>
+            <p class="metric-label">Legacy object simulation from `objets_connectes.py`</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    legacy_cols = st.columns(2)
+    with legacy_cols[0]:
+        if st.button("Legacy Light On", use_container_width=True, disabled=legacy_light["etat"]):
+            legacy_light_command("Allume la lumière")
+    with legacy_cols[1]:
+        if st.button("Legacy Light Off", use_container_width=True, disabled=not legacy_light["etat"]):
+            legacy_light_command("Éteins la lumière")
+
 with events_col:
     st.subheader("MQTT Event Log")
     events = st.session_state.agent.iot_controller.get_recent_events(limit=8)
@@ -311,6 +344,7 @@ with st.form(key="chat_form", clear_on_submit=True):
 if submit_chat and user_input:
     if st.session_state.meteo_data:
         st.session_state.agent.mettre_a_jour_meteo(st.session_state.meteo_data)
+    st.session_state.agent.mettre_a_jour_maison(st.session_state.maison)
     snapshot, living_room = current_snapshot()
     st.session_state.agent.mettre_a_jour_capteurs(living_room["sensors"])
 
@@ -333,6 +367,11 @@ with st.sidebar:
                 "robocompagnon/home/rooms/living_room/sensors/+",
             ]
         )
+    )
+
+    st.markdown("### Legacy Wokwi Demo")
+    st.markdown(
+        "[Open the Arduino/Wokwi export](./kira%20-%20Wokwi%20ESP32,%20STM32,%20Arduino%20Simulator.htm)"
     )
 
     st.markdown("### Reminders")

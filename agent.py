@@ -34,6 +34,7 @@ class AgentRobot:
         # Données IoT (sera mis à jour par l'interface)
         self.capteurs_data = None
         self.meteo_data = None
+        self.maison_connectee = None  # Objets connectés
         
         # Informations contextuelles
         self.nom_utilisateur = nom_utilisateur
@@ -392,6 +393,40 @@ Réponse (naturelle et amicale):"""
         
         return None  # Utiliser la durée par défaut (25 min)
     
+    def mettre_a_jour_maison(self, maison_connectee):
+        """Met à jour la référence à la maison connectée"""
+        self.maison_connectee = maison_connectee
+    
+    def detecter_commande_objets_connectes(self, message):
+        """Détecte si le message est une commande pour objets connectés"""
+        message_lower = message.lower()
+        
+        # Mots-clés pour lumière
+        mots_lumiere = ['lumière', 'lumiere', 'lampe', 'éclairage', 'eclairage']
+        
+        if any(mot in message_lower for mot in mots_lumiere):
+            # Vérifier action
+            if any(mot in message_lower for mot in ['allume', 'ouvre', 'active']):
+                return 'lumiere_on'
+            elif any(mot in message_lower for mot in ['éteins', 'eteins', 'ferme', 'désactive', 'desactive']):
+                return 'lumiere_off'
+        
+        return None
+    
+    def gerer_commande_objets_connectes(self, type_commande):
+        """Gère les commandes pour objets connectés"""
+        if not self.maison_connectee:
+            return None
+        
+        if type_commande == 'lumiere_on':
+            resultat = self.maison_connectee.executer_commande("Allume la lumière")
+            return resultat['reponse_vocale']
+        elif type_commande == 'lumiere_off':
+            resultat = self.maison_connectee.executer_commande("Éteins la lumière")
+            return resultat['reponse_vocale']
+        
+        return "Commande non reconnue"
+    
     def mettre_a_jour_capteurs(self, capteurs_data):
         """Met à jour les données des capteurs IoT"""
         self.capteurs_data = capteurs_data
@@ -556,6 +591,13 @@ Réponse (naturelle et amicale):"""
     
     def repondre(self, message_utilisateur):
         """Génère une réponse à partir du message de l'utilisateur"""
+        
+        # Détecter si c'est une commande objets connectés
+        commande_maison = self.detecter_commande_objets_connectes(message_utilisateur)
+        if commande_maison:
+            reponse_objet = self.gerer_commande_objets_connectes(commande_maison)
+            if reponse_objet:
+                return reponse_objet
         
         # Détecter si c'est une question IoT (météo ou capteurs)
         action_maison = self.gerer_commande_maison(message_utilisateur)
