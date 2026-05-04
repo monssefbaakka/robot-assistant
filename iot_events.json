@@ -1,0 +1,274 @@
+{
+  "events": [
+    {
+      "timestamp": "2026-05-04T22:09:26.430684+00:00",
+      "source": "smoke-test",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_off",
+      "target": "light",
+      "status": "success",
+      "raw_text": "turn off the lights of the living room",
+      "details": {
+        "ok": true,
+        "action": "turn_off",
+        "room": "living_room",
+        "device_id": "light_main",
+        "device_type": "light",
+        "old_state": {
+          "id": "light_main",
+          "type": "light",
+          "name": "Main Light",
+          "state": "on",
+          "brightness": 80,
+          "power_w": 9
+        },
+        "new_state": {
+          "id": "light_main",
+          "type": "light",
+          "name": "Main Light",
+          "state": "off",
+          "brightness": 0,
+          "power_w": 9
+        },
+        "message": "Living Room Main Light turned off."
+      }
+    },
+    {
+      "timestamp": "2026-05-04T22:09:26.446799+00:00",
+      "source": "smoke-test",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_on",
+      "target": "ac",
+      "status": "success",
+      "raw_text": "turn on the ac",
+      "details": {
+        "ok": true,
+        "action": "turn_on",
+        "room": "living_room",
+        "device_id": "ac_main",
+        "device_type": "ac",
+        "old_state": {
+          "id": "ac_main",
+          "type": "ac",
+          "name": "Main AC",
+          "state": "off",
+          "mode": "cool",
+          "target_temp": 22,
+          "fan_speed": 2,
+          "power_w": 0
+        },
+        "new_state": {
+          "id": "ac_main",
+          "type": "ac",
+          "name": "Main AC",
+          "state": "on",
+          "mode": "cool",
+          "target_temp": 22,
+          "fan_speed": 2,
+          "power_w": 0
+        },
+        "message": "Living Room Main AC turned on."
+      }
+    },
+    {
+      "timestamp": "2026-05-04T22:09:26.491020+00:00",
+      "source": "smoke-test",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "get_sensor",
+      "target": "temperature",
+      "status": "success",
+      "raw_text": "tell me the current temperature of the room",
+      "details": {
+        "ok": true,
+        "action": "get_sensor",
+        "room": "living_room",
+        "message": "The current temperature in the living room is 27.4C.",
+        "value": 27.4,
+        "unit": "C"
+      }
+    },
+    {
+      "timestamp": "2026-05-04T22:10:55.631471+00:00",
+      "source": "chat",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_off",
+      "target": "light",
+      "status": "success",
+      "raw_text": "turn off the lights of the living room",
+      "details": {
+        "ok": true,
+        "action": "turn_off",
+        "room": "living_room",
+        "device_id": "light_main",
+        "device_type": "light",
+        "old_state": {
+          "id": "light_main",
+          "type": "light",
+          "name": "Main Light",
+          "state": "off",
+          "brightness": 0,
+          "power_w": 0
+        },
+        "new_state": {
+          "id": "light_main",
+          "type": "light",
+          "name": "Main Light",
+          "state": "off",
+          "brightness": 0,
+          "power_w": 0
+        },
+        "message": "Living Room Main Light turned off."
+      }
+    },
+    {
+      "timestamp": "2026-05-04T22:10:55.678625+00:00",
+      "source": "chat",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_on",
+      "target": "ac",
+      "status": "success",
+      "raw_text": "turn on the ac",
+      "details": {
+        "ok": true,
+        "action": "turn_on",
+        "room": "living_room",
+        "device_id": "ac_main",
+        "device_type": "ac",
+        "old_state": {
+          "id": "ac_main",
+          "type": "ac",
+          "name": "Main AC",
+          "state": "on",
+          "mode": "cool",
+          "target_temp": 22,
+          "fan_speed": 2,
+          "power_w": 1200
+        },
+        "new_state": {
+          "id": "ac_main",
+          "type": "ac",
+          "name": "Main AC",
+          "state": "on",
+          "mode": "cool",
+          "target_temp": 22,
+          "fan_speed": 2,
+          "power_w": 1200
+        },
+        "message": "Living Room Main AC turned on."
+      }
+    },
+    {
+      "timestamp": "2026-05-04T22:10:55.744340+00:00",
+      "source": "chat",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "get_sensor",
+      "target": "temperature",
+      "status": "success",
+      "raw_text": "tell me the current temperature of the room",
+      "details": {
+        "ok": true,
+        "action": "get_sensor",
+        "room": "living_room",
+        "message": "The current temperature in the living room is 27.2C.",
+        "value": 27.2,
+        "unit": "C"
+      }
+    },
+    {
+      "timestamp": "2026-05-04T22:11:25.016207+00:00",
+      "source": "chat",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_off",
+      "target": "light",
+      "status": "success",
+      "raw_text": "turn off the lights of the living room",
+      "details": {
+        "ok": true,
+        "action": "turn_off",
+        "room": "living_room",
+        "device_id": "light_main",
+        "device_type": "light",
+        "old_state": {
+          "id": "light_main",
+          "type": "light",
+          "name": "Main Light",
+          "state": "off",
+          "brightness": 0,
+          "power_w": 0
+        },
+        "new_state": {
+          "id": "light_main",
+          "type": "light",
+          "name": "Main Light",
+          "state": "off",
+          "brightness": 0,
+          "power_w": 0
+        },
+        "message": "Living Room Main Light turned off."
+      }
+    },
+    {
+      "timestamp": "2026-05-04T22:11:25.075341+00:00",
+      "source": "chat",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_on",
+      "target": "ac",
+      "status": "success",
+      "raw_text": "turn on the ac",
+      "details": {
+        "ok": true,
+        "action": "turn_on",
+        "room": "living_room",
+        "device_id": "ac_main",
+        "device_type": "ac",
+        "old_state": {
+          "id": "ac_main",
+          "type": "ac",
+          "name": "Main AC",
+          "state": "on",
+          "mode": "cool",
+          "target_temp": 22,
+          "fan_speed": 2,
+          "power_w": 1200
+        },
+        "new_state": {
+          "id": "ac_main",
+          "type": "ac",
+          "name": "Main AC",
+          "state": "on",
+          "mode": "cool",
+          "target_temp": 22,
+          "fan_speed": 2,
+          "power_w": 1200
+        },
+        "message": "Living Room Main AC turned on."
+      }
+    },
+    {
+      "timestamp": "2026-05-04T22:11:25.135254+00:00",
+      "source": "chat",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "get_sensor",
+      "target": "temperature",
+      "status": "success",
+      "raw_text": "tell me the current temperature of the room",
+      "details": {
+        "ok": true,
+        "action": "get_sensor",
+        "room": "living_room",
+        "message": "The current temperature in the living room is 27.1C.",
+        "value": 27.1,
+        "unit": "C"
+      }
+    }
+  ]
+}

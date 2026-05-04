@@ -87,7 +87,7 @@ This separation allows hardware integration later with minimal redesign.
 
 ### Out of scope for the first version
 
-- real MQTT broker
+- external production MQTT broker operations
 - real ESP32/Arduino/Raspberry Pi integration
 - camera vision
 - autonomous navigation
@@ -119,7 +119,7 @@ Example environment feedback:
 
 ## 7. Target System Architecture
 
-The recommended architecture has six layers:
+The recommended architecture has seven layers:
 
 ### Layer 1: Interaction Layer
 
@@ -142,7 +142,16 @@ Responsibilities:
 - convert user text into structured commands
 - reject ambiguous or invalid commands
 
-### Layer 3: IoT Controller Layer
+### Layer 3: MQTT Transport Layer
+
+Responsibilities:
+
+- publish commands on MQTT topics
+- subscribe virtual devices to command topics
+- publish state, response, and event topics
+- preserve the same message flow expected by real IoT nodes
+
+### Layer 4: IoT Controller Layer
 
 Responsibilities:
 
@@ -152,7 +161,7 @@ Responsibilities:
 - update digital twin state
 - generate execution results
 
-### Layer 4: Device Layer
+### Layer 5: Device Layer
 
 Responsibilities:
 
@@ -160,7 +169,7 @@ Responsibilities:
 - maintain device-specific state
 - expose actions such as `turn_on`, `turn_off`, `set_target_temperature`
 
-### Layer 5: Environment Simulation Layer
+### Layer 6: Environment Simulation Layer
 
 Responsibilities:
 
@@ -168,7 +177,7 @@ Responsibilities:
 - update temperature, humidity, and occupancy impacts
 - propagate device effects to sensor values
 
-### Layer 6: Persistence and Observability Layer
+### Layer 7: Persistence and Observability Layer
 
 Responsibilities:
 
@@ -180,6 +189,7 @@ Responsibilities:
 
 The next implementation phase should add the following files:
 
+- `mqtt_bus.py`
 - `iot_models.py`
 - `iot_controller.py`
 - `iot_simulator.py`

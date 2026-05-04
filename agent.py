@@ -1,9 +1,13 @@
 # agent.py - Agent IA conversationnel pour le robot assistant
-from langchain_community.llms import Ollama
+try:
+    from langchain_community.llms import Ollama
+except Exception:
+    Ollama = None
 from robot import RobotVirtuel
 from rappels import SystemeRappels
 from pomodoro import SessionPomodoro
 from meteo import MeteoAPI
+from iot_controller import get_iot_controller
 from datetime import datetime, timedelta
 import re
 
@@ -12,7 +16,7 @@ class AgentRobot:
     
     def __init__(self, nom_utilisateur="Monssef"):
         # Initialiser le modèle LLM
-        self.llm = Ollama(model="llama3.2", temperature=0.7)
+        self.llm = Ollama(model="llama3.2", temperature=0.7) if Ollama else None
         
         # Robot virtuel
         self.robot = RobotVirtuel()
@@ -25,6 +29,7 @@ class AgentRobot:
         
         # API Météo
         self.meteo_api = MeteoAPI(ville="Rabat", pays="MA")
+        self.iot_controller = get_iot_controller()
         
         # Données IoT (sera mis à jour par l'interface)
         self.capteurs_data = None
@@ -394,7 +399,23 @@ Réponse (naturelle et amicale):"""
     def mettre_a_jour_meteo(self, meteo_data):
         """Met à jour les données météo"""
         self.meteo_data = meteo_data
+        if meteo_data:
+            self.iot_controller.update_outside_weather(meteo_data)
     
+    def gerer_commande_maison(self, message_utilisateur):
+        """Route une commande smart-home via le bus MQTT."""
+        resultat = self.iot_controller.try_handle_text(message_utilisateur, source="chat")
+        if not resultat:
+            return None
+
+        try:
+            snapshot = self.iot_controller.get_snapshot()
+            self.capteurs_data = snapshot["rooms"]["living_room"]["sensors"]
+        except Exception:
+            pass
+
+        return resultat.get("message", "Commande MQTT exÃ©cutÃ©e.")
+
     def detecter_question_iot(self, message):
         """Détecte si le message demande des infos sur les capteurs ou la météo"""
         message_lower = message.lower()
@@ -537,6 +558,10 @@ Réponse (naturelle et amicale):"""
         """Génère une réponse à partir du message de l'utilisateur"""
         
         # Détecter si c'est une question IoT (météo ou capteurs)
+        action_maison = self.gerer_commande_maison(message_utilisateur)
+        if action_maison:
+            return action_maison
+
         type_iot = self.detecter_question_iot(message_utilisateur)
         if type_iot == "meteo":
             return self.gerer_question_meteo()
@@ -569,7 +594,10 @@ Réponse (naturelle et amicale):"""
         
         # Générer la réponse de l'agent
         try:
-            reponse = self.llm.invoke(prompt_complet)
+            if self.llm is None:
+                reponse = "Le module LLM n'est pas installÃ© ici. Les commandes MQTT, rappels et Pomodoro restent disponibles."
+            else:
+                reponse = self.llm.invoke(prompt_complet)
         except Exception as e:
             reponse = f"Désolé, j'ai eu un petit problème technique... ({str(e)})"
         
