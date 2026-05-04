@@ -1,0 +1,131 @@
+kira - Wokwi ESP32, STM32, Arduino Simulator
+<https://wokwi.com/>
+
+Save
+
+Share
+
+kira
+
+Docs <https://docs.wokwi.com/?utm_source=wokwi>
+
+Monssef baakka
+
+sketch.ino
+
+diagram.json
+
+Library Manager
+
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+1
+int LED_PIN = 13;
+void setup() {
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);
+  Serial.begin(9600);
+  Serial.println("Robot IoT - LED Ready");
+}
+void loop() {
+  if (Serial.available() > 0) {
+    String commande = Serial.readStringUntil('\n');
+    commande.trim();
+    
+    if (commande == "ON") {
+      digitalWrite(LED_PIN, HIGH);
+      Serial.println("LED_ON");
+    }
+    else if (commande == "OFF") {
+      digitalWrite(LED_PIN, LOW);
+      Serial.println("LED_OFF");
+    }
+    else if (commande == "STATUS") {
+      if (digitalRead(LED_PIN) == HIGH) {
+        Serial.println("LED_ON");
+      } else {
+        Serial.println("LED_OFF");
+      }
+    }
+  }
+}
+// Code Arduino pour contrôle LED via série
+
+} }
+
+Simulation
+
+00:21.392
+
+99%
+
+uno:A5.2
+uno:A4.2
+uno:AREF
+uno:GND.1
+uno:13
+uno:12
+uno:11
+uno:10
+uno:9
+uno:8
+uno:7
+uno:6
+uno:5
+uno:4
+uno:3
+uno:2
+uno:1
+uno:0
+uno:IOREF
+uno:RESET
+uno:3.3V
+uno:5V
+uno:GND.2
+uno:GND.3
+uno:VIN
+uno:A0
+uno:A1
+uno:A2
+uno:A3
+uno:A4
+uno:A5
+
+led1:A
+led1:C
+
+Robot IoT - LED Ready
+
+LED_ON
+
+LED_OFF
+

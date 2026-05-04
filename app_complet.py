@@ -6,6 +6,7 @@ from datetime import datetime
 from agent import AgentRobot
 from meteo import MeteoAPI
 from tts import RobotVoix
+from objets_connectes import MaisonConnectee
 import json
 import os
 
@@ -153,6 +154,7 @@ if 'agent' not in st.session_state:
     st.session_state.derniere_maj_meteo = None
     st.session_state.robot_voix = RobotVoix(langue='fr')
     st.session_state.auto_play_voice = False  # Lecture automatique désactivée par défaut
+    st.session_state.maison = MaisonConnectee()  # Objets connectés IoT
 
 agent = st.session_state.agent
 
@@ -454,6 +456,63 @@ with col_sensors:
     
     if bruit > 65:
         st.warning("⚠️ Environnement bruyant, mets des écouteurs !")
+    
+    # ========== OBJETS CONNECTÉS ==========
+    st.markdown("---")
+    st.markdown("### 🏠 Objets Connectés")
+    
+    # État de la lumière
+    etat_lumiere = st.session_state.maison.lumiere.obtenir_etat()
+    
+    lumiere_color = "#48bb78" if etat_lumiere['etat'] else "#718096"
+    lumiere_bg = "#f0fff4" if etat_lumiere['etat'] else "#f7fafc"
+    
+    st.markdown(f"""
+    <div style="background: {lumiere_bg}; padding: 15px; border-radius: 10px; border-left: 4px solid {lumiere_color};">
+        <div style="font-size: 1.2rem; font-weight: bold; margin-bottom: 8px;">
+            💡 Lumière Chambre
+        </div>
+        <div style="font-size: 2rem; font-weight: bold; color: {lumiere_color};">
+            {etat_lumiere['emoji']} {etat_lumiere['etat_texte']}
+        </div>
+        {f"<div style='font-size: 0.85rem; color: #718096; margin-top: 8px;'>Dernière action: {etat_lumiere['derniere_action']['heure']}</div>" if etat_lumiere['derniere_action'] else ""}
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Boutons de contrôle manuel
+    col_on, col_off = st.columns(2)
+    with col_on:
+        if st.button("🟢 Allumer", use_container_width=True, disabled=etat_lumiere['etat']):
+            resultat = st.session_state.maison.executer_commande("Allume la lumière")
+            st.success(resultat['message'])
+            st.rerun()
+    
+    with col_off:
+        if st.button("🔴 Éteindre", use_container_width=True, disabled=not etat_lumiere['etat']):
+            resultat = st.session_state.maison.executer_commande("Éteins la lumière")
+            st.success(resultat['message'])
+            st.rerun()
+    
+    # Lien vers circuit Arduino virtuel
+    st.markdown("---")
+    st.markdown("### 🔌 Circuit Arduino Virtuel")
+    
+    wokwi_url = "https://wokwi.com/projects/463124017608304641"
+    
+    st.markdown(f"""
+    <div style="background: #f0f9ff; padding: 12px; border-radius: 8px; border-left: 4px solid #3b82f6;">
+        <p style="margin: 0; font-size: 0.9rem;">
+            💡 <strong>Voir la LED en action !</strong><br>
+            Le circuit Arduino simule la lumière connectée.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    if st.button("🔗 Ouvrir le circuit Wokwi", use_container_width=True, type="primary"):
+        st.markdown(f'<meta http-equiv="refresh" content="0; url={wokwi_url}" target="_blank">', unsafe_allow_html=True)
+        st.info("Circuit Wokwi ouvert dans un nouvel onglet !")
+    
+    st.caption("📌 Dans Wokwi, tape 'ON' ou 'OFF' dans le Serial Monitor pour contrôler la LED")
 
 # ========== ZONE DE CHAT ==========
 st.markdown("---")
@@ -497,6 +556,7 @@ if submit and user_input:
     agent.mettre_a_jour_capteurs(st.session_state.capteurs)
     if st.session_state.meteo_data:
         agent.mettre_a_jour_meteo(st.session_state.meteo_data)
+    agent.mettre_a_jour_maison(st.session_state.maison)
     
     # Ajouter message utilisateur
     st.session_state.historique_chat.append({
