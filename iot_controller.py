@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from iot_parser import parse_iot_command
 from iot_simulator import advance_state, apply_command, apply_weather_update
 from iot_store import append_event, load_events, load_state, reset_state, save_state
-from mqtt_bus import get_loopback_broker
+from mqtt_client import get_mqtt_client as get_loopback_broker
 
 
 def _now_iso():

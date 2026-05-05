@@ -439,6 +439,70 @@
         },
         "message": "Living Room Main Light turned on."
       }
+    },
+    {
+      "timestamp": "2026-05-05T15:08:20.641514+00:00",
+      "source": "test",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_on",
+      "target": "light",
+      "status": "success",
+      "raw_text": "turn on the lights",
+      "details": {
+        "ok": true,
+        "action": "turn_on",
+        "room": "living_room",
+        "device_id": "light_main",
+        "device_type": "light",
+        "old_state": {
+          "id": "light_main",
+          "type": "light",
+          "name": "Main Light",
+          "state": "on",
+          "brightness": 80,
+          "power_w": 9
+        },
+        "new_state": {
+          "id": "light_main",
+          "type": "light",
+          "name": "Main Light",
+          "state": "on",
+          "brightness": 80,
+          "power_w": 9
+        },
+        "message": "Living Room Main Light turned on."
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:09:45.070808+00:00",
+      "source": "dashboard",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "unlock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "dashboard:unlock:door",
+      "details": {
+        "ok": true,
+        "action": "unlock",
+        "room": "living_room",
+        "device_id": "door_main",
+        "device_type": "door",
+        "old_state": {
+          "id": "door_main",
+          "type": "door",
+          "name": "Front Door",
+          "state": "locked"
+        },
+        "new_state": {
+          "id": "door_main",
+          "type": "door",
+          "name": "Front Door",
+          "state": "unlocked"
+        },
+        "message": "Living Room Front Door unlocked."
+      }
     }
   ]
 }

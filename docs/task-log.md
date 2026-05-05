@@ -1,5 +1,47 @@
 # Task Log
 
+## Task: Phase 3 MQTT Broker Import Switch
+
+### Status
+Completed
+
+### Goal
+Switch `iot_controller.py` from the in-process loopback import to the real MQTT client import while keeping the rest of the controller unchanged.
+
+### What Was Implemented
+- Replaced the `mqtt_bus.py` import in `iot_controller.py`
+- Aliased `get_mqtt_client` to `get_loopback_broker` so the controller code path did not need a larger refactor
+- Updated `docs/mqtt-topics.md` notes to reflect that the transport now goes through Mosquitto and `paho-mqtt`
+
+### How It Works
+1. `iot_controller.py` imports `get_mqtt_client` from `mqtt_client.py`.
+2. The import is aliased to the previous broker function name, so controller construction stays unchanged.
+3. Commands now publish to the local Mosquitto broker instead of the in-process loopback transport.
+4. The virtual simulator service subscribes on the same broker and still publishes response, event, device, sensor, snapshot, and alert topics.
+
+### Files Changed
+- `iot_controller.py`
+- `docs/mqtt-topics.md`
+- `docs/task-log.md`
+
+### MQTT Topics
+- No topic names changed
+- Transport verified on `robocompagnon/#`
+
+### Hardware Involved
+- None. This task changes broker transport only.
+
+### How To Test
+1. Start Mosquitto with `mosquitto -v`.
+2. In a second terminal run `mosquitto_sub -t "robocompagnon/#" -v`.
+3. Run the app or `py chat.py`.
+4. Send a command such as `turn on the lights`.
+5. Verify MQTT messages appear on the subscriber terminal for commands, responses, events, snapshot, and device state topics.
+
+### Notes / Limitations
+- The simulator still runs in Python; only the transport changed.
+- The import alias is an intentional short transition step, not the final cleanup.
+
 ## Task: Streamlit Dashboard Cleanup and Phase 2 UI Alignment
 
 ### Status

@@ -116,5 +116,6 @@ Publishes door lock state after lock/unlock commands.
 - Door lock status display in dashboard
 
 ## Notes
-- The current transport is a local loopback MQTT simulation implemented in `mqtt_bus.py`.
-- There is no external broker or ESP32 device connected yet.
+- The current transport uses the local Mosquitto broker through `mqtt_client.py` and `paho-mqtt`.
+- The simulator service still applies commands locally and publishes the same topic contract for the dashboard and future hardware.
+- There is no ESP32 device connected yet.
