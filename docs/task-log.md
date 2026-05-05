@@ -1,5 +1,62 @@
 # Task Log
 
+## Task: Add Mermaid Workflow And Sensor Control Documentation
+
+### Status
+Completed
+
+### Goal
+Create a clear `/docs` document that explains the full robot workflow, the sensor flows, and how the robot controls devices using Mermaid diagrams.
+
+### What Was Implemented
+- Added `docs/robot-workflow-diagrams.md`
+- Documented the end-to-end robot command flow
+- Documented simulator mode and hardware mode
+- Added Mermaid diagrams for global workflow, command execution, robot control map, sensor and actuator relationships, gas alert logic, temperature and humidity flow, occupancy flow, light flow, and actuator control
+
+### How It Works
+1. The new document starts from the user command and shows how the assistant, parser, controller, MQTT, simulator, ESP32, and dashboard connect together.
+2. It explains each sensor in simple words and shows how the value moves through MQTT into the shared state.
+3. It shows how light, AC, and door commands become hardware or simulated actions.
+4. It includes the gas leak edge rule and the difference between simulator mode and hardware mode.
+
+### Files Changed
+- `docs/robot-workflow-diagrams.md`
+- `docs/task-log.md`
+
+### MQTT Topics
+- `robocompagnon/home/commands`
+- `robocompagnon/home/responses`
+- `robocompagnon/home/rooms/living_room/devices/light_main/state`
+- `robocompagnon/home/rooms/living_room/devices/ac_main/state`
+- `robocompagnon/home/rooms/living_room/devices/door_main/state`
+- `robocompagnon/home/rooms/living_room/sensors/temperature`
+- `robocompagnon/home/rooms/living_room/sensors/humidity`
+- `robocompagnon/home/rooms/living_room/sensors/occupancy`
+- `robocompagnon/home/rooms/living_room/sensors/light_level`
+- `robocompagnon/home/rooms/living_room/sensors/gas_ppm`
+- `robocompagnon/home/alerts/gas`
+
+### Hardware Involved
+- DHT22
+- MQ-2 gas sensor
+- PIR occupancy sensor
+- LDR
+- Light output on GPIO26
+- AC output on GPIO27
+- Door servo on GPIO18
+- ESP32
+
+### How To Test
+1. Open `docs/robot-workflow-diagrams.md`.
+2. Confirm the Mermaid blocks render in your Markdown viewer.
+3. Compare the diagrams with the current Python simulator and ESP32 firmware flows.
+4. Verify the documented topics and GPIO references match the current repo files.
+
+### Notes / Limitations
+- This task adds documentation only. No runtime behavior was changed.
+- The document reflects the current one-room setup: `living_room`.
+
 ## Task: Add Light Brightness And Gas Level Control
 
 ### Status

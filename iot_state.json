@@ -1,6 +1,6 @@
 {
   "meta": {
-    "last_update": "2026-05-05T21:13:39.026892+00:00",
+    "last_update": "2026-05-05T21:19:34.967088+00:00",
     "transport": "mqtt-wokwi-hardware",
     "version": 1
   },
@@ -8,10 +8,10 @@
     "temperature": 17.0,
     "humidity": 68,
     "source": "Rabat",
-    "updated_at": "2026-05-05T21:12:13.444580+00:00"
+    "updated_at": "2026-05-05T21:19:34.967339+00:00"
   },
   "alerts": {
-    "gas": true
+    "gas": false
   },
   "rooms": {
     "living_room": {
@@ -43,10 +43,10 @@
         }
       },
       "sensors": {
-        "temperature": 25,
+        "temperature": 25.0,
         "humidity": 50,
         "occupancy": true,
-        "light_level": 16,
+        "light_level": 140,
         "gas_ppm": 0
       },
       "environment": {
