@@ -1,5 +1,65 @@
 # Task Log
 
+## Task: Add Light Brightness And Gas Level Control
+
+### Status
+Completed
+
+### Goal
+Let the robot control light brightness and gas simulation state and level through the existing MQTT command flow.
+
+### What Was Implemented
+- Added parser support for:
+- `set light brightness to 60%`
+- `turn gas on`
+- `turn gas off`
+- `set gas level to 300 ppm`
+- Added simulator support for `set_brightness`, `set_gas_state`, and `set_gas_level`
+- Updated hardware-mode command confirmation to accept brightness and gas updates
+- Added Wokwi firmware support for light brightness state and gas override commands
+- Updated MQTT and hardware documentation
+
+### How It Works
+1. The robot parses brightness and gas commands into structured MQTT commands.
+2. In simulator mode, the simulator updates `light_main.brightness` or `sensors.gas_ppm`.
+3. In hardware mode, the ESP32 firmware applies the same command and republishes device or sensor topics.
+4. The Python side reads those updates and reflects them in the shared state file and UI.
+
+### Files Changed
+- `iot_parser.py`
+- `iot_simulator.py`
+- `iot_controller.py`
+- `firmware/wokwi/esp32-home-node/src/main.cpp`
+- `firmware/wokwi/esp32-home-node/sketch.ino`
+- `docs/mqtt-topics.md`
+- `docs/hardware.md`
+- `docs/task-log.md`
+
+### MQTT Topics
+- `robocompagnon/home/commands`
+- `robocompagnon/home/responses`
+- `robocompagnon/home/rooms/living_room/devices/light_main/state`
+- `robocompagnon/home/rooms/living_room/sensors/gas_ppm`
+
+### Hardware Involved
+- Virtual ESP32 in Wokwi
+- Light output on GPIO26
+- Gas sensor input on GPIO34 with command override mode
+
+### How To Test
+1. Start the Python app.
+2. In simulator mode, send:
+3. `set light brightness to 35%`
+4. `turn gas on`
+5. `set gas level to 250 ppm`
+6. Verify `iot_state.json` updates `light_main.brightness` and `sensors.gas_ppm`.
+7. In hardware mode, rebuild the Wokwi firmware and restart the simulator.
+8. Send the same commands and verify the device and sensor MQTT topics update.
+
+### Notes / Limitations
+- In Wokwi, light brightness is represented as state and power values; the output pin still behaves as a simple on/off demo actuator.
+- Gas control uses a firmware override mode after a gas command is sent, which is simpler than adding a separate virtual gas actuator.
+
 ## Task: Fix Dashboard Event Timestamp Rendering For Wokwi Events
 
 ### Status

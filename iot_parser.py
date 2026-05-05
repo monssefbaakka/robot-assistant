@@ -133,6 +133,13 @@ def _matches_any(text, patterns):
     return any(re.search(pattern, text) for pattern in patterns)
 
 
+def _matches_gas_state(text, enabled):
+    return (
+        (enabled and ("turn gas on" in text or "gas on" in text))
+        or ((not enabled) and ("turn gas off" in text or "gas off" in text))
+    )
+
+
 def parse_iot_command(message, source="chat"):
     text = normalize_text(message)
 
@@ -226,7 +233,7 @@ def parse_iot_command(message, source="chat"):
             "raw_text": message,
         }
 
-    if sensor_type == "gas_ppm" and _matches_any(text, TURN_ON_PATTERNS):
+    if sensor_type == "gas_ppm" and (_matches_any(text, TURN_ON_PATTERNS) or _matches_gas_state(text, True)):
         return {
             "action": "set_gas_state",
             "room": room,
@@ -237,7 +244,7 @@ def parse_iot_command(message, source="chat"):
             "raw_text": message,
         }
 
-    if sensor_type == "gas_ppm" and _matches_any(text, TURN_OFF_PATTERNS):
+    if sensor_type == "gas_ppm" and (_matches_any(text, TURN_OFF_PATTERNS) or _matches_gas_state(text, False)):
         return {
             "action": "set_gas_state",
             "room": room,

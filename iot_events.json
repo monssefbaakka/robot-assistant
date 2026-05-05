@@ -1239,6 +1239,344 @@
       "details": {
         "message": "Living Room Main Light turned off."
       }
+    },
+    {
+      "timestamp": 99653,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_on",
+      "target": "ac",
+      "status": "success",
+      "raw_text": "dashboard:turn_on:ac",
+      "details": {
+        "message": "Living Room Main AC turned on."
+      }
+    },
+    {
+      "timestamp": 100082,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_on",
+      "target": "light",
+      "status": "success",
+      "raw_text": "dashboard:turn_on:light",
+      "details": {
+        "message": "Living Room Main Light turned on."
+      }
+    },
+    {
+      "timestamp": 100082,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_on",
+      "target": "light",
+      "status": "success",
+      "raw_text": "dashboard:turn_on:light",
+      "details": {
+        "message": "Living Room Main Light turned on."
+      }
+    },
+    {
+      "timestamp": 128816,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "set_gas_state",
+      "target": "",
+      "status": "error",
+      "raw_text": "turn gas on",
+      "details": {
+        "message": "Unsupported command for Wokwi home node."
+      }
+    },
+    {
+      "timestamp": 135687,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "set_gas_level",
+      "target": "",
+      "status": "error",
+      "raw_text": "set gas level to 250 ppm",
+      "details": {
+        "message": "Unsupported command for Wokwi home node."
+      }
+    },
+    {
+      "timestamp": 4332,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "set_gas_level",
+      "target": "",
+      "status": "success",
+      "raw_text": "set gas level to 250 ppm",
+      "details": {
+        "message": "Living Room gas level set to 250 ppm."
+      }
+    },
+    {
+      "timestamp": 4332,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "set_gas_level",
+      "target": "",
+      "status": "success",
+      "raw_text": "set gas level to 250 ppm",
+      "details": {
+        "message": "Living Room gas level set to 250 ppm."
+      }
+    },
+    {
+      "timestamp": 13673,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "set_gas_state",
+      "target": "",
+      "status": "success",
+      "raw_text": "turn on gas",
+      "details": {
+        "message": "Living Room gas simulation turned on."
+      }
+    },
+    {
+      "timestamp": 13673,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "set_gas_state",
+      "target": "",
+      "status": "success",
+      "raw_text": "turn on gas",
+      "details": {
+        "message": "Living Room gas simulation turned on."
+      }
+    },
+    {
+      "timestamp": 16673,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "set_gas_state",
+      "target": "",
+      "status": "success",
+      "raw_text": "turn off gas",
+      "details": {
+        "message": "Living Room gas simulation turned off."
+      }
+    },
+    {
+      "timestamp": 16673,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "set_gas_state",
+      "target": "",
+      "status": "success",
+      "raw_text": "turn off gas",
+      "details": {
+        "message": "Living Room gas simulation turned off."
+      }
+    },
+    {
+      "timestamp": 22002,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_on",
+      "target": "ac",
+      "status": "success",
+      "raw_text": "dashboard:turn_on:ac",
+      "details": {
+        "message": "Living Room Main AC turned on."
+      }
+    },
+    {
+      "timestamp": 22002,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_on",
+      "target": "ac",
+      "status": "success",
+      "raw_text": "dashboard:turn_on:ac",
+      "details": {
+        "message": "Living Room Main AC turned on."
+      }
+    },
+    {
+      "timestamp": 24379,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "set_temperature",
+      "target": "ac",
+      "status": "success",
+      "raw_text": "make ac temperature 19",
+      "details": {
+        "message": "Living Room AC target temperature updated."
+      }
+    },
+    {
+      "timestamp": 24379,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "set_temperature",
+      "target": "ac",
+      "status": "success",
+      "raw_text": "make ac temperature 19",
+      "details": {
+        "message": "Living Room AC target temperature updated."
+      }
+    },
+    {
+      "timestamp": 32674,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_on",
+      "target": "light",
+      "status": "success",
+      "raw_text": "turn on the main light",
+      "details": {
+        "message": "Living Room Main Light turned on."
+      }
+    },
+    {
+      "timestamp": 32674,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_on",
+      "target": "light",
+      "status": "success",
+      "raw_text": "turn on the main light",
+      "details": {
+        "message": "Living Room Main Light turned on."
+      }
+    },
+    {
+      "timestamp": 37374,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_off",
+      "target": "light",
+      "status": "success",
+      "raw_text": "turn off the main light",
+      "details": {
+        "message": "Living Room Main Light turned off."
+      }
+    },
+    {
+      "timestamp": 37374,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_off",
+      "target": "light",
+      "status": "success",
+      "raw_text": "turn off the main light",
+      "details": {
+        "message": "Living Room Main Light turned off."
+      }
+    },
+    {
+      "timestamp": 38968,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "lock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "lock the door",
+      "details": {
+        "message": "Living Room Front Door locked."
+      }
+    },
+    {
+      "timestamp": 38968,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "lock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "lock the door",
+      "details": {
+        "message": "Living Room Front Door locked."
+      }
+    },
+    {
+      "timestamp": 42068,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "unlock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "ouvre la porte",
+      "details": {
+        "message": "Living Room Front Door unlocked."
+      }
+    },
+    {
+      "timestamp": 42068,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "unlock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "ouvre la porte",
+      "details": {
+        "message": "Living Room Front Door unlocked."
+      }
+    },
+    {
+      "timestamp": 47002,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_off",
+      "target": "ac",
+      "status": "success",
+      "raw_text": "eteint climat",
+      "details": {
+        "message": "Living Room Main AC turned off."
+      }
+    },
+    {
+      "timestamp": 47002,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_off",
+      "target": "ac",
+      "status": "success",
+      "raw_text": "eteint climat",
+      "details": {
+        "message": "Living Room Main AC turned off."
+      }
+    },
+    {
+      "timestamp": 47002,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_off",
+      "target": "ac",
+      "status": "success",
+      "raw_text": "eteint climat",
+      "details": {
+        "message": "Living Room Main AC turned off."
+      }
     }
   ]
 }

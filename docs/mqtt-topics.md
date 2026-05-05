@@ -13,8 +13,11 @@ Receives structured IoT commands from the assistant or dashboard.
 
 ### Used For
 - Turn light on or off
+- Set light brightness
 - Turn AC on or off
 - Set AC target temperature
+- Turn gas simulation on or off
+- Set gas level
 - Request device state
 - Request sensor values
 

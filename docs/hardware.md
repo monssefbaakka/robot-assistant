@@ -41,7 +41,10 @@ Detects combustible gas concentration (LPG, propane, methane). Returns analog vo
 - Publishes to `robocompagnon/home/alerts/gas`
 
 ### Simulation
-Static `gas_ppm` value in state. Set > 400 manually to trigger alert.
+`gas_ppm` can now be controlled by command:
+- turn gas on
+- turn gas off
+- set gas level to 300 ppm
 
 ---
 
@@ -94,9 +97,13 @@ Controls mains-voltage light fixture via GPIO. LOW signal = relay closed = light
 
 ### Used For
 - `devices.light_main` state in `iot_state.json`
+- `devices.light_main.brightness` in `iot_state.json`
 
 ### Simulation
-`light_main.state` toggled by `turn_on` / `turn_off` commands in `iot_simulator.py`.
+`light_main.state` and `brightness` can be controlled by command:
+- turn on the light
+- turn off the light
+- set light brightness to 60%
 
 ---
 
