@@ -1,10 +1,11 @@
+#include <Arduino.h>
 #include <ArduinoJson.h>
 #include <DHTesp.h>
 #include <ESP32Servo.h>
 #include <PubSubClient.h>
 #include <WiFi.h>
 
-#include "config.h"
+#include "../config.h"
 
 static const int LIGHT_PIN = 26;
 static const int AC_PIN = 27;
@@ -86,8 +87,8 @@ void publishSensorValue(const char *name, TValue value) {
 void publishSensors() {
   Serial.println("Publishing sensor values...");
   TempAndHumidity reading = dht.getTempAndHumidity();
-  float temperature = isnan(reading.temperature) ? 25.0 : reading.temperature;
-  float humidity = isnan(reading.humidity) ? 50.0 : reading.humidity;
+  float temperature = isnan(reading.temperature) ? 25.0f : reading.temperature;
+  float humidity = isnan(reading.humidity) ? 50.0f : reading.humidity;
   bool occupancy = digitalRead(OCCUPANCY_PIN) == HIGH;
   int gasRaw = analogRead(GAS_PIN);
   int ldrRaw = analogRead(LDR_PIN);

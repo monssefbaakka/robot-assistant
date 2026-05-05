@@ -36,3 +36,17 @@ For local development with the Python app:
 - `diagram.json`: Wokwi wiring
 - `libraries.txt`: Arduino libraries needed by Wokwi
 - `config.example.h`: copy to `config.h` and set your broker host if needed
+- `platformio.ini`: local PlatformIO build config for VS Code
+- `wokwi.toml`: Wokwi for VS Code simulation config
+
+## VS Code workflow
+
+The simplest local workflow for this folder is:
+
+1. Install the PlatformIO IDE extension in VS Code
+2. Install the Wokwi for VS Code extension and activate its license
+3. Copy `config.example.h` to `config.h`
+4. Open this folder directly in VS Code
+5. Run a PlatformIO build
+6. Open `diagram.json`
+7. Start the Wokwi simulation from the embedded simulator view

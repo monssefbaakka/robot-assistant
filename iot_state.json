@@ -1,14 +1,14 @@
 {
   "meta": {
-    "last_update": "2026-05-05T15:37:08.982085+00:00",
-    "transport": "mqtt-wokwi-hardware",
+    "last_update": "2026-05-05T17:01:37.958629+00:00",
+    "transport": "mqtt-python-simulator",
     "version": 1
   },
   "outside": {
-    "temperature": 21.0,
-    "humidity": 46,
+    "temperature": 19.0,
+    "humidity": 56,
     "source": "Rabat",
-    "updated_at": "2026-05-05T15:37:08.982202+00:00"
+    "updated_at": "2026-05-05T17:01:37.834673+00:00"
   },
   "alerts": {
     "gas": false
@@ -31,7 +31,7 @@
           "name": "Main AC",
           "state": "off",
           "mode": "cool",
-          "target_temp": 26,
+          "target_temp": 22,
           "fan_speed": 2,
           "power_w": 0
         },
@@ -39,14 +39,14 @@
           "id": "door_main",
           "type": "door",
           "name": "Front Door",
-          "state": "unlocked"
+          "state": "locked"
         }
       },
       "sensors": {
         "temperature": 24.5,
         "humidity": 48,
         "occupancy": true,
-        "light_level": 1010,
+        "light_level": 720,
         "gas_ppm": 120
       },
       "environment": {
