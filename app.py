@@ -11,50 +11,111 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# CSS personnalisé
+# CSS personnalisé pour un look moderne et minimaliste
 st.markdown("""
 <style>
+    .stApp {
+        background-color: #fafafa;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
     .main-header {
-        font-size: 2.5rem;
-        font-weight: bold;
-        color: #1f77b4;
-        text-align: center;
-        margin-bottom: 1rem;
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: #111827;
+        text-align: left;
+        margin-bottom: 2rem;
+        letter-spacing: -0.02em;
+        border-bottom: 1px solid #e5e7eb;
+        padding-bottom: 1rem;
     }
     .stat-box {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 1rem;
-        border-radius: 10px;
-        color: white;
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        padding: 1.5rem;
+        border-radius: 12px;
+        color: #1f2937;
         text-align: center;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .stat-box:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
     }
     .stat-value {
-        font-size: 2rem;
-        font-weight: bold;
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 0.25rem;
     }
     .stat-label {
-        font-size: 0.9rem;
-        opacity: 0.9;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
     }
     .robot-status {
-        background: #f0f2f6;
-        padding: 1rem;
-        border-radius: 10px;
-        border-left: 4px solid #1f77b4;
+        background: #ffffff;
+        padding: 1.5rem;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .robot-status h4 {
+        margin-top: 0;
+        color: #111827;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+    .robot-status p {
+        color: #4b5563;
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+    }
+    
+    /* Modern Chat UI */
+    .chat-container-custom {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem 0;
     }
     .chat-message {
-        padding: 1rem;
-        border-radius: 10px;
-        margin: 0.5rem 0;
+        padding: 0.85rem 1.25rem;
+        border-radius: 18px;
+        max-width: 85%;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        word-wrap: break-word;
+    }
+    .user-message-wrapper {
+        display: flex;
+        justify-content: flex-end;
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    .robot-message-wrapper {
+        display: flex;
+        justify-content: flex-start;
+        width: 100%;
+        margin-bottom: 0.5rem;
     }
     .user-message {
-        background: #e3f2fd;
-        border-left: 4px solid #2196f3;
+        background: #111827;
+        color: #ffffff;
+        border-bottom-right-radius: 4px;
     }
     .robot-message {
-        background: #f1f8e9;
-        border-left: 4px solid #4caf50;
+        background: #ffffff;
+        color: #1f2937;
+        border: 1px solid #e5e7eb;
+        border-bottom-left-radius: 4px;
     }
+    
+    div[data-testid="stToolbar"] { visibility: hidden; }
+    footer { visibility: hidden; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -91,7 +152,7 @@ with col1:
     
     with stat_col2:
         st.markdown(f"""
-        <div class="stat-box" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+        <div class="stat-box">
             <div class="stat-value">{etat['nb_actions']}</div>
             <div class="stat-label">⚡ Actions</div>
         </div>
@@ -100,7 +161,7 @@ with col1:
     with stat_col3:
         direction_emoji = "⬆️" if etat['direction'] < 45 else "➡️" if etat['direction'] < 135 else "⬇️" if etat['direction'] < 225 else "⬅️"
         st.markdown(f"""
-        <div class="stat-box" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+        <div class="stat-box">
             <div class="stat-value">{direction_emoji}</div>
             <div class="stat-label">🧭 {etat['direction_text']}</div>
         </div>
@@ -194,11 +255,13 @@ with col2:
         if not st.session_state.historique_chat:
             st.info("👋 Salut Monssef ! Je suis RoboCompagnon. Pose-moi une question ou demande-moi de bouger !")
         
+        st.markdown('<div class="chat-container-custom">', unsafe_allow_html=True)
         for msg in st.session_state.historique_chat:
             if msg['role'] == 'user':
-                st.markdown(f'<div class="chat-message user-message">👤 <strong>Toi:</strong> {msg["message"]}</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="user-message-wrapper"><div class="chat-message user-message">{msg["message"]}</div></div>', unsafe_allow_html=True)
             else:
-                st.markdown(f'<div class="chat-message robot-message">🤖 <strong>RoboCompagnon:</strong> {msg["message"]}</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="robot-message-wrapper"><div class="chat-message robot-message">🤖 <strong>RoboCompagnon:</strong> {msg["message"]}</div></div>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
     
     # Input utilisateur
     with st.form(key="chat_form", clear_on_submit=True):

@@ -1,5 +1,96 @@
 # Task Log
 
+## Task: Redesign Streamlit Dashboard to be Modern and Minimalist
+
+### Status
+Completed
+
+### Goal
+Make the UI better, fix coloring, fix the background, and provide a modern and minimalist design for the Streamlit applications.
+
+### What Was Implemented
+- Updated CSS in `app.py` to use a white/gray minimal color scheme.
+- Changed `app.py` chat messages UI from simple text boxes to modern bordered message wrappers.
+- Updated `app_complet.py` to remove gradients and heavy backgrounds.
+- Converted `app_complet.py` dashboard cards to use subtle shadows, clean white backgrounds, and minimalist typography.
+- Refined the chat input area to be simple, with flat background and clean borders.
+
+### How It Works
+- The custom HTML/CSS inside Streamlit's `st.markdown(unsafe_allow_html=True)` overrides the default elements.
+- Uses `:root` CSS variables for simple color switching.
+- Applies `box-shadow` and `border-radius` to simulate a clean mobile-like card UI.
+
+### Files Changed
+- `app.py`
+- `app_complet.py`
+- `docs/task-log.md`
+
+### MQTT Topics
+- No new topics.
+
+### Hardware Involved
+- None.
+
+### How To Test
+1. Run `streamlit run app.py` and `streamlit run app_complet.py`.
+2. Ensure the UI is clean, minimalist, using mostly white/light-gray backgrounds.
+3. Check the chat components for modern layout styling.
+
+### Notes / Limitations
+- Relies on Streamlit's structural class names (like `[data-testid="stChatInput"]`), which can break if Streamlit is updated.
+
+## Task: Streamlit Chat UI Refresh
+
+### Status
+Completed
+
+### Goal
+Improve the Streamlit chat experience so device commands feel easier to send and conversation history is easier to read during demos.
+
+### What Was Implemented
+- Reworked the chat area in `app_complet.py`
+- Replaced the old plain message cards with a clearer conversation layout using Streamlit chat messages
+- Added quick command buttons for common IoT actions
+- Added chat summary metrics for message count, reply count, and last reply time
+- Switched the input area to `st.chat_input`
+- Added timestamp metadata for newly sent and generated messages
+- Kept voice playback support for assistant replies
+- Restyled the chat composer to feel closer to a ChatGPT-style input bar with a softer white capsule and simpler chrome
+- Removed the dark floating background behind the composer and changed the input bar itself to a darker capsule style
+- Added broader wrapper overrides to remove the remaining full-width dark band behind the floating chat bar
+- Added a targeted override for the exact `stBottomBlockContainer` wrapper and nested Streamlit emotion classes from the browser DOM
+
+### How It Works
+1. The dashboard now shows a dedicated chat header with a compact summary.
+2. Common room commands can be sent from one-click quick action buttons.
+3. User and assistant messages render in a standard chat layout with avatars.
+4. New messages are stamped with the current time when they are added to the session history.
+5. The bottom chat input is styled like a rounded assistant composer, with the floating black strip removed and the bar itself carrying the darker visual weight, while still sending messages through the same `AgentRobot` flow.
+
+### Files Changed
+- `app_complet.py`
+- `docs/task-log.md`
+
+### MQTT Topics
+- No topic names changed
+- Chat commands still flow through:
+- `robocompagnon/home/commands`
+- `robocompagnon/home/responses`
+
+### Hardware Involved
+- None. UI-only improvement.
+
+### How To Test
+1. Run `py -m streamlit run app_complet.py`.
+2. Open the dashboard in the browser.
+3. Use a quick action such as `Turn On Light`.
+4. Send a typed command from the chat input.
+5. Verify the new message appears in the chat timeline and the room state updates as before.
+
+### Notes / Limitations
+- Existing older chat entries may not have timestamps because only new messages are stamped.
+- Voice playback still depends on the local TTS path succeeding.
+
 ## Task: Hardware Mode Startup Alignment and Wokwi Diagnostics
 
 ### Status

@@ -37,10 +37,21 @@ Recommended local setup:
 
 ### Wokwi side
 
-1. Open `firmware/wokwi/esp32-home-node` in Wokwi
+1. Open `firmware/wokwi/esp32-home-node` in VS Code
 2. Copy `config.example.h` to `config.h`
-3. Set `MQTT_HOST` to a broker reachable from Wokwi cloud
-4. Run the simulation
+3. Set `MQTT_HOST` to the **same broker** as `MQTT_HOST` in your `.env` (both must match)
+4. **Rebuild firmware** after any `config.h` change:
+   ```powershell
+   cd firmware\wokwi\esp32-home-node
+   & "$env:USERPROFILE\.platformio\penv\Scripts\pio.exe" run
+   ```
+5. Start the Wokwi simulation (VS Code: `F1 → Wokwi: Start Simulator`)
+6. Check the Serial Monitor — must show:
+   ```
+   WiFi connected
+   MQTT connected
+   Subscribed to: robocompagnon/home/commands
+   ```
 
 For the VS Code + PlatformIO workflow:
 

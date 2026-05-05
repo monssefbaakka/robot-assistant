@@ -13,6 +13,33 @@ from mqtt_client import get_mqtt_client as get_loopback_broker
 from mqtt_topics import MQTTTopics
 
 
+class _GasAlertTelegramNotifier:
+    """Subscribes to gas alert topic and forwards to Telegram if configured."""
+
+    def __init__(self, broker):
+        self._sub_id = broker.subscribe(MQTTTopics.ALERT_GAS, self._on_alert)
+
+    def _on_alert(self, envelope):
+        payload = envelope.get("payload", {})
+        if not isinstance(payload, dict) or not payload.get("alert"):
+            return
+        token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+        chat_id = os.environ.get("TELEGRAM_CHAT_ID", "")
+        if not token or not chat_id or "your_token" in token:
+            return
+        try:
+            from telegram_bot import TelegramBot
+            bot = TelegramBot(token)
+            bot.chat_id = chat_id
+            bot.envoyer_alerte_personnalisee(
+                "Alerte Gaz",
+                payload.get("message", "Gas leak detected!"),
+                emoji="⚠️",
+            )
+        except Exception:
+            pass
+
+
 def _now_iso():
     return datetime.now(timezone.utc).isoformat()
 
@@ -83,6 +110,7 @@ class IoTMQTTController:
         self.mode = os.environ.get("IOT_MODE", "simulator").strip().lower()
         self._service = get_iot_service(self.broker) if self.mode != "hardware" else None
         self._bridge = get_hardware_bridge(self.broker) if self.mode == "hardware" else None
+        self._gas_notifier = _GasAlertTelegramNotifier(self.broker)
 
     def try_handle_text(self, message, source="chat"):
         command = parse_iot_command(message, source=source)
@@ -110,7 +138,7 @@ class IoTMQTTController:
                     "command": deepcopy(command),
                 },
             )
-            response_event.wait(1.0)
+            response_event.wait(10.0)
         finally:
             self.broker.unsubscribe(subscription_id)
 

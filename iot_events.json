@@ -994,6 +994,108 @@
         },
         "message": "Living Room Front Door locked."
       }
+    },
+    {
+      "timestamp": "2026-05-05T17:50:40.870131+00:00",
+      "source": "dashboard",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "unlock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "dashboard:unlock:door",
+      "details": {
+        "ok": true,
+        "action": "unlock",
+        "room": "living_room",
+        "device_id": "door_main",
+        "device_type": "door",
+        "old_state": {
+          "id": "door_main",
+          "type": "door",
+          "name": "Front Door",
+          "state": "locked"
+        },
+        "new_state": {
+          "id": "door_main",
+          "type": "door",
+          "name": "Front Door",
+          "state": "unlocked"
+        },
+        "message": "Living Room Front Door unlocked."
+      }
+    },
+    {
+      "timestamp": "2026-05-05T17:50:42.718420+00:00",
+      "source": "dashboard",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_on",
+      "target": "ac",
+      "status": "success",
+      "raw_text": "dashboard:turn_on:ac",
+      "details": {
+        "ok": true,
+        "action": "turn_on",
+        "room": "living_room",
+        "device_id": "ac_main",
+        "device_type": "ac",
+        "old_state": {
+          "id": "ac_main",
+          "type": "ac",
+          "name": "Main AC",
+          "state": "off",
+          "mode": "cool",
+          "target_temp": 22,
+          "fan_speed": 2,
+          "power_w": 0
+        },
+        "new_state": {
+          "id": "ac_main",
+          "type": "ac",
+          "name": "Main AC",
+          "state": "on",
+          "mode": "cool",
+          "target_temp": 22,
+          "fan_speed": 2,
+          "power_w": 1200
+        },
+        "message": "Living Room Main AC turned on."
+      }
+    },
+    {
+      "timestamp": "2026-05-05T17:50:44.871099+00:00",
+      "source": "dashboard",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_off",
+      "target": "light",
+      "status": "success",
+      "raw_text": "dashboard:turn_off:light",
+      "details": {
+        "ok": true,
+        "action": "turn_off",
+        "room": "living_room",
+        "device_id": "light_main",
+        "device_type": "light",
+        "old_state": {
+          "id": "light_main",
+          "type": "light",
+          "name": "Main Light",
+          "state": "on",
+          "brightness": 80,
+          "power_w": 9
+        },
+        "new_state": {
+          "id": "light_main",
+          "type": "light",
+          "name": "Main Light",
+          "state": "off",
+          "brightness": 0,
+          "power_w": 0
+        },
+        "message": "Living Room Main Light turned off."
+      }
     }
   ]
 }

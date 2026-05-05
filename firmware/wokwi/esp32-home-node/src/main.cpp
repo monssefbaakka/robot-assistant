@@ -295,6 +295,7 @@ void setup() {
   setDoorLocked(true);
 
   ensureWiFi();
+  mqttClient.setBufferSize(2048);
   mqttClient.setServer(MQTT_HOST, MQTT_PORT);
   mqttClient.setCallback(handleCommand);
   Serial.println("Setup complete");

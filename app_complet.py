@@ -22,182 +22,410 @@ st.markdown(
     """
 <style>
     :root {
-        --bg-soft: linear-gradient(180deg, #f5f1e8 0%, #edf4f2 100%);
-        --panel-bg: rgba(255, 255, 255, 0.84);
-        --panel-border: #c8d7d2;
-        --text-strong: #16323f;
-        --text-soft: #5b7078;
-        --accent: #d97a2b;
-        --good: #287d4f;
-        --warn: #b95a17;
-        --danger: #a83832;
+        --bg-main: #ffffff;
+        --sidebar-bg: #f8f9fa;
+        --border-color: #eaecf0;
+        --text-main: #1d2939;
+        --text-muted: #667085;
+        --accent-blue: #0066cc;
+        --accent-blue-light: #e6f0fa;
+        --terminal-bg: #1c1c1c;
     }
 
     .stApp {
-        background:
-            radial-gradient(circle at top left, rgba(217, 122, 43, 0.12), transparent 28%),
-            radial-gradient(circle at top right, rgba(40, 125, 79, 0.10), transparent 24%),
-            var(--bg-soft);
+        background: var(--bg-main);
+        font-family: 'Inter', system-ui, sans-serif;
     }
 
-    .hero {
-        background: linear-gradient(135deg, rgba(255, 248, 239, 0.96), rgba(238, 246, 243, 0.96));
-        border: 1px solid var(--panel-border);
-        border-radius: 22px;
-        padding: 1.35rem 1.4rem;
-        margin-bottom: 1rem;
-        box-shadow: 0 18px 40px rgba(22, 50, 63, 0.08);
+    /* Hide default header/footer */
+    header[data-testid="stHeader"] {
+        display: none;
+    }
+    footer {
+        display: none;
     }
 
-    .hero-title {
-        color: var(--text-strong);
-        font-size: 2.3rem;
-        font-weight: 800;
-        line-height: 1.05;
-        margin: 0 0 0.35rem 0;
+    /* Sidebar Styling */
+    section[data-testid="stSidebar"] {
+        background-color: var(--sidebar-bg);
+        border-right: 1px solid var(--border-color);
+        padding-top: 1rem;
     }
 
-    .hero-copy {
-        color: var(--text-soft);
-        margin: 0;
-        font-size: 1rem;
-    }
-
-    .panel, .device-card, .event-card, .chat-card {
-        background: var(--panel-bg);
-        backdrop-filter: blur(6px);
-        border: 1px solid var(--panel-border);
-        border-radius: 18px;
-        box-shadow: 0 14px 32px rgba(22, 50, 63, 0.06);
-    }
-
-    .panel {
-        padding: 1.1rem 1.15rem;
-        margin-bottom: 1rem;
-    }
-
-    .device-card {
-        padding: 1rem;
-        min-height: 168px;
-    }
-
-    .event-card {
-        padding: 0.95rem 1rem;
-        margin-bottom: 0.75rem;
-    }
-
-    .chat-card {
-        padding: 0.9rem 1rem;
-        margin: 0.45rem 0;
-    }
-
-    .chat-shell {
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(247, 250, 249, 0.9));
-        border: 1px solid var(--panel-border);
-        border-radius: 24px;
-        padding: 1rem 1rem 0.4rem 1rem;
-        box-shadow: 0 18px 38px rgba(22, 50, 63, 0.08);
-    }
-
-    .chat-toolbar {
+    /* Top Bar */
+    .top-bar {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        gap: 0.75rem;
-        margin-bottom: 0.85rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 1.5rem;
     }
-
-    .chat-title {
-        color: var(--text-strong);
-        font-size: 1.1rem;
-        font-weight: 780;
+    .top-bar-title {
+        color: var(--accent-blue);
+        font-size: 1.5rem;
+        font-weight: 700;
         margin: 0;
     }
 
-    .chat-subtitle {
-        color: var(--text-soft);
-        margin: 0.15rem 0 0 0;
-        font-size: 0.92rem;
+    /* Hero Banner */
+    .hero {
+        background: linear-gradient(135deg, #0a1628 0%, #0d2245 50%, #0a3d62 100%);
+        border-radius: 12px;
+        padding: 3rem 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
     }
-
-    .chat-hint {
-        background: rgba(22, 50, 63, 0.05);
-        border: 1px dashed rgba(22, 50, 63, 0.14);
-        border-radius: 16px;
-        padding: 0.9rem 1rem;
-        color: var(--text-soft);
-        margin-bottom: 0.85rem;
+    .hero::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(ellipse at 80% 50%, rgba(0, 102, 204, 0.25) 0%, transparent 60%);
     }
-
-    .chat-meta {
-        color: var(--text-soft);
-        font-size: 0.8rem;
-        margin-top: 0.35rem;
-    }
-
-    .status-chip {
+    .hero-tag {
+        background: var(--accent-blue);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
         display: inline-block;
-        padding: 0.2rem 0.65rem;
-        border-radius: 999px;
-        font-size: 0.8rem;
-        font-weight: 700;
-        letter-spacing: 0.02em;
-        margin-bottom: 0.7rem;
+        margin-bottom: 1rem;
     }
-
-    .status-ok {
-        background: rgba(40, 125, 79, 0.12);
-        color: var(--good);
-    }
-
-    .status-warn {
-        background: rgba(185, 90, 23, 0.12);
-        color: var(--warn);
-    }
-
-    .status-danger {
-        background: rgba(168, 56, 50, 0.12);
-        color: var(--danger);
-    }
-
-    .status-neutral {
-        background: rgba(22, 50, 63, 0.08);
-        color: var(--text-strong);
-    }
-
-    .card-title {
-        color: var(--text-strong);
-        font-size: 1rem;
+    .hero-title {
+        color: white;
+        font-size: 2.5rem;
         font-weight: 700;
         margin: 0 0 0.5rem 0;
+        line-height: 1.2;
     }
-
-    .metric-value {
-        color: var(--text-strong);
-        font-size: 2rem;
-        font-weight: 800;
+    .hero-subtitle {
+        color: #d0d5dd;
         margin: 0;
-        line-height: 1;
+        font-size: 1rem;
     }
 
-    .metric-label, .meta-line {
-        color: var(--text-soft);
+    /* Section Headers */
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-main);
+        margin: 0;
+    }
+    .section-subtitle {
+        font-size: 0.85rem;
+        color: var(--accent-blue);
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .section-subtitle::before {
+        content: '';
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        background: var(--accent-blue);
+        border-radius: 50%;
+    }
+
+    /* Base Card Style */
+    .card {
+        background: white;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.25rem;
+        height: 100%;
+        box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+    }
+    
+    /* Device Cards */
+    .device-card {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    .device-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    .device-icon {
+        color: var(--accent-blue);
+        font-size: 1.25rem;
+    }
+    .device-status {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--accent-blue);
+        text-transform: uppercase;
+    }
+    .device-status.off {
+        color: var(--text-muted);
+    }
+    .device-name {
+        font-weight: 600;
+        color: var(--text-main);
+        margin: 0 0 0.25rem 0;
+    }
+    .device-sub {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        margin: 0;
+    }
+    .device-card.active {
+        border: 1.5px solid var(--accent-blue);
+        box-shadow: 0 0 0 3px var(--accent-blue-light);
+    }
+
+    /* Weather Panel */
+    .weather-panel {
+        display: flex;
+        flex-direction: column;
+    }
+    .weather-main {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .weather-icon {
+        font-size: 2.5rem;
+        color: #f59e0b;
+    }
+    .weather-info h3 {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-main);
+    }
+    .weather-info p {
+        margin: 0;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+    .weather-metrics {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+    .weather-metric {
+        text-align: center;
+    }
+    .weather-metric-val {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-main);
         margin: 0.25rem 0 0 0;
     }
+    .weather-metric-label {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        letter-spacing: 0.05em;
+        margin: 0;
+    }
+    
+    /* Sensor Chips */
+    .sensor-chips {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        justify-content: space-between;
+    }
+    .sensor-chip {
+        background: #f9fafb;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 0.5rem;
+        flex: 1;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    .sensor-chip-icon {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+    .sensor-chip-val {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-main);
+    }
 
-    .section-title {
-        color: var(--text-strong);
-        font-size: 1.15rem;
-        font-weight: 750;
+    /* Terminal */
+    .terminal {
+        background: var(--terminal-bg);
+        border-radius: 12px;
+        padding: 1.25rem;
+        min-height: 260px;
+        max-height: 320px;
+        color: #a1a1aa;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+        overflow-y: auto;
+    }
+    .terminal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #333;
+        padding-bottom: 0.75rem;
         margin-bottom: 0.75rem;
+        color: #71717a;
+        font-size: 0.75rem;
+    }
+    .term-time { color: #d4d4d8; }
+    .term-pub { color: #f97316; }
+    .term-sub { color: #3b82f6; }
+    .term-rec { color: #22c55e; }
+    .term-beat { color: #a1a1aa; }
+    .term-topic { color: #e4e4e7; }
+    
+    /* Robot Status */
+    .robot-status {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+    }
+    .battery-circle {
+        position: relative;
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        border: 4px solid var(--accent-blue-light);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: var(--accent-blue);
+    }
+    .battery-circle::before {
+        content: '';
+        position: absolute;
+        inset: -4px;
+        border-radius: 50%;
+        border: 4px solid var(--accent-blue);
+        clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%);
     }
 
-    .chat-user {
-        border-left: 4px solid #288db8;
+    /* Streamlit Button Overrides */
+    div[data-testid="stButton"] button {
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+    div[data-testid="stButton"] button[kind="primary"] {
+        background: var(--accent-blue);
+        color: white;
+        border: none;
+    }
+    div[data-testid="stButton"] button[kind="secondary"] {
+        background: white;
+        color: var(--text-main);
+        border: 1px solid var(--border-color);
     }
 
-    .chat-robot {
-        border-left: 4px solid #2f8f64;
+    /* Chat Styling */
+    .chat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 1rem;
+    }
+    .chat-header-title {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-weight: 600;
+        font-size: 1rem;
+        color: var(--text-main);
+    }
+    .chat-header-stats {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        display: flex;
+        gap: 1.5rem;
+    }
+    .chat-header-stats strong {
+        color: var(--text-main);
+        font-size: 0.85rem;
+    }
+    .ai-msg, .user-msg {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    .msg-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+    .ai-msg .msg-icon { background: #e5e7eb; }
+    .user-msg .msg-icon { background: var(--accent-blue); color: white; margin-left: auto; order: 2; }
+    
+    .msg-bubble {
+        background: #f3f4f6;
+        padding: 1rem;
+        border-radius: 12px;
+        border-top-left-radius: 2px;
+        font-size: 0.9rem;
+        color: var(--text-main);
+        max-width: 80%;
+    }
+    .user-msg .msg-bubble {
+        background: var(--accent-blue);
+        color: white;
+        border-radius: 12px;
+        border-top-right-radius: 2px;
+        order: 1;
+    }
+    
+    /* Quick Actions */
+    .quick-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    .quick-action-btn {
+        background: white;
+        border: 1px solid var(--border-color);
+        border-radius: 999px;
+        padding: 0.4rem 1rem;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .quick-action-btn:hover {
+        border-color: var(--accent-blue);
+        color: var(--accent-blue);
+    }
+
+    /* Streamlit overrides for inputs */
+    [data-testid="stChatInput"] {
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
     }
 </style>
 """,
@@ -260,46 +488,55 @@ def mqtt_command(action, device_type=None, parameters=None):
     st.rerun()
 
 
-def status_chip(label, tone="neutral"):
-    return f'<span class="status-chip status-{tone}">{escape(label)}</span>'
+def status_chip(label, is_on=False):
+    status_class = "on" if is_on else "off"
+    return f'<span class="device-status {status_class}">{escape(label)}</span>'
 
 
-def device_card(title, value, lines, tone="neutral"):
-    details = "".join(f'<p class="metric-label">{escape(line)}</p>' for line in lines)
+def device_card(icon, name, sublabel, status, is_on):
+    active_class = "active" if is_on else ""
     return f"""
-    <div class="device-card">
-        {status_chip(value, tone)}
-        <p class="card-title">{escape(title)}</p>
-        <p class="metric-value">{escape(value)}</p>
-        {details}
+    <div class="card device-card {active_class}">
+        <div class="device-header">
+            <div class="device-icon">{icon}</div>
+            {status_chip(status, is_on)}
+        </div>
+        <div>
+            <p class="device-name">{escape(name)}</p>
+            <p class="device-sub">{escape(sublabel)}</p>
+        </div>
     </div>
     """
 
 
-def sensor_card(title, value, subtitle):
+def sensor_card(icon, val, label):
     return f"""
-    <div class="device-card">
-        <p class="card-title">{escape(title)}</p>
-        <p class="metric-value">{escape(value)}</p>
-        <p class="metric-label">{escape(subtitle)}</p>
+    <div class="sensor-chip">
+        <div class="sensor-chip-icon">{icon}</div>
+        <div class="sensor-chip-val">{escape(str(val))}</div>
+        <div class="weather-metric-label">{escape(label)}</div>
     </div>
     """
 
 
-def event_card(event):
-    status = event.get("status", "unknown")
-    tone = "ok" if status == "success" else "danger"
-    title = f"{event.get('action', 'event')} -> {event.get('target', 'unknown')}"
-    meta = f"{event.get('timestamp', '')} | {status} | {event.get('room', '')}"
-    raw_text = event.get("raw_text") or ""
-    return f"""
-    <div class="event-card">
-        {status_chip(status.upper(), tone)}
-        <p class="card-title">{escape(title)}</p>
-        <p class="meta-line">{escape(meta)}</p>
-        <p class="metric-label">{escape(raw_text)}</p>
-    </div>
-    """
+def event_row(event):
+    time = event.get('timestamp', '')
+    action = event.get('action', 'EVENT').upper()
+    target = event.get('target', '')
+    
+    # color mapping for terminal
+    if action == "PUBLISH":
+        color_class = "term-pub"
+    elif action == "SUBSCRIBE":
+        color_class = "term-sub"
+    elif action == "RECEIVE":
+        color_class = "term-rec"
+    elif action == "HEARTBEAT":
+        color_class = "term-beat"
+    else:
+        color_class = "term-topic"
+
+    return f'<div><span class="term-time">[{time}]</span> <span class="{color_class}">{escape(action)}:</span> {escape(target)}</div>'
 
 
 def safe_audio(message):
@@ -311,10 +548,10 @@ def safe_audio(message):
 
 def quick_prompt_specs():
     return [
-        ("Turn On Light", "turn on light"),
-        ("Turn Off Light", "turn off light"),
-        ("Unlock Door", "unlock the door"),
-        ("Gas Level", "tell me the current gas level"),
+        "Turn On Light",
+        "Gas Level",
+        "Lock All Doors",
+        "Robot View"
     ]
 
 
@@ -365,313 +602,328 @@ door = devices.get("door_main")
 gas_ppm = sensors.get("gas_ppm", 0)
 gas_alert = alerts.get("gas", False)
 occupancy = sensors.get("occupancy", False)
-transport_label = snapshot.get("meta", {}).get("transport", "mqtt")
-runtime_mode = os.environ.get("IOT_MODE", "simulator")
-runtime_broker = f"{os.environ.get('MQTT_HOST', 'localhost')}:{os.environ.get('MQTT_PORT', '1883')}"
 
+# TOP BAR
 st.markdown(
     """
-    <div class="hero">
-        <p class="hero-title">RoboCompagnon Smart Home Console</p>
-        <p class="hero-copy">
-            Local MQTT simulator for the living room digital twin. The dashboard reads persisted state,
-            visualizes room conditions, and sends device commands through the controller.
-        </p>
+    <div class="top-bar">
+        <h1 class="top-bar-title">RoboCompagnon Console</h1>
+        <div style="display:flex; gap: 1rem; align-items:center; color: #667085;">
+            <span>🔍</span>
+            <span>⚠️</span>
+            <span>🔄</span>
+            <div style="width:32px; height:32px; border-radius:50%; background:#0066cc; color:white; display:flex; align-items:center; justify-content:center; font-size:12px;">DEV</div>
+        </div>
     </div>
     """,
-    unsafe_allow_html=True,
+    unsafe_allow_html=True
+)
+
+# HERO
+_mode = os.environ.get("IOT_MODE", "simulator").upper()
+_broker = os.environ.get("MQTT_HOST", "localhost")
+_gas_status = "Gas Alert Active" if gas_alert else "All sensors nominal"
+st.markdown(
+    f"""
+    <div class="hero">
+        <div class="hero-tag">{_mode} Mode</div>
+        <h2 class="hero-title">RoboCompagnon Home Node</h2>
+        <p class="hero-subtitle">Broker: {escape(_broker)} &nbsp;|&nbsp; {escape(_gas_status)}</p>
+    </div>
+    """,
+    unsafe_allow_html=True
 )
 
 if gas_alert:
     st.error("Gas alert is active. Check the living room gas level and ventilation before sending more commands.")
 
-top_left, top_right = st.columns([1.05, 1.35])
+# ROW 1: Devices and Weather
+col1, col2 = st.columns([1.5, 1])
 
-with top_left:
-    st.markdown('<div class="section-title">Home Node</div>', unsafe_allow_html=True)
+with col1:
     st.markdown(
-        f"""
-            <div class="panel">
-            {status_chip(transport_label.upper(), 'neutral')}
-            <p class="card-title">Living Room Digital Twin</p>
-            <p class="meta-line">Runtime mode: {escape(runtime_mode)}</p>
-            <p class="meta-line">MQTT broker: {escape(runtime_broker)}</p>
-            <p class="meta-line">State source: persisted JSON snapshot</p>
-            <p class="meta-line">Outside weather source: {escape(snapshot['outside']['source'])}</p>
-            <p class="meta-line">Last update: {escape(snapshot['meta']['last_update'])}</p>
+        """
+        <div class="section-header">
+            <h3 class="section-title">Active Devices</h3>
+            <span class="section-subtitle">Living Room</span>
         </div>
         """,
-        unsafe_allow_html=True,
+        unsafe_allow_html=True
     )
-
+    
     device_cols = st.columns(3)
+    
+    # Light Card
     with device_cols[0]:
-        light_tone = "ok" if light["state"] == "on" else "neutral"
-        st.markdown(
-            device_card(
-                "Main Light",
-                light["state"].upper(),
-                [f"Brightness: {light['brightness']}%", f"Power: {light['power_w']} W"],
-                light_tone,
-            ),
-            unsafe_allow_html=True,
-        )
-        if light["state"] == "on":
-            if st.button("Turn Light Off", use_container_width=True):
+        is_on = light["state"] == "on"
+        st.markdown(device_card("💡", "Main Light", "LIVING_ROOM_01", light["state"].upper(), is_on), unsafe_allow_html=True)
+        if is_on:
+            if st.button("Turn Off", key="light_off", use_container_width=True):
                 mqtt_command("turn_off", device_type="light")
         else:
-            if st.button("Turn Light On", use_container_width=True):
+            if st.button("Turn On", key="light_on", use_container_width=True):
                 mqtt_command("turn_on", device_type="light")
 
+    # AC Card
     with device_cols[1]:
-        ac_tone = "ok" if ac["state"] == "on" else "neutral"
-        st.markdown(
-            device_card(
-                "Main AC",
-                ac["state"].upper(),
-                [f"Target: {ac['target_temp']} C", f"Power: {ac['power_w']} W"],
-                ac_tone,
-            ),
-            unsafe_allow_html=True,
-        )
-        if ac["state"] == "on":
-            if st.button("Turn AC Off", use_container_width=True):
+        is_on = ac["state"] == "on"
+        st.markdown(device_card("❄️", "AC Unit", f"{ac['target_temp']}°C Target", f"{ac['target_temp']}°C", is_on), unsafe_allow_html=True)
+        if is_on:
+            if st.button("Turn Off", key="ac_off", use_container_width=True):
                 mqtt_command("turn_off", device_type="ac")
         else:
-            if st.button("Turn AC On", use_container_width=True):
+            if st.button("Turn On", key="ac_on", use_container_width=True):
                 mqtt_command("turn_on", device_type="ac")
-
+                
+    # Door Card
     with device_cols[2]:
         if door:
-            door_locked = door["state"] == "locked"
-            door_tone = "warn" if door_locked else "ok"
-            st.markdown(
-                device_card(
-                    "Front Door",
-                    door["state"].upper(),
-                    ["Virtual lock state", "Phase 2 device"],
-                    door_tone,
-                ),
-                unsafe_allow_html=True,
-            )
-            if door_locked:
-                if st.button("Unlock Door", use_container_width=True):
+            is_locked = door["state"] == "locked"
+            st.markdown(device_card("🔓" if not is_locked else "🔒", "Front Door", "ENTRY_WAY_HUB", door["state"].upper(), not is_locked), unsafe_allow_html=True)
+            if is_locked:
+                if st.button("Unlock", key="door_unlock", use_container_width=True):
                     mqtt_command("unlock", device_type="door")
             else:
-                if st.button("Lock Door", use_container_width=True):
+                if st.button("Lock", key="door_lock", use_container_width=True):
                     mqtt_command("lock", device_type="door")
 
-    target_temp = st.slider("AC target temperature", 16, 30, int(ac["target_temp"]))
-    if st.button("Apply AC Target", use_container_width=True):
-        mqtt_command("set_temperature", device_type="ac", parameters={"target_temp": target_temp})
-
-    if st.session_state.last_manual_result:
-        manual_result = st.session_state.last_manual_result
-        if manual_result.get("ok"):
-            st.success(manual_result["message"])
-        else:
-            st.error(manual_result["message"])
-
-with top_right:
-    st.markdown('<div class="section-title">Sensors and Alerts</div>', unsafe_allow_html=True)
-    sensor_cols = st.columns(5)
-    sensor_specs = [
-        ("Temperature", f"{sensors['temperature']} C", "Room sensor"),
-        ("Humidity", f"{sensors['humidity']}%", "Room sensor"),
-        ("Light Level", f"{sensors['light_level']} lux", "Room sensor"),
-        ("Gas Level", f"{gas_ppm} ppm", "Alert threshold: 400 ppm"),
-        ("Occupancy", "Occupied" if occupancy else "Empty", "Manual simulation flag"),
-    ]
-    for col, (title, value, subtitle) in zip(sensor_cols, sensor_specs):
-        with col:
-            st.markdown(sensor_card(title, value, subtitle), unsafe_allow_html=True)
-
+with col2:
     if st.session_state.meteo_data:
         meteo = st.session_state.meteo_data
         st.markdown(
             f"""
-            <div class="panel">
-                {status_chip('WEATHER FEED', 'neutral')}
-                <p class="card-title">Outside Conditions</p>
-                <p class="meta-line"><strong>{escape(meteo['ville'])}</strong> - {escape(meteo['description'])}</p>
-                <p class="meta-line">Temperature: {meteo['temperature']} C (feels like {meteo['ressenti']} C)</p>
-                <p class="meta-line">Humidity: {meteo['humidite']}% | Wind: {meteo['vent_kmh']} km/h</p>
+            <div class="card weather-panel">
+                <div class="weather-main">
+                    <div class="weather-icon">☀️</div>
+                    <div class="weather-info">
+                        <h3>Weather Panel</h3>
+                        <p>{escape(meteo['ville'])}</p>
+                    </div>
+                </div>
+                <div class="weather-metrics">
+                    <div class="weather-metric">
+                        <p class="weather-metric-label">TEMP</p>
+                        <p class="weather-metric-val">{meteo['temperature']}°</p>
+                    </div>
+                    <div class="weather-metric">
+                        <p class="weather-metric-label">HUMIDITY</p>
+                        <p class="weather-metric-val">{meteo['humidite']}%</p>
+                    </div>
+                    <div class="weather-metric">
+                        <p class="weather-metric-label">WIND</p>
+                        <p class="weather-metric-val">{meteo['vent_kmh']}km/h</p>
+                    </div>
+                    <div class="weather-metric">
+                        <p class="weather-metric-label">AQI</p>
+                        <p class="weather-metric-val" style="color: #059669;">Good</p>
+                    </div>
+                </div>
             </div>
             """,
-            unsafe_allow_html=True,
+            unsafe_allow_html=True
         )
+    
+    # Sensors row below weather
+    sensors_html = f"""
+    <div class="sensor-chips">
+        {sensor_card("🌡️", f"{sensors['temperature']}°", "TEMP")}
+        {sensor_card("💧", f"{sensors['humidity']}%", "HUMID")}
+        {sensor_card("☀️", f"{sensors['light_level']}", "LUX")}
+        {sensor_card("💨", f"{gas_ppm}ppm", "GAS")}
+        {sensor_card("👤", "YES" if occupancy else "NO", "OCCUPY")}
+    </div>
+    """
+    st.markdown(sensors_html, unsafe_allow_html=True)
 
-st.markdown("---")
+st.markdown("<div style='margin-top:1.5rem;'></div>", unsafe_allow_html=True)
 
-assistant_col, events_col = st.columns([1, 1.15])
+# ROW 2: Robot Status + Timer AND Terminal
+col3, col4 = st.columns([1, 1.5])
 
-with assistant_col:
-    st.markdown('<div class="section-title">Robot and Study Assistant</div>', unsafe_allow_html=True)
+with col3:
     etat_robot = st.session_state.agent.robot.etat()
-    stat_cols = st.columns(3)
-    stat_cols[0].metric("Battery", f"{etat_robot['batterie']:.0f}%")
-    stat_cols[1].metric("Actions", etat_robot["nb_actions"])
-    stat_cols[2].metric("Direction", etat_robot["direction_text"])
-
+    st.markdown(
+        f"""
+        <div class="card" style="margin-bottom: 1rem;">
+            <h3 class="section-title" style="font-size:1rem; border-bottom:none; margin-bottom:0.5rem;">Robot Physical Status</h3>
+            <div class="robot-status">
+                <div class="battery-circle">🤖</div>
+                <div style="flex:1;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
+                        <span style="font-size:0.85rem; color:var(--text-muted);">Battery</span>
+                        <span style="font-size:0.85rem; font-weight:600; color:var(--accent-blue);">{etat_robot['batterie']:.0f}%</span>
+                    </div>
+                    <div style="height:4px; background:#f3f4f6; border-radius:2px; margin-bottom:1rem;">
+                        <div style="height:100%; width:{etat_robot['batterie']}%; background:var(--accent-blue); border-radius:2px;"></div>
+                    </div>
+                    <div style="font-size:0.85rem; color:var(--text-main);">
+                        🧭 Heading: {etat_robot['direction_text']}
+                    </div>
+                </div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+    
+    # Pomodoro
+    st.markdown(
+        """
+        <div class="card" style="padding-bottom: 0;">
+            <h3 class="section-title" style="font-size:1rem; border-bottom:none; margin-bottom:0.5rem;">⏱️ Deep Work Timer</h3>
+        """,
+        unsafe_allow_html=True
+    )
     pomodoro_state = st.session_state.agent.pomodoro.etat_session()
     if pomodoro_state["active"]:
-        st.success(f"Pomodoro active: {pomodoro_state['matiere']}")
-        st.info(f"Time remaining: {pomodoro_state['temps_restant']}")
-        if st.button("Stop Pomodoro", use_container_width=True):
+        st.success(f"Active: {pomodoro_state['matiere']} ({pomodoro_state['temps_restant']})")
+        if st.button("Stop Session", key="pomo_stop", use_container_width=True):
             st.session_state.agent.pomodoro.arreter_session()
             st.rerun()
     else:
-        with st.form("pomodoro_form"):
-            matiere = st.text_input("Study subject", placeholder="Mathematiques")
-            duree = st.slider("Duration (minutes)", 5, 60, 25)
-            submit_pomo = st.form_submit_button("Start Pomodoro", use_container_width=True)
-        if submit_pomo and matiere:
-            st.session_state.agent.pomodoro.demarrer_session_travail(matiere, duree)
-            st.rerun()
+        with st.form("pomo_form"):
+            colA, colB = st.columns(2)
+            duree = colA.number_input("Duration", min_value=5, max_value=60, value=25, label_visibility="collapsed")
+            matiere = colB.selectbox("Mode", ["Focus", "Study", "Coding"], label_visibility="collapsed")
+            submit = st.form_submit_button("Start Session", use_container_width=True, type="primary")
+            if submit:
+                st.session_state.agent.pomodoro.demarrer_session_travail(matiere, duree)
+                st.rerun()
+    st.markdown("</div>", unsafe_allow_html=True)
 
+
+with col4:
+    events = st.session_state.agent.iot_controller.get_recent_events(limit=8)
+    terminal_rows = "".join([event_row(e) for e in events]) if events else "<div>No recent events.</div>"
+    
     st.markdown(
         f"""
-        <div class="panel">
-            {status_chip('ROOM SUMMARY', 'neutral')}
-            <p class="card-title">Operational Notes</p>
-            <p class="meta-line">Door state: {escape(door['state'] if door else 'unavailable')}</p>
-            <p class="meta-line">Gas alert: {'ACTIVE' if gas_alert else 'clear'}</p>
-            <p class="meta-line">Next step: test chat commands or device buttons and verify event log updates.</p>
+        <div class="terminal">
+            <div class="terminal-header">
+                <span>> MQTT_STREAM_LIVE</span>
+                <span>v2.4.1</span>
+            </div>
+            {terminal_rows}
         </div>
         """,
-        unsafe_allow_html=True,
+        unsafe_allow_html=True
     )
 
-with events_col:
-    st.markdown('<div class="section-title">MQTT Event Log</div>', unsafe_allow_html=True)
-    events = st.session_state.agent.iot_controller.get_recent_events(limit=8)
-    if not events:
-        st.info("No MQTT events yet.")
-    else:
-        for event in events:
-            st.markdown(event_card(event), unsafe_allow_html=True)
+st.write("")
+st.markdown("<div style='margin-top:1.5rem;'></div>", unsafe_allow_html=True)
 
-st.markdown("---")
-st.markdown('<div class="section-title">Conversation with RoboCompagnon</div>', unsafe_allow_html=True)
+# ROW 3: Chat Interface
+chat_history = st.session_state.historique_chat
 
-chat_container = st.container()
+st.markdown(
+    """
+    <div class="card" style="padding: 1.5rem;">
+        <div class="chat-header">
+            <div class="chat-header-title">
+                <div style="width:28px; height:28px; border-radius:50%; background:var(--accent-blue); color:white; display:flex; align-items:center; justify-content:center;">✨</div>
+                RoboCompagnon AI
+                <span style="font-size:0.6rem; color:#059669; margin-left:0.5rem;">● Neural Engine Online</span>
+            </div>
+            <div class="chat-header-stats">
+                <div>MODE<br><strong>{os.environ.get("IOT_MODE", "simulator").upper()}</strong></div>
+                <div>BROKER<br><strong style="color:var(--accent-blue);">{os.environ.get("MQTT_HOST", "localhost")}</strong></div>
+            </div>
+        </div>
+    """,
+    unsafe_allow_html=True
+)
+
+chat_container = st.container(height=350)
 with chat_container:
-    if not st.session_state.historique_chat:
-        st.info(
-            "Try: 'turn off the lights of the living room', 'unlock the door', or 'tell me the current gas level'."
+    if not chat_history:
+        st.markdown(
+            """
+            <div class="ai-msg">
+                <div class="msg-icon">🤖</div>
+                <div class="msg-bubble">
+                    Hello Developer. All systems are currently in deep learning mode. I've optimized the AC schedule based on today's weather forecast. Shall I run the diagnostic routine for the Kitchen node?
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
         )
 
-    for idx, msg in enumerate(st.session_state.historique_chat):
+    for idx, msg in enumerate(chat_history):
         role = msg["role"]
-        message_html = escape(msg["message"])
-        if role == "user":
+        if role == "robot":
             st.markdown(
-                f'<div class="chat-card chat-user"><strong>You:</strong> {message_html}</div>',
-                unsafe_allow_html=True,
+                f"""
+                <div class="ai-msg">
+                    <div class="msg-icon">🤖</div>
+                    <div class="msg-bubble">
+                        {escape(msg["message"])}
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True
             )
+            # small audio button hack
+            if st.button("🔊", key=f"speak_{idx}"):
+                audio_file = safe_audio(msg["message"])
+                if audio_file:
+                    st.audio(audio_file, format="audio/mp3", autoplay=True)
         else:
             st.markdown(
-                f'<div class="chat-card chat-robot"><strong>RoboCompagnon:</strong> {message_html}</div>',
-                unsafe_allow_html=True,
+                f"""
+                <div class="user-msg">
+                    <div class="msg-icon">DEV</div>
+                    <div class="msg-bubble">
+                        {escape(msg["message"])}
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True
             )
-            audio_col, _ = st.columns([1, 12])
-            with audio_col:
-                if st.button("🔊", key=f"speak_{idx}", help="Listen to this reply"):
-                    audio_file = safe_audio(msg["message"])
-                    if audio_file:
-                        st.audio(audio_file, format="audio/mp3", autoplay=True)
 
-with st.form(key="chat_form", clear_on_submit=True):
-    chat_cols = st.columns([5, 1])
-    with chat_cols[0]:
-        user_input = st.text_input(
-            "Message",
-            placeholder="Ex: turn on the AC in the living room",
-            label_visibility="collapsed",
-        )
-    with chat_cols[1]:
-        submit_chat = st.form_submit_button("Send", use_container_width=True)
+# Quick Actions
+quick_cols = st.columns([1,1,1,1, 4]) # 4 is dummy for spacing
+for idx, label in enumerate(quick_prompt_specs()):
+    with quick_cols[idx]:
+        if st.button(label, key=f"quick_{idx}", use_container_width=True):
+            submit_chat_message(label)
 
-if submit_chat and user_input:
-    if st.session_state.meteo_data:
-        st.session_state.agent.mettre_a_jour_meteo(st.session_state.meteo_data)
-    st.session_state.agent.mettre_a_jour_maison(st.session_state.maison)
-    snapshot, living_room = current_snapshot()
-    st.session_state.agent.mettre_a_jour_capteurs(living_room["sensors"])
+user_input = st.chat_input("Type a command or ask a question...")
+if user_input:
+    submit_chat_message(user_input)
 
-    st.session_state.historique_chat.append({"role": "user", "message": user_input})
-    with st.spinner("RoboCompagnon is thinking..."):
-        response = st.session_state.agent.repondre(user_input)
-    st.session_state.historique_chat.append({"role": "robot", "message": response})
+st.markdown("</div>", unsafe_allow_html=True) # close chat card
 
-    if st.session_state.auto_play_voice and response != st.session_state.last_voice_message:
-        st.session_state.last_voice_message = response
-
-    st.rerun()
-
-if st.session_state.auto_play_voice and st.session_state.historique_chat:
-    last_message = st.session_state.historique_chat[-1]
-    if last_message["role"] == "robot" and last_message["message"] == st.session_state.last_voice_message:
-        auto_audio = safe_audio(last_message["message"])
-        if auto_audio:
-            st.audio(auto_audio, format="audio/mp3", autoplay=True)
-        st.session_state.last_voice_message = None
-
+# SIDEBAR
 with st.sidebar:
-    st.title("Control Panel")
-    st.markdown("### MQTT Topics")
-    st.code(
-        "\n".join(
-            [
-                "robocompagnon/home/commands",
-                "robocompagnon/home/responses",
-                "robocompagnon/home/events",
-                "robocompagnon/home/snapshot",
-                "robocompagnon/home/alerts/gas",
-                "robocompagnon/home/rooms/living_room/devices/+/state",
-                "robocompagnon/home/rooms/living_room/sensors/+",
-            ]
-        )
+    st.markdown(
+        """
+        <div style="margin-bottom: 2rem;">
+            <h2 style="color: var(--accent-blue); font-weight:700; font-size:1.4rem; margin:0;">RoboCompagnon</h2>
+            <p style="color: var(--text-muted); font-size:0.8rem; margin:0;">System Console</p>
+        </div>
+        """,
+        unsafe_allow_html=True
     )
-
-    st.markdown("### Current Room")
-    st.metric("Temperature", f"{sensors['temperature']} C")
-    st.metric("Gas Level", f"{gas_ppm} ppm")
-    st.metric("Door", door["state"].title() if door else "Unavailable")
-
-    st.markdown("### Reminders")
-    rappels = st.session_state.agent.systeme_rappels.obtenir_prochains_rappels(3)
-    if rappels:
-        for rappel in rappels:
-            st.info(f"{rappel['titre']}\n\n{rappel['date_heure']}\n{rappel['temps_restant']}")
-    else:
-        st.info("No reminders")
-
-    st.markdown("### Pomodoro Stats")
-    stats = st.session_state.agent.pomodoro.obtenir_statistiques()
-    st.metric("Sessions today", stats.get("sessions_aujourd_hui", 0))
-    st.metric("Total sessions", stats.get("total_sessions", 0))
-    st.metric("Total study time", f"{stats.get('temps_total_heures', 0)}h")
-
-    st.markdown("### Tools")
-    st.session_state.auto_play_voice = st.checkbox(
-        "Automatic voice",
-        value=st.session_state.auto_play_voice,
-    )
-    if st.button("Refresh weather", use_container_width=True):
+    
+    st.button("⚙️ MQTT Topics", use_container_width=True, type="secondary")
+    st.button("📊 Room Stats", use_container_width=True, type="secondary")
+    st.button("🔔 Reminders", use_container_width=True, type="secondary")
+    st.button("⏱️ Pomodoro", use_container_width=True, type="secondary")
+    st.button("⚙️ Utilities", use_container_width=True, type="secondary")
+    
+    st.write("---")
+    
+    if st.button("Refresh System", type="primary", use_container_width=True):
         st.session_state.derniere_maj_meteo = None
         refresh_weather()
         st.rerun()
-    if st.button("Reset MQTT home state", use_container_width=True):
+        
+    st.write("---")
+    
+    if st.button("🔄 System Reset", use_container_width=True, type="secondary"):
         st.session_state.agent.iot_controller.reset()
-        st.session_state.last_manual_result = None
         st.rerun()
-    if st.button("Clear conversation", use_container_width=True):
+        
+    if st.button("🗑️ Clear Logs", use_container_width=True, type="secondary"):
         st.session_state.historique_chat = []
-        st.session_state.last_voice_message = None
         st.rerun()
-    if st.button("Reset robot", use_container_width=True):
-        st.session_state.agent.robot.reset()
-        st.rerun()
-
-st.caption("RoboCompagnon MQTT IoT simulator - local digital twin with topic-based device control.")
