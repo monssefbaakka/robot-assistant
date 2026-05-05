@@ -3,6 +3,8 @@ import os
 from copy import deepcopy
 from datetime import datetime, timezone
 
+from config_env import load_env_file
+
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATE_PATH = os.path.join(BASE_DIR, "iot_state.json")
@@ -14,6 +16,7 @@ def _now_iso():
 
 
 def current_transport_label():
+    load_env_file()
     mode = os.environ.get("IOT_MODE", "simulator").strip().lower()
     if mode == "hardware":
         return "mqtt-wokwi-hardware"

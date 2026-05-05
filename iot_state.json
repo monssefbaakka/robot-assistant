@@ -1,6 +1,6 @@
 {
   "meta": {
-    "last_update": "2026-05-05T17:01:37.958629+00:00",
+    "last_update": "2026-05-05T17:44:42.753809+00:00",
     "transport": "mqtt-python-simulator",
     "version": 1
   },
@@ -8,7 +8,7 @@
     "temperature": 19.0,
     "humidity": 56,
     "source": "Rabat",
-    "updated_at": "2026-05-05T17:01:37.834673+00:00"
+    "updated_at": "2026-05-05T17:44:00.664211+00:00"
   },
   "alerts": {
     "gas": false

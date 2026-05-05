@@ -1,5 +1,70 @@
 # Task Log
 
+## Task: Hardware Mode Startup Alignment and Wokwi Diagnostics
+
+### Status
+Completed
+
+### Goal
+Make the Python app and the Wokwi ESP32 simulation line up reliably so MQTT commands produce visible hardware-state changes instead of only local chat confirmations.
+
+### What Was Implemented
+- Added automatic `.env` loading through `config_env.py`
+- Updated the MQTT client, controller, store, chat CLI, and dashboard to read runtime settings from `.env`
+- Added clearer hardware-mode timeout messages when the ESP32 node does not respond
+- Added runtime mode and broker visibility in `chat.py` and `app_complet.py`
+- Added a local `.env` with hardware mode and the same public broker currently used by the Wokwi firmware
+- Updated `.gitignore` to keep `.env` out of git
+- Documented the VS Code Wokwi caveat that PlatformIO builds `src/main.cpp`
+
+### How It Works
+1. When Python starts, it now loads `.env` from the repo root if the file exists.
+2. `IOT_MODE`, `MQTT_HOST`, and `MQTT_PORT` are applied automatically without needing manual PowerShell exports each time.
+3. In hardware mode, Python publishes the command and waits for the ESP32 MQTT response.
+4. If no response arrives, the error now points directly to the likely cause: Wokwi not running, wrong broker, or wrong mode.
+5. The chat CLI and dashboard show the active mode and broker so configuration mistakes are visible immediately.
+6. The Wokwi simulation documentation now notes that VS Code + PlatformIO builds `src/main.cpp`, not `sketch.ino`.
+
+### Files Changed
+- `config_env.py`
+- `mqtt_client.py`
+- `iot_controller.py`
+- `iot_store.py`
+- `chat.py`
+- `app_complet.py`
+- `.env`
+- `.env.example`
+- `.gitignore`
+- `docs/wokwi-simulation.md`
+- `docs/task-log.md`
+
+### MQTT Topics
+- No topic names changed
+- Runtime alignment verified against:
+- `robocompagnon/home/commands`
+- `robocompagnon/home/responses`
+- `robocompagnon/home/rooms/living_room/devices/+/state`
+- `robocompagnon/home/rooms/living_room/sensors/+`
+
+### Hardware Involved
+- Virtual ESP32 in Wokwi
+- Light LED on GPIO26
+- AC LED on GPIO27
+- Door servo on GPIO18
+
+### How To Test
+1. Start the Wokwi ESP32 simulation from `firmware/wokwi/esp32-home-node/`.
+2. Confirm `config.h` still points to the same broker as `.env`.
+3. Run `py chat.py` or `py -m streamlit run app_complet.py` from the repo root.
+4. Check the startup output or dashboard panel for `IOT_MODE=hardware` and the active broker.
+5. Send `turn on light`.
+6. Verify the Wokwi LED on GPIO26 changes state and the Python side receives a hardware MQTT response.
+
+### Notes / Limitations
+- Public brokers can be noisy and less reliable than a private reachable broker.
+- If you use VS Code Wokwi with PlatformIO, update `src/main.cpp` for the built firmware path.
+- If you use the Arduino/Wokwi sketch path, keep `sketch.ino` in sync with `src/main.cpp`.
+
 ## Task: real-simulation Branch and Wokwi Hardware Mode Prep
 
 ### Status

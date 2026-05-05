@@ -19,19 +19,21 @@ This branch prepares the project for a split simulation:
 Use:
 
 ```powershell
-$env:IOT_MODE='hardware'
-$env:MQTT_HOST='your-broker-host'
-$env:MQTT_PORT='1883'
 py -m streamlit run app_complet.py
 ```
 
 or:
 
 ```powershell
-$env:IOT_MODE='hardware'
-$env:MQTT_HOST='your-broker-host'
 py chat.py
 ```
+
+Recommended local setup:
+
+1. Copy `.env.example` to `.env`
+2. Set `IOT_MODE=hardware`
+3. Set `MQTT_HOST` and `MQTT_PORT` to the same broker used by the Wokwi ESP32 node
+4. Start the Python app from the repo root so `.env` is loaded automatically
 
 ### Wokwi side
 
@@ -39,6 +41,12 @@ py chat.py
 2. Copy `config.example.h` to `config.h`
 3. Set `MQTT_HOST` to a broker reachable from Wokwi cloud
 4. Run the simulation
+
+For the VS Code + PlatformIO workflow:
+
+- `platformio.ini` builds the firmware from `src/main.cpp`
+- `sketch.ino` is useful for the Arduino/Wokwi-style layout, but the VS Code firmware binary comes from `src/main.cpp`
+- If you change one file and run the other build path, the simulator will appear unchanged
 
 ## Important limitation
 

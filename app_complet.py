@@ -1,9 +1,11 @@
 from datetime import datetime
 from html import escape
+import os
 
 import streamlit as st
 
 from agent import AgentRobot
+from config_env import load_env_file
 from meteo import MeteoAPI
 from objets_connectes import MaisonConnectee
 from tts import RobotVoix
@@ -89,6 +91,50 @@ st.markdown(
         margin: 0.45rem 0;
     }
 
+    .chat-shell {
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(247, 250, 249, 0.9));
+        border: 1px solid var(--panel-border);
+        border-radius: 24px;
+        padding: 1rem 1rem 0.4rem 1rem;
+        box-shadow: 0 18px 38px rgba(22, 50, 63, 0.08);
+    }
+
+    .chat-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.85rem;
+    }
+
+    .chat-title {
+        color: var(--text-strong);
+        font-size: 1.1rem;
+        font-weight: 780;
+        margin: 0;
+    }
+
+    .chat-subtitle {
+        color: var(--text-soft);
+        margin: 0.15rem 0 0 0;
+        font-size: 0.92rem;
+    }
+
+    .chat-hint {
+        background: rgba(22, 50, 63, 0.05);
+        border: 1px dashed rgba(22, 50, 63, 0.14);
+        border-radius: 16px;
+        padding: 0.9rem 1rem;
+        color: var(--text-soft);
+        margin-bottom: 0.85rem;
+    }
+
+    .chat-meta {
+        color: var(--text-soft);
+        font-size: 0.8rem;
+        margin-top: 0.35rem;
+    }
+
     .status-chip {
         display: inline-block;
         padding: 0.2rem 0.65rem;
@@ -160,6 +206,7 @@ st.markdown(
 
 
 def init_session():
+    load_env_file()
     if "agent" not in st.session_state:
         st.session_state.agent = AgentRobot(nom_utilisateur="Monssef")
         st.session_state.historique_chat = []
@@ -262,6 +309,49 @@ def safe_audio(message):
         return None
 
 
+def quick_prompt_specs():
+    return [
+        ("Turn On Light", "turn on light"),
+        ("Turn Off Light", "turn off light"),
+        ("Unlock Door", "unlock the door"),
+        ("Gas Level", "tell me the current gas level"),
+    ]
+
+
+def submit_chat_message(user_input):
+    if not user_input or not user_input.strip():
+        return
+
+    cleaned_input = user_input.strip()
+    if st.session_state.meteo_data:
+        st.session_state.agent.mettre_a_jour_meteo(st.session_state.meteo_data)
+    st.session_state.agent.mettre_a_jour_maison(st.session_state.maison)
+    snapshot, living_room = current_snapshot()
+    st.session_state.agent.mettre_a_jour_capteurs(living_room["sensors"])
+
+    st.session_state.historique_chat.append(
+        {
+            "role": "user",
+            "message": cleaned_input,
+            "timestamp": datetime.now().strftime("%H:%M"),
+        }
+    )
+    with st.spinner("RoboCompagnon is thinking..."):
+        response = st.session_state.agent.repondre(cleaned_input)
+    st.session_state.historique_chat.append(
+        {
+            "role": "robot",
+            "message": response,
+            "timestamp": datetime.now().strftime("%H:%M"),
+        }
+    )
+
+    if st.session_state.auto_play_voice and response != st.session_state.last_voice_message:
+        st.session_state.last_voice_message = response
+
+    st.rerun()
+
+
 init_session()
 refresh_weather()
 snapshot, living_room = current_snapshot()
@@ -276,6 +366,8 @@ gas_ppm = sensors.get("gas_ppm", 0)
 gas_alert = alerts.get("gas", False)
 occupancy = sensors.get("occupancy", False)
 transport_label = snapshot.get("meta", {}).get("transport", "mqtt")
+runtime_mode = os.environ.get("IOT_MODE", "simulator")
+runtime_broker = f"{os.environ.get('MQTT_HOST', 'localhost')}:{os.environ.get('MQTT_PORT', '1883')}"
 
 st.markdown(
     """
@@ -302,6 +394,8 @@ with top_left:
             <div class="panel">
             {status_chip(transport_label.upper(), 'neutral')}
             <p class="card-title">Living Room Digital Twin</p>
+            <p class="meta-line">Runtime mode: {escape(runtime_mode)}</p>
+            <p class="meta-line">MQTT broker: {escape(runtime_broker)}</p>
             <p class="meta-line">State source: persisted JSON snapshot</p>
             <p class="meta-line">Outside weather source: {escape(snapshot['outside']['source'])}</p>
             <p class="meta-line">Last update: {escape(snapshot['meta']['last_update'])}</p>

@@ -4,6 +4,7 @@ import uuid
 from copy import deepcopy
 from datetime import datetime, timezone
 
+from config_env import load_env_file
 from iot_hardware_bridge import get_hardware_bridge
 from iot_parser import parse_iot_command
 from iot_simulator import advance_state, apply_command, apply_weather_update
@@ -77,6 +78,7 @@ class IoTMQTTSimulatorService:
 
 class IoTMQTTController:
     def __init__(self, broker=None):
+        load_env_file()
         self.broker = broker or get_loopback_broker()
         self.mode = os.environ.get("IOT_MODE", "simulator").strip().lower()
         self._service = get_iot_service(self.broker) if self.mode != "hardware" else None
@@ -113,10 +115,25 @@ class IoTMQTTController:
             self.broker.unsubscribe(subscription_id)
 
         if "result" not in response_holder:
+            host = os.environ.get("MQTT_HOST", "localhost")
+            port = os.environ.get("MQTT_PORT", "1883")
+            if self.mode == "hardware":
+                return {
+                    "ok": False,
+                    "error_code": "timeout",
+                    "message": (
+                        "No MQTT response came back from the hardware node. "
+                        f"Check that Wokwi is running, subscribed to {MQTTTopics.COMMANDS}, "
+                        f"and using the same broker as Python ({host}:{port})."
+                    ),
+                }
             return {
                 "ok": False,
                 "error_code": "timeout",
-                "message": "MQTT command timed out before the simulator responded.",
+                "message": (
+                    "MQTT command timed out before the simulator responded. "
+                    f"Broker: {host}:{port}."
+                ),
             }
         return response_holder["result"]
 

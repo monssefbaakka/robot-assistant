@@ -4,6 +4,8 @@ import threading
 import uuid
 from datetime import datetime, timezone
 
+from config_env import load_env_file
+
 try:
     import paho.mqtt.client as mqtt
 except ImportError:
@@ -101,6 +103,7 @@ def get_mqtt_client():
     global _CLIENT
     with _CLIENT_LOCK:
         if _CLIENT is None:
+            load_env_file()
             host = os.environ.get("MQTT_HOST", "localhost")
             port = int(os.environ.get("MQTT_PORT", "1883"))
             _CLIENT = PahoMQTTClient(host=host, port=port)
