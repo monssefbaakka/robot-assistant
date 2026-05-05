@@ -1,6 +1,6 @@
 {
   "meta": {
-    "last_update": "2026-05-05T15:24:51.974992+00:00",
+    "last_update": "2026-05-05T15:37:08.982085+00:00",
     "transport": "mqtt-wokwi-hardware",
     "version": 1
   },
@@ -8,7 +8,7 @@
     "temperature": 21.0,
     "humidity": 46,
     "source": "Rabat",
-    "updated_at": "2026-05-05T15:08:57.244243+00:00"
+    "updated_at": "2026-05-05T15:37:08.982202+00:00"
   },
   "alerts": {
     "gas": false
