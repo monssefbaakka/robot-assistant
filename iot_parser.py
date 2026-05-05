@@ -33,6 +33,15 @@ SENSOR_ALIASES = {
     "gas_ppm": ["gas", "gaz", "gas level", "gas leak", "fuite de gaz"],
 }
 
+SET_PATTERNS = [
+    r"\bset\b",
+    r"\bmettre\b",
+    r"\bregle\b",
+    r"\bregler\b",
+    r"\bchange\b",
+    r"\badjust\b",
+]
+
 TURN_ON_PATTERNS = [
     r"\bturn on\b",
     r"\bswitch on\b",
@@ -133,6 +142,8 @@ def parse_iot_command(message, source="chat"):
     room = resolve_room(text)
     device_type = resolve_device_type(text)
     sensor_type = resolve_sensor_type(text)
+    percent_match = re.search(r"(\d{1,3})\s*%", text)
+    number_match = re.search(r"(\d{1,3})\s*(?:ppm|percent|pourcent)?", text)
 
     if device_type and _matches_any(text, TURN_ON_PATTERNS):
         return {
@@ -193,6 +204,63 @@ def parse_iot_command(message, source="chat"):
             "device_type": "ac",
             "device_id": None,
             "parameters": {"target_temp": int(set_temp_match.group(1))},
+            "source": source,
+            "raw_text": message,
+        }
+
+    if device_type == "light" and percent_match and (
+        "brightness" in text
+        or "luminosite" in text
+        or "light level" in text
+        or _matches_any(text, SET_PATTERNS)
+    ):
+        brightness = max(0, min(100, int(percent_match.group(1))))
+        return {
+            "action": "set_brightness",
+            "room": room,
+            "target_type": "device",
+            "device_type": "light",
+            "device_id": None,
+            "parameters": {"brightness": brightness},
+            "source": source,
+            "raw_text": message,
+        }
+
+    if sensor_type == "gas_ppm" and _matches_any(text, TURN_ON_PATTERNS):
+        return {
+            "action": "set_gas_state",
+            "room": room,
+            "target_type": "sensor",
+            "sensor_type": "gas_ppm",
+            "parameters": {"enabled": True},
+            "source": source,
+            "raw_text": message,
+        }
+
+    if sensor_type == "gas_ppm" and _matches_any(text, TURN_OFF_PATTERNS):
+        return {
+            "action": "set_gas_state",
+            "room": room,
+            "target_type": "sensor",
+            "sensor_type": "gas_ppm",
+            "parameters": {"enabled": False},
+            "source": source,
+            "raw_text": message,
+        }
+
+    if sensor_type == "gas_ppm" and number_match and (
+        "ppm" in text
+        or "level" in text
+        or "niveau" in text
+        or _matches_any(text, SET_PATTERNS)
+    ):
+        gas_ppm = max(0, min(1000, int(number_match.group(1))))
+        return {
+            "action": "set_gas_level",
+            "room": room,
+            "target_type": "sensor",
+            "sensor_type": "gas_ppm",
+            "parameters": {"gas_ppm": gas_ppm},
             "source": source,
             "raw_text": message,
         }

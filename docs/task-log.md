@@ -1,5 +1,378 @@
 # Task Log
 
+## Task: Fix Dashboard Event Timestamp Rendering For Wokwi Events
+
+### Status
+Completed
+
+### Goal
+Prevent the dashboard terminal from crashing when hardware-mode events use integer millisecond timestamps instead of ISO datetime strings.
+
+### What Was Implemented
+- Updated `app_complet.py` event rendering to format both numeric and string timestamps safely.
+- Added support for Wokwi firmware event timestamps coming from `millis()`.
+- Kept existing support for ISO timestamps produced by the Python simulator and controller.
+
+### How It Works
+1. The dashboard reads recent events from `iot_events.json`.
+2. Before rendering an event row, the timestamp is passed through a small formatter.
+3. If the timestamp is numeric, it is converted from milliseconds to `HH:MM:SS`.
+4. If the timestamp is a string, the formatter extracts the visible time safely.
+5. If the value is missing or unusual, the formatter falls back to a safe placeholder instead of crashing.
+
+### Files Changed
+- `app_complet.py`
+- `docs/task-log.md`
+
+### MQTT Topics
+- No new topics
+- Existing event flow:
+- `robocompagnon/home/events`
+
+### Hardware Involved
+- Virtual ESP32 in Wokwi
+
+### How To Test
+1. Run `py -m streamlit run app_complet.py`.
+2. Start the Wokwi ESP32 node in hardware mode.
+3. Send a device command such as `turn on light` or `lock door`.
+4. Verify the terminal event list renders normally.
+5. Verify no `TypeError: object of type 'int' has no len()` appears.
+
+### Notes / Limitations
+- Numeric timestamps from Wokwi are displayed as elapsed device uptime, not wall-clock local time.
+
+## Task: Accept Hardware State Sync As Command Success
+
+### Status
+Completed
+
+### Goal
+Stop the website from showing a failed hardware command when the ESP32 device state already changed and the hardware bridge already wrote that change into `iot_state.json`.
+
+### What Was Implemented
+- Updated `iot_controller.py` so hardware mode now falls back to persisted device state after a response timeout.
+- If the expected device state is already present in `iot_state.json`, the command returns success instead of a timeout error.
+
+### How It Works
+1. Python still waits for the MQTT `responses` topic first.
+2. In hardware mode, Python also watches for the expected device-state update.
+3. If neither callback result is available in time, Python checks the persisted state written by the hardware bridge.
+4. If the device already reached the expected state, the website treats the command as successful.
+
+### Files Changed
+- `iot_controller.py`
+- `docs/task-log.md`
+
+### MQTT Topics
+- `robocompagnon/home/responses`
+- `robocompagnon/home/rooms/living_room/devices/light_main/state`
+- `robocompagnon/home/rooms/living_room/devices/ac_main/state`
+- `robocompagnon/home/rooms/living_room/devices/door_main/state`
+
+### Hardware Involved
+- Virtual ESP32 in Wokwi
+
+### How To Test
+1. Fully restart the Python dashboard in hardware mode.
+2. Start the Wokwi ESP32 node on the same broker.
+3. Click `Turn On` for the light.
+4. Verify the website shows the light as `ON`.
+5. Verify the website does not show a timeout if the state file already updated correctly.
+
+### Notes / Limitations
+- This fallback covers device actions that have a clear expected state.
+- It does not replace the normal MQTT response path; it only prevents false failures when the state sync already proves the command succeeded.
+
+## Task: Limit Public Broker Subscription Scope
+
+### Status
+Completed
+
+### Goal
+Fix website timeouts and stale UI in hardware mode by stopping the Python MQTT client from subscribing to unrelated public-broker traffic.
+
+### What Was Implemented
+- Updated `mqtt_client.py` so the Paho client subscribes only to `robocompagnon/home/#` instead of `#`.
+
+### How It Works
+1. On connection, Python now listens only to this project's MQTT namespace.
+2. The app no longer processes unrelated traffic from the whole public broker.
+3. Response callbacks and hardware bridge updates can be handled with much less delay and noise.
+
+### Files Changed
+- `mqtt_client.py`
+- `docs/task-log.md`
+
+### MQTT Topics
+- `robocompagnon/home/#`
+
+### Hardware Involved
+- Virtual ESP32 in Wokwi
+
+### How To Test
+1. Fully stop the running Streamlit or Python app.
+2. Start it again in hardware mode.
+3. Click `Turn On` for the light.
+4. Verify the website updates and the timeout message no longer appears.
+
+### Notes / Limitations
+- This fix requires a full app restart because the old running MQTT client stays connected with the previous broad subscription.
+
+## Task: Bind Dashboard Device Cards To Live Simulation State
+
+### Status
+Completed
+
+### Goal
+Make the Active Devices section read its visible status from the live simulation snapshot instead of relying on hardcoded card text.
+
+### What Was Implemented
+- Updated `app_complet.py` so device cards now render their `name`, `id`, and `state` directly from `iot_state.json` through the current MQTT snapshot flow.
+- Added a small live meta line on each card using simulation values:
+- Light card: brightness and room light level
+- AC card: room temperature and AC target temperature
+- Door card: lock state and occupancy status
+- Changed the AC badge to show `ON` or `OFF` from the device state instead of always showing only the target temperature.
+
+### How It Works
+1. The dashboard reads the current snapshot from the IoT controller.
+2. The living-room device objects and sensor values are extracted from that snapshot.
+3. Each card now uses the live device object for display fields.
+4. Extra card details are built from the current sensor values in the same room.
+5. When the simulator or hardware bridge updates `iot_state.json`, the cards refresh with the new values.
+
+### Files Changed
+- `app_complet.py`
+- `docs/task-log.md`
+
+### MQTT Topics
+- No new topics
+- Existing live state flow used by the dashboard:
+- `robocompagnon/home/rooms/living_room/devices/light_main/state`
+- `robocompagnon/home/rooms/living_room/devices/ac_main/state`
+- `robocompagnon/home/rooms/living_room/devices/door_main/state`
+- `robocompagnon/home/rooms/living_room/sensors/temperature`
+- `robocompagnon/home/rooms/living_room/sensors/light_level`
+- `robocompagnon/home/rooms/living_room/sensors/occupancy`
+
+### Hardware Involved
+- None required for the UI change itself
+- Works with both Python simulator mode and Wokwi hardware mode because both feed the same persisted state
+
+### How To Test
+1. Run `py -m streamlit run app_complet.py`.
+2. Open the dashboard and inspect the Active Devices section.
+3. Toggle the light, AC, or door from chat or buttons.
+4. Verify the card badge updates from the live device state.
+5. Verify the card code matches the current device `id` from state.
+6. Verify the meta line updates from current room sensors and device values.
+
+### Notes / Limitations
+- The dashboard still assumes one room: `living_room`.
+- The cards depend on the stored snapshot being updated correctly by the simulator or hardware bridge.
+
+## Task: Accept Hardware Device State As Command Success
+
+### Status
+Completed
+
+### Goal
+Fix the case where the ESP32 or Wokwi hardware actually applies a device command, but the Python app still reports a timeout because the separate MQTT response topic was missed.
+
+### What Was Implemented
+- Updated `iot_controller.py` hardware mode so it also watches the expected device state topic for actionable commands.
+- Added simple fallback success handling for:
+- `light_main` turn on/off
+- `ac_main` turn on/off
+- `ac_main` set temperature
+- `door_main` lock/unlock
+- Kept the existing `robocompagnon/home/responses` path for normal command replies and status/sensor queries.
+
+### How It Works
+1. Python still publishes the command to `robocompagnon/home/commands`.
+2. In hardware mode, Python now also subscribes briefly to the expected device state topic for that command.
+3. If the hardware publishes the matching new state first, Python returns success immediately.
+4. If a normal MQTT response arrives, Python still uses that response.
+5. Only if neither the response nor the expected state arrives does Python return the timeout message.
+
+### Files Changed
+- `iot_controller.py`
+- `docs/task-log.md`
+
+### MQTT Topics
+- `robocompagnon/home/commands`
+- `robocompagnon/home/responses`
+- `robocompagnon/home/rooms/living_room/devices/light_main/state`
+- `robocompagnon/home/rooms/living_room/devices/ac_main/state`
+- `robocompagnon/home/rooms/living_room/devices/door_main/state`
+
+### Hardware Involved
+- Virtual ESP32 in Wokwi
+- Door servo on GPIO18
+- Light output on GPIO26
+- AC output on GPIO27
+
+### How To Test
+1. Run the Python app with `IOT_MODE=hardware`.
+2. Start the Wokwi ESP32 node on the same broker.
+3. Send `unlock the door`.
+4. Verify the servo moves and `door_main` publishes `state = unlocked`.
+5. Verify the Python reply now reports success instead of the old timeout message, even if `robocompagnon/home/responses` is delayed or absent.
+
+### Notes / Limitations
+- This fallback only applies to commands where success can be confirmed from a device state update.
+- Sensor queries and device status questions still require the normal `robocompagnon/home/responses` payload.
+
+## Task: Fix Python Hardware Receive Path Stability
+
+### Status
+Completed
+
+### Goal
+Fix the case where Wokwi executes the command but the website still times out and does not refresh, by stabilizing the Python MQTT receive path.
+
+### What Was Implemented
+- Hardened `mqtt_client.py` so one callback exception does not stop delivery to other MQTT subscribers.
+- Added callback error collection for MQTT receive diagnostics.
+- Added a store lock in `iot_store.py` to avoid concurrent read/write issues between the Streamlit UI thread and the MQTT callback thread.
+- Updated `iot_controller.py` timeout messages to include the most recent Python-side callback error when available.
+
+### How It Works
+1. Python still subscribes to all required MQTT topics.
+2. When a topic arrives, each callback is now wrapped separately.
+3. If one callback fails, the error is recorded, but other callbacks still run.
+4. Hardware bridge updates and command responses can continue reaching the app instead of silently stopping after the first callback error.
+
+### Files Changed
+- mqtt_client.py
+- iot_store.py
+- iot_controller.py
+- docs/task-log.md
+
+### MQTT Topics
+- robocompagnon/home/responses
+- robocompagnon/home/rooms/living_room/devices/light_main/state
+- robocompagnon/home/rooms/living_room/devices/ac_main/state
+- robocompagnon/home/rooms/living_room/devices/door_main/state
+- robocompagnon/home/rooms/living_room/sensors/temperature
+- robocompagnon/home/rooms/living_room/sensors/humidity
+- robocompagnon/home/rooms/living_room/sensors/occupancy
+- robocompagnon/home/rooms/living_room/sensors/light_level
+- robocompagnon/home/rooms/living_room/sensors/gas_ppm
+
+### Hardware Involved
+- Virtual ESP32 in Wokwi
+
+### How To Test
+1. Start the Python dashboard in `IOT_MODE=hardware`.
+2. Start the Wokwi ESP32 node on the same broker.
+3. Click `Turn On` for the light.
+4. Verify the website updates the light state and no timeout appears.
+5. If a timeout still appears, read the appended Python callback error included in the message.
+
+### Notes / Limitations
+- This fix stabilizes the Python receive path, but public brokers can still produce noisy shared traffic.
+- If another message format is published on the same topic contract, the new diagnostics should make that visible.
+
+## Task: Fix Hardware Mode Broker Mismatch Guidance
+
+### Status
+Completed
+
+### Goal
+Reduce hardware-mode MQTT timeouts caused by Wokwi firmware using a different broker than the Python app, and make the timeout message point to the actual recovery steps.
+
+### What Was Implemented
+- Updated `firmware/wokwi/esp32-home-node/config.example.h` to default to `broker.emqx.io`.
+- Improved the hardware timeout message in `iot_controller.py` to mention rebuilding the ESP32 firmware and checking the serial monitor subscription logs.
+- Updated Wokwi documentation to state the current broker expected by the repo hardware setup.
+
+### How It Works
+1. New Wokwi config copies now start from the same broker as the Python `.env`.
+2. If the ESP32 firmware is stale or built with an old broker, the Python error now tells you to rebuild and verify the serial monitor output.
+3. This keeps both sides aligned on the same MQTT broker and command topic.
+
+### Files Changed
+- firmware/wokwi/esp32-home-node/config.example.h
+- firmware/wokwi/esp32-home-node/README.md
+- iot_controller.py
+- docs/wokwi-simulation.md
+- docs/task-log.md
+
+### MQTT Topics
+- robocompagnon/home/commands
+- robocompagnon/home/responses
+
+### Hardware Involved
+- Virtual ESP32 in Wokwi
+
+### How To Test
+1. Confirm `.env` uses `MQTT_HOST=broker.emqx.io` and `IOT_MODE=hardware`.
+2. Copy `config.example.h` to `config.h` if needed and confirm the same broker there.
+3. Rebuild the firmware from `firmware/wokwi/esp32-home-node/src/main.cpp`.
+4. Start Wokwi and open the serial monitor.
+5. Verify it prints `MQTT connected` and `Subscribed to: robocompagnon/home/commands`.
+6. Send `turn on light` from the dashboard or chat.
+7. Verify the Python side receives a response instead of timing out.
+
+### Notes / Limitations
+- If Wokwi is running an older compiled binary, matching `config.h` on disk is not enough; you must rebuild.
+- Public brokers can still be flaky, but this change removes the repo's default broker mismatch.
+
+## Task: Make UI Read Only From Simulation Feed
+
+### Status
+Completed
+
+### Goal
+Ensure the dashboard gets its IoT state from the simulator-owned data flow instead of advancing or writing state from the UI side, and fix the simulator so it sends regular state updates instead of mainly receiving commands.
+
+### What Was Implemented
+- Updated `IoTMQTTSimulatorService` to publish snapshot, device, and sensor topics on a repeating heartbeat.
+- Added an immediate simulator publish on service startup.
+- Changed `IoTMQTTController.get_snapshot()` to become read-only and stop mutating `iot_state.json` during UI refreshes.
+- Documented the simulator heartbeat behavior in architecture and MQTT topic docs.
+
+### How It Works
+1. When simulator mode starts, the MQTT simulator service subscribes to commands as before.
+2. A background loop now advances the simulated state locally at a short interval.
+3. After each simulator step, the service saves state and publishes snapshot, device, and sensor topics.
+4. The dashboard reads the persisted state without triggering new state mutations from the UI path.
+5. Command handling still works the same, but now idle simulation also keeps sending fresh data.
+
+### Files Changed
+- iot_controller.py
+- docs/architecture.md
+- docs/mqtt-topics.md
+- docs/task-log.md
+
+### MQTT Topics
+- robocompagnon/home/snapshot
+- robocompagnon/home/rooms/living_room/devices/light_main/state
+- robocompagnon/home/rooms/living_room/devices/ac_main/state
+- robocompagnon/home/rooms/living_room/devices/door_main/state
+- robocompagnon/home/rooms/living_room/sensors/temperature
+- robocompagnon/home/rooms/living_room/sensors/humidity
+- robocompagnon/home/rooms/living_room/sensors/occupancy
+- robocompagnon/home/rooms/living_room/sensors/light_level
+- robocompagnon/home/rooms/living_room/sensors/gas_ppm
+
+### Hardware Involved
+- None. This task targets the Python simulator path.
+
+### How To Test
+1. Start Mosquitto.
+2. Run the dashboard or any Python entry point with `IOT_MODE=simulator`.
+3. Subscribe to `robocompagnon/home/#`.
+4. Wait a few seconds without sending a command.
+5. Verify snapshot, device, and sensor topics are still being published regularly.
+6. Refresh the dashboard and confirm it reflects simulator data without the UI needing to advance the state itself.
+
+### Notes / Limitations
+- The dashboard still reads the persisted digital twin file locally, but the UI path no longer mutates it in simulator mode.
+- The simulator heartbeat interval defaults to 2 seconds and can be changed with `IOT_SIM_PUBLISH_INTERVAL_S`.
+
 ## Task: Redesign Streamlit Dashboard to be Modern and Minimalist
 
 ### Status

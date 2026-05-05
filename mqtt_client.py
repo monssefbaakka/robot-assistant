@@ -40,6 +40,8 @@ class PahoMQTTClient:
         self._subscriptions = {}
         self._next_id = 1
         self._connected = threading.Event()
+        self._callback_errors = []
+        self._broker_topic_root = "robocompagnon/home/#"
 
         client_id = f"robocompagnon-{uuid.uuid4().hex[:8]}"
         self._client = mqtt.Client(client_id=client_id)
@@ -54,7 +56,7 @@ class PahoMQTTClient:
 
     def _on_connect(self, client, userdata, flags, rc):
         if rc == 0:
-            client.subscribe("#", qos=0)
+            client.subscribe(self._broker_topic_root, qos=0)
             self._connected.set()
 
     def _on_message(self, client, userdata, msg):
@@ -74,7 +76,22 @@ class PahoMQTTClient:
 
         for _, (topic_filter, callback) in subscriptions:
             if _topic_matches(topic_filter, msg.topic):
-                callback(envelope)
+                try:
+                    callback(envelope)
+                except Exception as exc:
+                    with self._lock:
+                        self._callback_errors.append(
+                            {
+                                "topic": msg.topic,
+                                "error": repr(exc),
+                                "timestamp": envelope["timestamp"],
+                            }
+                        )
+                        self._callback_errors = self._callback_errors[-50:]
+
+    def get_callback_errors(self, limit=10):
+        with self._lock:
+            return list(self._callback_errors[-limit:])
 
     def subscribe(self, topic_filter, callback):
         with self._lock:

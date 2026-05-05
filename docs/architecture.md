@@ -41,7 +41,7 @@ RoboCompagnon is a simulation-first IoT smart home assistant. All logic runs loc
 └────────────────┘    └────────────────────┘
 ```
 
-**Key rule**: UI and assistant only READ state. Only the virtual device service WRITES state.
+**Key rule**: UI and assistant only READ state. Only the virtual device service or hardware bridge WRITES state.
 
 ---
 
@@ -134,5 +134,6 @@ See `docs/hardware.md` for pin mapping and `docs/execution-plan.md` Phase 3 for 
 - Transport: Mosquitto via `mqtt_client.py`
 - Modes:
 - `IOT_MODE=simulator`: Python simulator service owns device behavior
+- In simulator mode, the simulator also publishes periodic snapshot/device/sensor updates so the UI stays driven by simulation output
 - `IOT_MODE=hardware`: external MQTT node (for example Wokwi ESP32) owns device behavior and `iot_hardware_bridge.py` syncs state back into JSON
 - No physical hardware connected yet

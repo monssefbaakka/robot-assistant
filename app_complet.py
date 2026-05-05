@@ -573,6 +573,11 @@ div[data-testid="stAlert"] {
     font-family: 'Fira Code', monospace; margin: 0;
     letter-spacing: 0.06em; text-transform: uppercase;
 }
+.rc-device-meta {
+    font-size: 11px; color: var(--text-muted);
+    margin: 10px 0 0 0;
+    min-height: 16px;
+}
 
 /* AC bar */
 .rc-temp-bar { position: relative; height: 2px; background: var(--bg-raised); border-radius: 999px; margin-top: 12px; }
@@ -950,6 +955,36 @@ def current_snapshot():
     return snapshot, living_room
 
 
+def _device_name(device, fallback):
+    return device.get("name") or fallback
+
+
+def _device_code(device, fallback):
+    return (device.get("id") or fallback).upper()
+
+
+def _light_meta(device, sensors):
+    brightness = device.get("brightness", 0)
+    lux = sensors.get("light_level", 0)
+    return f"{brightness}% brightness • {lux} lux"
+
+
+def _ac_badge(ac):
+    return "ON" if ac.get("state") == "on" else "OFF"
+
+
+def _ac_meta(ac, sensors):
+    room_temp = sensors.get("temperature", 0)
+    target_temp = ac.get("target_temp", 22)
+    return f"Room {room_temp}°C • Target {target_temp}°C"
+
+
+def _door_meta(door, sensors):
+    occupancy = sensors.get("occupancy", False)
+    occupancy_label = "Occupied" if occupancy else "No occupancy"
+    return f"{door.get('state', 'locked').capitalize()} • {occupancy_label}"
+
+
 def _expected_device_state(action, device_type, parameters):
     if device_type == "light":
         if action == "turn_on":
@@ -1035,9 +1070,24 @@ def submit_chat_message(user_input):
     st.rerun()
 
 
+def _format_event_time(timestamp_value):
+    if isinstance(timestamp_value, (int, float)):
+        total_seconds = max(int(timestamp_value) // 1000, 0)
+        hours = total_seconds // 3600
+        minutes = (total_seconds % 3600) // 60
+        seconds = total_seconds % 60
+        return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+
+    ts = str(timestamp_value or "")
+    if len(ts) >= 19 and "T" in ts:
+        return ts[11:19]
+    if len(ts) >= 8:
+        return ts[:8]
+    return ts or "--:--:--"
+
+
 def event_row(event):
-    ts = event.get("timestamp", "")
-    time_str = ts[11:19] if len(ts) >= 19 else ts[:8]
+    time_str = _format_event_time(event.get("timestamp", ""))
     action = event.get("action", "event").upper()
     target = event.get("target", "")
     status = event.get("status", "")
@@ -1255,8 +1305,9 @@ def live_panel():
                         </div>
                         <span class="rc-status-badge {'rc-status-on' if light_on else 'rc-status-off'}">{light['state'].upper()}</span>
                     </div>
-                    <p class="rc-device-name">Main Light</p>
-                    <p class="rc-device-id">LIVING_ROOM_01</p>
+                    <p class="rc-device-name">{escape(_device_name(light, 'Main Light'))}</p>
+                    <p class="rc-device-id">{escape(_device_code(light, 'light_main'))}</p>
+                    <p class="rc-device-meta">{escape(_light_meta(light, sensors))}</p>
                 </div>""",
                 unsafe_allow_html=True,
             )
@@ -1279,10 +1330,11 @@ def live_panel():
                         <div class="rc-device-icon-wrap">
                             <span class="material-symbols-outlined rc-device-icon">ac_unit</span>
                         </div>
-                        <span class="rc-status-badge {'rc-status-on' if ac_on else 'rc-status-off'}">{temp}&deg;C</span>
+                        <span class="rc-status-badge {'rc-status-on' if ac_on else 'rc-status-off'}">{_ac_badge(ac)}</span>
                     </div>
-                    <p class="rc-device-name">AC Unit</p>
-                    <p class="rc-device-id">HVAC_MAIN_01</p>
+                    <p class="rc-device-name">{escape(_device_name(ac, 'AC Unit'))}</p>
+                    <p class="rc-device-id">{escape(_device_code(ac, 'ac_main'))}</p>
+                    <p class="rc-device-meta">{escape(_ac_meta(ac, sensors))}</p>
                     <div class="rc-temp-bar">
                         <div class="rc-temp-fill" style="width:{pct}%;"></div>
                         <div class="rc-temp-thumb" style="left:{pct}%;"></div>
@@ -1312,8 +1364,9 @@ def live_panel():
                             </div>
                             <span class="rc-status-badge {badge_cls}">{door['state'].upper()}</span>
                         </div>
-                        <p class="rc-device-name">Front Door</p>
-                        <p class="rc-device-id">ENTRY_NODE_01</p>
+                        <p class="rc-device-name">{escape(_device_name(door, 'Front Door'))}</p>
+                        <p class="rc-device-id">{escape(_device_code(door, 'door_main'))}</p>
+                        <p class="rc-device-meta">{escape(_door_meta(door, sensors))}</p>
                     </div>""",
                     unsafe_allow_html=True,
                 )
@@ -1580,4 +1633,3 @@ for idx, (icon, label) in enumerate(quick_actions):
 user_input = st.chat_input("Type a command or ask a question...")
 if user_input:
     submit_chat_message(user_input)
-

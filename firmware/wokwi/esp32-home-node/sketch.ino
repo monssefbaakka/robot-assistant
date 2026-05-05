@@ -21,8 +21,11 @@ Servo doorServo;
 
 String doorState = "locked";
 bool lightOn = false;
+int lightBrightness = 80;
 bool acOn = false;
 int acTargetTemp = 22;
+bool gasOverrideActive = false;
+int gasOverridePpm = 0;
 unsigned long lastSensorPublishMs = 0;
 
 String deviceTopic(const char *deviceId) {
@@ -52,8 +55,8 @@ void publishDeviceStates() {
   lightDoc["type"] = "light";
   lightDoc["name"] = "Main Light";
   lightDoc["state"] = lightOn ? "on" : "off";
-  lightDoc["brightness"] = lightOn ? 80 : 0;
-  lightDoc["power_w"] = lightOn ? 9 : 0;
+  lightDoc["brightness"] = lightOn ? lightBrightness : 0;
+  lightDoc["power_w"] = lightOn ? max(1, (int)roundf(12.0f * (lightBrightness / 100.0f))) : 0;
   publishJson(deviceTopic("light_main"), lightDoc);
 
   StaticJsonDocument<256> acDoc;
@@ -91,7 +94,7 @@ void publishSensors() {
   bool occupancy = digitalRead(OCCUPANCY_PIN) == HIGH;
   int gasRaw = analogRead(GAS_PIN);
   int ldrRaw = analogRead(LDR_PIN);
-  int gasPpm = map(gasRaw, 0, 4095, 50, 800);
+  int gasPpm = gasOverrideActive ? gasOverridePpm : map(gasRaw, 0, 4095, 50, 800);
   int lightLux = map(ldrRaw, 0, 4095, 10, 900);
 
   publishSensorValue("temperature", roundf(temperature * 10.0f) / 10.0f);
@@ -107,6 +110,13 @@ void publishSensors() {
     publishJson(MQTT_ALERT_GAS_TOPIC, alertDoc);
     Serial.println("Gas alert published");
   }
+}
+
+int currentGasPpm() {
+  if (gasOverrideActive) {
+    return gasOverridePpm;
+  }
+  return map(analogRead(GAS_PIN), 0, 4095, 50, 800);
 }
 
 void publishResponse(const char *correlationId, bool ok, const String &message, const char *action, const char *deviceType) {
@@ -167,14 +177,25 @@ void handleCommand(char *topic, byte *payload, unsigned int length) {
   if (String(deviceType) == "light") {
     if (String(action) == "turn_on") {
       lightOn = true;
+      if (lightBrightness <= 0) {
+        lightBrightness = 80;
+      }
       digitalWrite(LIGHT_PIN, HIGH);
       message = "Living Room Main Light turned on.";
     } else if (String(action) == "turn_off") {
       lightOn = false;
+      lightBrightness = 0;
       digitalWrite(LIGHT_PIN, LOW);
       message = "Living Room Main Light turned off.";
+    } else if (String(action) == "set_brightness") {
+      lightBrightness = command["parameters"]["brightness"] | lightBrightness;
+      lightBrightness = constrain(lightBrightness, 0, 100);
+      lightOn = lightBrightness > 0;
+      digitalWrite(LIGHT_PIN, lightOn ? HIGH : LOW);
+      message = "Living Room light brightness updated.";
     } else if (String(action) == "get_device_state") {
-      message = lightOn ? "Living room light is on at 80% brightness." : "Living room light is off at 0% brightness.";
+      message = lightOn ? "Living room light is on at " + String(lightBrightness) + "% brightness."
+                        : "Living room light is off at 0% brightness.";
     } else {
       ok = false;
     }
@@ -215,7 +236,7 @@ void handleCommand(char *topic, byte *payload, unsigned int length) {
     } else if (String(sensorType) == "humidity") {
       message = "The current humidity in the living room is " + String((int)roundf(reading.humidity)) + "%.";
     } else if (String(sensorType) == "gas_ppm") {
-      int gasPpm = map(analogRead(GAS_PIN), 0, 4095, 50, 800);
+      int gasPpm = currentGasPpm();
       message = "Gas level in the living room is " + String(gasPpm) + " ppm.";
     } else if (String(sensorType) == "light_level") {
       int lightLux = map(analogRead(LDR_PIN), 0, 4095, 10, 900);
@@ -223,6 +244,20 @@ void handleCommand(char *topic, byte *payload, unsigned int length) {
     } else {
       ok = false;
     }
+  } else if (String(action) == "set_gas_state") {
+    bool enabled = command["parameters"]["enabled"] | false;
+    gasOverrideActive = true;
+    if (enabled && gasOverridePpm <= 0) {
+      gasOverridePpm = 550;
+    } else if (!enabled) {
+      gasOverridePpm = 0;
+    }
+    message = String("Living Room gas simulation turned ") + (enabled ? "on." : "off.");
+  } else if (String(action) == "set_gas_level") {
+    gasOverrideActive = true;
+    gasOverridePpm = command["parameters"]["gas_ppm"] | gasOverridePpm;
+    gasOverridePpm = constrain(gasOverridePpm, 0, 1000);
+    message = "Living Room gas level set to " + String(gasOverridePpm) + " ppm.";
   } else {
     ok = false;
   }

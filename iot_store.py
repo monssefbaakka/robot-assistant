@@ -1,5 +1,6 @@
 import json
 import os
+import threading
 from copy import deepcopy
 from datetime import datetime, timezone
 
@@ -9,6 +10,7 @@ from config_env import load_env_file
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATE_PATH = os.path.join(BASE_DIR, "iot_state.json")
 EVENTS_PATH = os.path.join(BASE_DIR, "iot_events.json")
+_STORE_LOCK = threading.RLock()
 
 
 def _now_iso():
@@ -93,52 +95,59 @@ def _atomic_write(path, payload):
 
 
 def ensure_files():
-    if not os.path.exists(STATE_PATH):
-        _atomic_write(STATE_PATH, default_state())
-    if not os.path.exists(EVENTS_PATH):
-        _atomic_write(EVENTS_PATH, {"events": []})
+    with _STORE_LOCK:
+        if not os.path.exists(STATE_PATH):
+            _atomic_write(STATE_PATH, default_state())
+        if not os.path.exists(EVENTS_PATH):
+            _atomic_write(EVENTS_PATH, {"events": []})
 
 
 def _load_events_payload():
-    ensure_files()
-    try:
-        with open(EVENTS_PATH, "r", encoding="utf-8") as handle:
-            payload = json.load(handle)
-    except (json.JSONDecodeError, OSError):
-        payload = {"events": []}
-        _atomic_write(EVENTS_PATH, payload)
-    payload.setdefault("events", [])
-    return payload
+    with _STORE_LOCK:
+        ensure_files()
+        try:
+            with open(EVENTS_PATH, "r", encoding="utf-8") as handle:
+                payload = json.load(handle)
+        except (json.JSONDecodeError, OSError):
+            payload = {"events": []}
+            _atomic_write(EVENTS_PATH, payload)
+        payload.setdefault("events", [])
+        return payload
 
 
 def load_state():
-    ensure_files()
-    with open(STATE_PATH, "r", encoding="utf-8") as handle:
-        return json.load(handle)
+    with _STORE_LOCK:
+        ensure_files()
+        with open(STATE_PATH, "r", encoding="utf-8") as handle:
+            return json.load(handle)
 
 
 def save_state(state):
-    state.setdefault("meta", {})["transport"] = current_transport_label()
-    _atomic_write(STATE_PATH, state)
+    with _STORE_LOCK:
+        state.setdefault("meta", {})["transport"] = current_transport_label()
+        _atomic_write(STATE_PATH, state)
 
 
 def reset_state():
-    state = default_state()
-    save_state(state)
-    _atomic_write(EVENTS_PATH, {"events": []})
-    return deepcopy(state)
+    with _STORE_LOCK:
+        state = default_state()
+        save_state(state)
+        _atomic_write(EVENTS_PATH, {"events": []})
+        return deepcopy(state)
 
 
 def append_event(event):
-    payload = _load_events_payload()
-    payload["events"].append(event)
-    payload["events"] = payload["events"][-200:]
-    _atomic_write(EVENTS_PATH, payload)
+    with _STORE_LOCK:
+        payload = _load_events_payload()
+        payload["events"].append(event)
+        payload["events"] = payload["events"][-200:]
+        _atomic_write(EVENTS_PATH, payload)
 
 
 def load_events(limit=None):
-    payload = _load_events_payload()
-    events = payload.get("events", [])
-    if limit is not None:
-        return events[-limit:]
-    return events
+    with _STORE_LOCK:
+        payload = _load_events_payload()
+        events = payload.get("events", [])
+        if limit is not None:
+            return events[-limit:]
+        return events

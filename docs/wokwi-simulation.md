@@ -40,6 +40,7 @@ Recommended local setup:
 1. Open `firmware/wokwi/esp32-home-node` in VS Code
 2. Copy `config.example.h` to `config.h`
 3. Set `MQTT_HOST` to the **same broker** as `MQTT_HOST` in your `.env` (both must match)
+   In this repo's current hardware setup, that broker is `broker.emqx.io`.
 4. **Rebuild firmware** after any `config.h` change:
    ```powershell
    cd firmware\wokwi\esp32-home-node

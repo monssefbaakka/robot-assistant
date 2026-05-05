@@ -91,6 +91,7 @@ def advance_state(state, now=None):
             sensors["light_level"] = max(0, int(daylight + light_boost))
 
     alerts = state.setdefault("alerts", {})
+    alerts["gas"] = False
     for room in state.get("rooms", {}).values():
         gas_ppm = room.get("sensors", {}).get("gas_ppm", 0)
         if gas_ppm > GAS_THRESHOLD:
@@ -157,6 +158,36 @@ def apply_command(state, command, now=None):
             "unit": unit,
         }
 
+    if action == "set_gas_state":
+        enabled = bool(command.get("parameters", {}).get("enabled"))
+        previous_gas = room["sensors"].get("gas_ppm", 120)
+        room["sensors"]["gas_ppm"] = 550 if enabled and previous_gas <= 0 else (previous_gas if enabled else 0)
+        message = f"{room['name']} gas simulation turned {'on' if enabled else 'off'}."
+        advance_state(state, now)
+        return {
+            "ok": True,
+            "action": action,
+            "room": room_id,
+            "sensor_type": "gas_ppm",
+            "value": room["sensors"]["gas_ppm"],
+            "message": message,
+        }
+
+    if action == "set_gas_level":
+        gas_ppm = int(command.get("parameters", {}).get("gas_ppm", room["sensors"].get("gas_ppm", 0)))
+        gas_ppm = max(0, min(1000, gas_ppm))
+        room["sensors"]["gas_ppm"] = gas_ppm
+        message = f"{room['name']} gas level set to {gas_ppm} ppm."
+        advance_state(state, now)
+        return {
+            "ok": True,
+            "action": action,
+            "room": room_id,
+            "sensor_type": "gas_ppm",
+            "value": gas_ppm,
+            "message": message,
+        }
+
     device = _resolve_device(room, command)
     if not device:
         device_type = command.get("device_type") or command.get("device_id") or "device"
@@ -192,6 +223,16 @@ def apply_command(state, command, now=None):
         target_temp = max(16, min(30, target_temp))
         device["target_temp"] = target_temp
         message = f"{room['name']} AC target temperature set to {target_temp}C."
+
+    elif action == "set_brightness":
+        if device_type != "light":
+            return _error_result(command, "unsupported_action", "Only the light supports brightness control.")
+        brightness = int(command.get("parameters", {}).get("brightness", device.get("brightness", 80)))
+        brightness = max(0, min(100, brightness))
+        device["brightness"] = brightness
+        device["state"] = "on" if brightness > 0 else "off"
+        device["power_w"] = max(1, int(12 * (brightness / 100.0))) if brightness > 0 else 0
+        message = f"{room['name']} light brightness set to {brightness}%."
 
     elif action in ("lock", "unlock"):
         if device_type != "door":

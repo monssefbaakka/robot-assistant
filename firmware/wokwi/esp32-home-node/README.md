@@ -36,6 +36,7 @@ For local development with the Python app:
 - `diagram.json`: Wokwi wiring
 - `libraries.txt`: Arduino libraries needed by Wokwi
 - `config.example.h`: copy to `config.h` and set your broker host if needed
+  The template now defaults to `broker.emqx.io` to match the current Python hardware-mode setup in this repo.
 - `platformio.ini`: local PlatformIO build config for VS Code
 - `wokwi.toml`: Wokwi for VS Code simulation config
 

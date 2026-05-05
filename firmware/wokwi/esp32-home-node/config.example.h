@@ -7,7 +7,7 @@
 
 // Use a broker reachable from Wokwi cloud.
 // Wokwi cannot connect to localhost on your PC directly.
-#define MQTT_HOST "test.mosquitto.org"
+#define MQTT_HOST "broker.emqx.io"
 #define MQTT_PORT 1883
 
 // Stable topic contract used by the Python app
