@@ -169,6 +169,7 @@ class IoTMQTTController:
         state = load_state()
         if self.mode != "hardware":
             advance_state(state)
+        state.setdefault("meta", {})["last_update"] = _now_iso()
         save_state(state)
         return state
 

@@ -59,6 +59,8 @@ Improve the Streamlit chat experience so device commands feel easier to send and
 - Removed the dark floating background behind the composer and changed the input bar itself to a darker capsule style
 - Added broader wrapper overrides to remove the remaining full-width dark band behind the floating chat bar
 - Added a targeted override for the exact `stBottomBlockContainer` wrapper and nested Streamlit emotion classes from the browser DOM
+- Added hardware-mode dashboard sync improvements so button commands wait briefly for persisted device-state updates
+- Wired the sidebar auto-refresh control to reload the page periodically in hardware mode so Wokwi-side changes appear on the website
 
 ### How It Works
 1. The dashboard now shows a dedicated chat header with a compact summary.
