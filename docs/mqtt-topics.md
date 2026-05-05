@@ -1,0 +1,96 @@
+# MQTT Topics
+
+This file documents the MQTT topics currently used by the local IoT simulator.
+
+## Topic: `robocompagnon/home/commands`
+
+### Purpose
+Receives structured IoT commands from the assistant or dashboard.
+
+### Payload
+- `correlation_id`
+- `command`
+
+### Used For
+- Turn light on or off
+- Turn AC on or off
+- Set AC target temperature
+- Request device state
+- Request sensor values
+
+## Topic: `robocompagnon/home/responses`
+
+### Purpose
+Returns the result of a command executed by the virtual MQTT simulator service.
+
+### Payload
+- `correlation_id`
+- `result`
+
+### Used For
+- Matching command responses to the original request
+- Returning success or error messages to the assistant
+
+## Topic: `robocompagnon/home/events`
+
+### Purpose
+Publishes an event record for each executed IoT command.
+
+### Payload
+- `timestamp`
+- `source`
+- `topic`
+- `room`
+- `action`
+- `target`
+- `status`
+- `raw_text`
+- `details`
+
+### Used For
+- Event history
+- Dashboard activity display
+- Debugging command execution
+
+## Topic: `robocompagnon/home/snapshot`
+
+### Purpose
+Publishes the full current IoT state after room updates.
+
+### Payload
+- Full `iot_state.json` structure
+
+### Used For
+- Refreshing the dashboard from one complete state message
+
+## Topic Pattern: `robocompagnon/home/rooms/{room_id}/devices/{device_id}/state`
+
+### Purpose
+Publishes the latest state for each device in a room.
+
+### Current Topics
+- `robocompagnon/home/rooms/living_room/devices/light_main/state`
+- `robocompagnon/home/rooms/living_room/devices/ac_main/state`
+
+### Used For
+- Device status updates in the dashboard
+- Future hardware-compatible device state subscriptions
+
+## Topic Pattern: `robocompagnon/home/rooms/{room_id}/sensors/{sensor_name}`
+
+### Purpose
+Publishes the latest sensor value for each room sensor.
+
+### Current Topics
+- `robocompagnon/home/rooms/living_room/sensors/temperature`
+- `robocompagnon/home/rooms/living_room/sensors/humidity`
+- `robocompagnon/home/rooms/living_room/sensors/occupancy`
+- `robocompagnon/home/rooms/living_room/sensors/light_level`
+
+### Used For
+- Sensor monitoring in the dashboard
+- Future subscriptions for alerts or analytics
+
+## Notes
+- The current transport is a local loopback MQTT simulation implemented in `mqtt_bus.py`.
+- There is no external broker or ESP32 device connected yet.
