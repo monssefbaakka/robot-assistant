@@ -1,14 +1,14 @@
 {
   "meta": {
-    "last_update": "2026-05-04T22:11:25.179855+00:00",
+    "last_update": "2026-05-05T14:56:45.630328+00:00",
     "transport": "mqtt-loopback",
     "version": 1
   },
   "outside": {
-    "temperature": 30.0,
-    "humidity": 40,
-    "source": "test",
-    "updated_at": "2026-05-04T22:10:55.610897+00:00"
+    "temperature": 21.0,
+    "humidity": 46,
+    "source": "Rabat",
+    "updated_at": "2026-05-05T14:56:45.621068+00:00"
   },
   "alerts": {
     "gas": false
@@ -43,10 +43,10 @@
         }
       },
       "sensors": {
-        "temperature": 27.1,
+        "temperature": 22.0,
         "humidity": 48,
         "occupancy": true,
-        "light_level": 40,
+        "light_level": 650,
         "gas_ppm": 120
       },
       "environment": {
