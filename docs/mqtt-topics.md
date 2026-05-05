@@ -118,4 +118,5 @@ Publishes door lock state after lock/unlock commands.
 ## Notes
 - The current transport uses the local Mosquitto broker through `mqtt_client.py` and `paho-mqtt`.
 - The simulator service still applies commands locally and publishes the same topic contract for the dashboard and future hardware.
-- There is no ESP32 device connected yet.
+- Hardware mode is now prepared for a Wokwi ESP32 node publishing the same topics.
+- In Wokwi cloud, the broker must be reachable from the public internet. `localhost` on the PC is not reachable directly from Wokwi.

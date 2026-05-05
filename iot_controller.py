@@ -1,32 +1,19 @@
+import os
 import threading
 import uuid
 from copy import deepcopy
 from datetime import datetime, timezone
 
+from iot_hardware_bridge import get_hardware_bridge
 from iot_parser import parse_iot_command
 from iot_simulator import advance_state, apply_command, apply_weather_update
 from iot_store import append_event, load_events, load_state, reset_state, save_state
 from mqtt_client import get_mqtt_client as get_loopback_broker
+from mqtt_topics import MQTTTopics
 
 
 def _now_iso():
     return datetime.now(timezone.utc).isoformat()
-
-
-class MQTTTopics:
-    COMMANDS = "robocompagnon/home/commands"
-    RESPONSES = "robocompagnon/home/responses"
-    EVENTS = "robocompagnon/home/events"
-    SNAPSHOT = "robocompagnon/home/snapshot"
-    ALERT_GAS = "robocompagnon/home/alerts/gas"
-
-    @staticmethod
-    def room_device_state(room_id, device_id):
-        return f"robocompagnon/home/rooms/{room_id}/devices/{device_id}/state"
-
-    @staticmethod
-    def room_sensor_state(room_id, sensor_name):
-        return f"robocompagnon/home/rooms/{room_id}/sensors/{sensor_name}"
 
 
 class IoTMQTTSimulatorService:
@@ -91,7 +78,9 @@ class IoTMQTTSimulatorService:
 class IoTMQTTController:
     def __init__(self, broker=None):
         self.broker = broker or get_loopback_broker()
-        self._service = get_iot_service(self.broker)
+        self.mode = os.environ.get("IOT_MODE", "simulator").strip().lower()
+        self._service = get_iot_service(self.broker) if self.mode != "hardware" else None
+        self._bridge = get_hardware_bridge(self.broker) if self.mode == "hardware" else None
 
     def try_handle_text(self, message, source="chat"):
         command = parse_iot_command(message, source=source)
@@ -133,7 +122,8 @@ class IoTMQTTController:
 
     def get_snapshot(self):
         state = load_state()
-        advance_state(state)
+        if self.mode != "hardware":
+            advance_state(state)
         save_state(state)
         return state
 

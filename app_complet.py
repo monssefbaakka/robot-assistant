@@ -275,6 +275,7 @@ door = devices.get("door_main")
 gas_ppm = sensors.get("gas_ppm", 0)
 gas_alert = alerts.get("gas", False)
 occupancy = sensors.get("occupancy", False)
+transport_label = snapshot.get("meta", {}).get("transport", "mqtt")
 
 st.markdown(
     """
@@ -298,8 +299,8 @@ with top_left:
     st.markdown('<div class="section-title">Home Node</div>', unsafe_allow_html=True)
     st.markdown(
         f"""
-        <div class="panel">
-            {status_chip('MQTT LOOPBACK', 'neutral')}
+            <div class="panel">
+            {status_chip(transport_label.upper(), 'neutral')}
             <p class="card-title">Living Room Digital Twin</p>
             <p class="meta-line">State source: persisted JSON snapshot</p>
             <p class="meta-line">Outside weather source: {escape(snapshot['outside']['source'])}</p>

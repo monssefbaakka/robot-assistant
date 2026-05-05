@@ -1,5 +1,85 @@
 # Task Log
 
+## Task: real-simulation Branch and Wokwi Hardware Mode Prep
+
+### Status
+Completed
+
+### Goal
+Prepare a dedicated branch for moving device behavior from the Python simulator toward a Wokwi ESP32 home node while keeping the existing Python dashboard and chat flow usable.
+
+### What Was Implemented
+- Created branch `real-simulation`
+- Added `IOT_MODE=hardware` support in `iot_controller.py`
+- Added `iot_hardware_bridge.py` to sync MQTT device and sensor topics back into `iot_state.json`
+- Added `mqtt_topics.py` to centralize topic constants
+- Updated `iot_store.py` defaults to include door, gas sensor, alerts, and transport labeling
+- Added Wokwi firmware scaffold in `firmware/wokwi/esp32-home-node/`
+- Added:
+- `sketch.ino`
+- `diagram.json`
+- `libraries.txt`
+- `config.example.h`
+- `README.md`
+- Added `docs/wokwi-simulation.md`
+
+### How It Works
+1. In `IOT_MODE=hardware`, Python no longer owns device behavior through `IoTMQTTSimulatorService`.
+2. Python still publishes commands and waits for MQTT responses.
+3. The Wokwi ESP32 node is expected to subscribe to `robocompagnon/home/commands`.
+4. The ESP32 node publishes device state, sensor state, events, and responses.
+5. `iot_hardware_bridge.py` subscribes to those MQTT topics and updates `iot_state.json`.
+6. Streamlit and chat keep reading the same persisted state file, so the rest of the app remains simple.
+
+### Files Changed
+- `iot_controller.py`
+- `iot_store.py`
+- `iot_hardware_bridge.py`
+- `mqtt_topics.py`
+- `app_complet.py`
+- `.env.example`
+- `.gitignore`
+- `docs/mqtt-topics.md`
+- `docs/architecture.md`
+- `docs/wokwi-simulation.md`
+- `docs/task-log.md`
+- `firmware/wokwi/esp32-home-node/sketch.ino`
+- `firmware/wokwi/esp32-home-node/diagram.json`
+- `firmware/wokwi/esp32-home-node/libraries.txt`
+- `firmware/wokwi/esp32-home-node/config.example.h`
+- `firmware/wokwi/esp32-home-node/README.md`
+
+### MQTT Topics
+- No topic names changed
+- Hardware mode expects the Wokwi node to publish:
+- `robocompagnon/home/responses`
+- `robocompagnon/home/events`
+- `robocompagnon/home/alerts/gas`
+- `robocompagnon/home/rooms/living_room/devices/+/state`
+- `robocompagnon/home/rooms/living_room/sensors/+`
+
+### Hardware Involved
+- Virtual ESP32 in Wokwi
+- DHT22
+- two LEDs for light and AC
+- servo for door lock
+- potentiometer as gas surrogate
+- photoresistor
+- occupancy switch
+
+### How To Test
+1. Start a reachable MQTT broker.
+2. Run Python with `IOT_MODE=hardware`.
+3. Start the Wokwi ESP32 home node using the files in `firmware/wokwi/esp32-home-node/`.
+4. Send a command such as `turn on the lights`.
+5. Verify the ESP32 publishes a response and device state updates.
+6. Verify `iot_state.json` updates and the dashboard reflects the new state.
+
+### Notes / Limitations
+- Wokwi cloud cannot connect directly to `localhost` on the PC.
+- The provided firmware is a first hardware-simulation slice, not full production firmware.
+- Real sensor calibration and robust MQTT reconnection behavior are intentionally kept simple.
+
 ## Task: Phase 3 MQTT Broker Import Switch
 
 ### Status

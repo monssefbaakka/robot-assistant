@@ -54,7 +54,9 @@ RoboCompagnon is a simulation-first IoT smart home assistant. All logic runs loc
 | `iot_controller.py` | MQTT topic contract, publishes commands, receives responses, publishes alerts |
 | `iot_simulator.py` | Physics simulation (temperature drift, AC cooling), edge rules (gas alert), apply_command |
 | `iot_store.py` | Load/save `iot_state.json` and `iot_events.json` |
-| `mqtt_bus.py` | In-process loopback MQTT broker (no network required) |
+| `mqtt_bus.py` | Legacy in-process loopback MQTT broker (kept for reference) |
+| `mqtt_client.py` | Real MQTT client used for Mosquitto-backed transport |
+| `iot_hardware_bridge.py` | Hardware-mode state sync from MQTT device/sensor topics into `iot_state.json` |
 | `app_complet.py` | Streamlit dashboard, reads digital twin state |
 | `chat.py` | CLI entry point |
 | `telegram_bot.py` | Telegram alert sender (Phase 5) |
@@ -123,11 +125,14 @@ See `docs/hardware.md` for pin mapping and `docs/execution-plan.md` Phase 3 for 
 
 ---
 
-## Current State (Phase 2 complete)
+## Current State (real-simulation branch)
 
 - One room: `living_room`
 - Devices: `light_main`, `ac_main`, `door_main`
 - Sensors: `temperature`, `humidity`, `occupancy`, `light_level`, `gas_ppm`
 - Alerts: `gas`
-- Transport: loopback (no real broker)
-- No real hardware connected
+- Transport: Mosquitto via `mqtt_client.py`
+- Modes:
+- `IOT_MODE=simulator`: Python simulator service owns device behavior
+- `IOT_MODE=hardware`: external MQTT node (for example Wokwi ESP32) owns device behavior and `iot_hardware_bridge.py` syncs state back into JSON
+- No physical hardware connected yet

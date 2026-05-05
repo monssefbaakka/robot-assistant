@@ -1,7 +1,7 @@
 {
   "meta": {
-    "last_update": "2026-05-05T15:09:55.155526+00:00",
-    "transport": "mqtt-loopback",
+    "last_update": "2026-05-05T15:24:51.974992+00:00",
+    "transport": "mqtt-wokwi-hardware",
     "version": 1
   },
   "outside": {
@@ -43,7 +43,7 @@
         }
       },
       "sensors": {
-        "temperature": 22.0,
+        "temperature": 24.5,
         "humidity": 48,
         "occupancy": true,
         "light_level": 1010,

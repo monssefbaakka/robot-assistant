@@ -13,12 +13,19 @@ def _now_iso():
     return datetime.now(timezone.utc).isoformat()
 
 
+def current_transport_label():
+    mode = os.environ.get("IOT_MODE", "simulator").strip().lower()
+    if mode == "hardware":
+        return "mqtt-wokwi-hardware"
+    return "mqtt-python-simulator"
+
+
 def default_state():
     now = _now_iso()
     return {
         "meta": {
             "last_update": now,
-            "transport": "mqtt-loopback",
+            "transport": current_transport_label(),
             "version": 1,
         },
         "outside": {
@@ -49,18 +56,28 @@ def default_state():
                         "fan_speed": 2,
                         "power_w": 0,
                     },
+                    "door_main": {
+                        "id": "door_main",
+                        "type": "door",
+                        "name": "Front Door",
+                        "state": "locked",
+                    },
                 },
                 "sensors": {
                     "temperature": 27.4,
                     "humidity": 48,
                     "occupancy": True,
                     "light_level": 760,
+                    "gas_ppm": 120,
                 },
                 "environment": {
                     "insulation_factor": 0.72,
                     "sun_exposure": 0.65,
                 },
             }
+        },
+        "alerts": {
+            "gas": False,
         },
     }
 
@@ -79,6 +96,18 @@ def ensure_files():
         _atomic_write(EVENTS_PATH, {"events": []})
 
 
+def _load_events_payload():
+    ensure_files()
+    try:
+        with open(EVENTS_PATH, "r", encoding="utf-8") as handle:
+            payload = json.load(handle)
+    except (json.JSONDecodeError, OSError):
+        payload = {"events": []}
+        _atomic_write(EVENTS_PATH, payload)
+    payload.setdefault("events", [])
+    return payload
+
+
 def load_state():
     ensure_files()
     with open(STATE_PATH, "r", encoding="utf-8") as handle:
@@ -86,6 +115,7 @@ def load_state():
 
 
 def save_state(state):
+    state.setdefault("meta", {})["transport"] = current_transport_label()
     _atomic_write(STATE_PATH, state)
 
 
@@ -97,18 +127,14 @@ def reset_state():
 
 
 def append_event(event):
-    ensure_files()
-    with open(EVENTS_PATH, "r", encoding="utf-8") as handle:
-        payload = json.load(handle)
-    payload.setdefault("events", []).append(event)
+    payload = _load_events_payload()
+    payload["events"].append(event)
     payload["events"] = payload["events"][-200:]
     _atomic_write(EVENTS_PATH, payload)
 
 
 def load_events(limit=None):
-    ensure_files()
-    with open(EVENTS_PATH, "r", encoding="utf-8") as handle:
-        payload = json.load(handle)
+    payload = _load_events_payload()
     events = payload.get("events", [])
     if limit is not None:
         return events[-limit:]
