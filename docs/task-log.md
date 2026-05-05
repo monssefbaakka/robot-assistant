@@ -1,6 +1,64 @@
 # Task Log
 
-## Task: Phase 2 — Gas Detection + Door Lock + Edge Rules
+## Task: Streamlit Dashboard Cleanup and Phase 2 UI Alignment
+
+### Status
+Completed
+
+### Goal
+Fix the Streamlit interface so it reflects the current MQTT simulator state clearly and removes the confusing split between the new digital twin UI and the old legacy light demo.
+
+### What Was Implemented
+- Reworked `app_complet.py` into a clearer dashboard layout with a hero header and grouped sections
+- Added dashboard visibility for Phase 2 features already present in state
+- Added `door_main` lock status and lock/unlock controls
+- Added `gas_ppm` sensor visibility and an active gas alert banner
+- Added occupancy status and a room summary block
+- Removed the separate legacy light control block from the visible UI to avoid conflicting control paths
+- Added safer rendering for chat and event content using HTML escaping
+- Added optional automatic voice playback for the latest robot response
+
+### How It Works
+1. The dashboard loads the persisted MQTT snapshot through `iot_controller.get_snapshot()`.
+2. The interface reads living-room devices, sensors, and top-level alerts from that snapshot.
+3. Device buttons publish commands through the same MQTT controller used by chat.
+4. The event log renders recent simulator events from `iot_events.json`.
+5. The chat area safely renders user and assistant messages without injecting raw HTML.
+6. When auto-voice is enabled, the latest robot reply is converted to audio and played once after the response is generated.
+
+### Files Changed
+- `app_complet.py`
+- `docs/task-log.md`
+
+### MQTT Topics
+- No new topics added
+- Existing topics used by the interface:
+- `robocompagnon/home/commands`
+- `robocompagnon/home/responses`
+- `robocompagnon/home/events`
+- `robocompagnon/home/snapshot`
+- `robocompagnon/home/alerts/gas`
+- `robocompagnon/home/rooms/living_room/devices/door_main/state`
+
+### Hardware Involved
+- None. This task updates the simulation dashboard only.
+
+### How To Test
+1. Run `py -m streamlit run app_complet.py`.
+2. Verify the page loads with sections for devices, sensors, events, and chat.
+3. Confirm the door card is visible and use `Lock Door` or `Unlock Door`.
+4. Confirm the gas level sensor card is visible.
+5. Set `gas_ppm` above `400` in `iot_state.json`, refresh, and verify the gas alert banner appears.
+6. Send a chat message such as `turn on the lights`.
+7. Verify the device state updates and the event log records the command.
+8. Verify chat messages render normally without broken markup.
+
+### Notes / Limitations
+- The dashboard still targets one room only: `living_room`.
+- Voice playback still depends on `gTTS` network availability.
+- The legacy connected-light code still exists in the repo for compatibility, but it is no longer shown as a primary dashboard control.
+
+## Task: Phase 2 - Gas Detection + Door Lock + Edge Rules
 
 ### Status
 Completed
@@ -23,16 +81,16 @@ Add gas sensor monitoring with local edge alert logic and door lock/unlock contr
 - `gas_ppm` added to `SENSOR_ALIASES` in `iot_parser.py`
 - `LOCK_PATTERNS` and `UNLOCK_PATTERNS` added to parser
 - Lock/unlock command parsing for door device type
-- Gas sensor query now also triggered by STATUS_PATTERNS ("gas status")
+- Gas sensor query now also triggered by `STATUS_PATTERNS` ("gas status")
 
 ### How It Works
-1. User sends "lock the door" → parser returns `{action: lock, device_type: door}`
-2. Controller publishes command to MQTT bus
-3. Simulator sets `door_main.state = "locked"` and saves state
-4. Controller publishes updated door state topic
-5. For gas: each command execution runs `advance_state` which checks gas_ppm > 400
-6. If threshold exceeded, `alerts.gas = True` in state
-7. Controller detects the flag and publishes to `robocompagnon/home/alerts/gas`
+1. User sends `lock the door` and the parser returns `{action: lock, device_type: door}`.
+2. The controller publishes the command to the MQTT bus.
+3. The simulator sets `door_main.state = "locked"` and saves state.
+4. The controller publishes the updated door state topic.
+5. Each command execution runs `advance_state()`, which checks `gas_ppm > 400`.
+6. If the threshold is exceeded, `alerts.gas = True` in state.
+7. The controller detects the flag and publishes to `robocompagnon/home/alerts/gas`.
 
 ### Files Changed
 - `iot_state.json`
@@ -47,25 +105,23 @@ Add gas sensor monitoring with local edge alert logic and door lock/unlock contr
 - `robocompagnon/home/rooms/living_room/devices/door_main/state`
 
 ### Hardware Involved
-- Gas sensor: simulated (maps to MQ-2 on GPIO34 when real hardware used)
-- Door lock: simulated (maps to SG90 Servo on GPIO18 when real hardware used)
+- Gas sensor: simulated (maps to MQ-2 on GPIO34 when real hardware is used)
+- Door lock: simulated (maps to SG90 servo on GPIO18 when real hardware is used)
 
 ### How To Test
-1. Run `python chat.py`
-2. Type "lock the door" → expected: "Living Room Front Door locked."
-3. Type "unlock the door" → expected: "Living Room Front Door unlocked."
-4. Type "is the door locked?" → expected: current door state
-5. Type "what is the gas level?" → expected: gas ppm reading
-6. Edit `iot_state.json` — set `gas_ppm` to 500 in living_room sensors
-7. Send any MQTT command (e.g., "turn on the lights")
-8. Verify `alerts.gas = true` in state and alert published to `robocompagnon/home/alerts/gas`
+1. Run `python chat.py`.
+2. Type `lock the door` and expect: `Living Room Front Door locked.`
+3. Type `unlock the door` and expect: `Living Room Front Door unlocked.`
+4. Type `is the door locked?` and expect the current door state.
+5. Type `what is the gas level?` and expect the gas ppm reading.
+6. Edit `iot_state.json` and set `gas_ppm` to `500` in `living_room` sensors.
+7. Send any MQTT command such as `turn on the lights`.
+8. Verify `alerts.gas = true` in state and alert publication to `robocompagnon/home/alerts/gas`.
 
 ### Notes / Limitations
-- Gas ppm value is static (not drifting in simulation). Set manually in `iot_state.json` to test alert.
-- Gas alert flag is set but not auto-cleared — requires manual reset or future reset command.
-- Telegram notification not yet wired (Phase 5).
-
-
+- Gas ppm value is static and must be set manually in `iot_state.json` for alert testing.
+- The gas alert flag is set but not auto-cleared.
+- Telegram notification is not yet wired.
 
 ## Task: MQTT IoT Simulator Foundation Cleanup
 

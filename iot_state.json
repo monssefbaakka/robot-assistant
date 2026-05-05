@@ -1,6 +1,6 @@
 {
   "meta": {
-    "last_update": "2026-05-05T14:56:45.630328+00:00",
+    "last_update": "2026-05-05T14:59:37.949924+00:00",
     "transport": "mqtt-loopback",
     "version": 1
   },
@@ -8,7 +8,7 @@
     "temperature": 21.0,
     "humidity": 46,
     "source": "Rabat",
-    "updated_at": "2026-05-05T14:56:45.621068+00:00"
+    "updated_at": "2026-05-05T14:59:27.322261+00:00"
   },
   "alerts": {
     "gas": false
@@ -21,19 +21,19 @@
           "id": "light_main",
           "type": "light",
           "name": "Main Light",
-          "state": "off",
-          "brightness": 0,
-          "power_w": 0
+          "state": "on",
+          "brightness": 80,
+          "power_w": 9
         },
         "ac_main": {
           "id": "ac_main",
           "type": "ac",
           "name": "Main AC",
-          "state": "on",
+          "state": "off",
           "mode": "cool",
-          "target_temp": 22,
+          "target_temp": 26,
           "fan_speed": 2,
-          "power_w": 1200
+          "power_w": 0
         },
         "door_main": {
           "id": "door_main",
@@ -46,7 +46,7 @@
         "temperature": 22.0,
         "humidity": 48,
         "occupancy": true,
-        "light_level": 650,
+        "light_level": 1010,
         "gas_ppm": 120
       },
       "environment": {
