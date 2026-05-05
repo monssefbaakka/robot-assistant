@@ -91,6 +91,30 @@ Publishes the latest sensor value for each room sensor.
 - Sensor monitoring in the dashboard
 - Future subscriptions for alerts or analytics
 
+## Topic: `robocompagnon/home/alerts/gas`
+
+### Purpose
+Published when the gas sensor reading exceeds the safety threshold (400 ppm).
+
+### Payload
+- `alert`: true
+- `message`: human-readable alert string
+
+### Used For
+- Gas leak notification to dashboard and future Telegram bot
+- Edge-triggered: fires from within the virtual device service on every command that updates state
+
+## Topic Pattern: `robocompagnon/home/rooms/{room_id}/devices/door_main/state`
+
+### Purpose
+Publishes door lock state after lock/unlock commands.
+
+### Current Topics
+- `robocompagnon/home/rooms/living_room/devices/door_main/state`
+
+### Used For
+- Door lock status display in dashboard
+
 ## Notes
 - The current transport is a local loopback MQTT simulation implemented in `mqtt_bus.py`.
 - There is no external broker or ESP32 device connected yet.

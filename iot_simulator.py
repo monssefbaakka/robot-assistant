@@ -1,6 +1,8 @@
 from copy import deepcopy
 from datetime import datetime, timezone
 
+GAS_THRESHOLD = 400
+
 
 def _now():
     return datetime.now(timezone.utc)
@@ -88,6 +90,12 @@ def advance_state(state, now=None):
             sensors["humidity"] = int(round(humidity))
             sensors["light_level"] = max(0, int(daylight + light_boost))
 
+    alerts = state.setdefault("alerts", {})
+    for room in state.get("rooms", {}).values():
+        gas_ppm = room.get("sensors", {}).get("gas_ppm", 0)
+        if gas_ppm > GAS_THRESHOLD:
+            alerts["gas"] = True
+
     meta["last_update"] = now.isoformat()
     return state
 
@@ -138,7 +146,7 @@ def apply_command(state, command, now=None):
             return _error_result(command, "sensor_not_found", f"Sensor '{sensor_type}' was not found.")
 
         value = room["sensors"][sensor_type]
-        unit = {"temperature": "C", "humidity": "%", "light_level": "lux"}.get(sensor_type, "")
+        unit = {"temperature": "C", "humidity": "%", "light_level": "lux", "gas_ppm": "ppm"}.get(sensor_type, "")
         message = _sensor_message(room["name"], sensor_type, value, unit)
         return {
             "ok": True,
@@ -185,11 +193,19 @@ def apply_command(state, command, now=None):
         device["target_temp"] = target_temp
         message = f"{room['name']} AC target temperature set to {target_temp}C."
 
+    elif action in ("lock", "unlock"):
+        if device_type != "door":
+            return _error_result(command, "unsupported_action", "Only the door supports lock/unlock.")
+        device["state"] = "locked" if action == "lock" else "unlocked"
+        message = f"{room['name']} {device['name']} {'locked' if action == 'lock' else 'unlocked'}."
+
     elif action == "get_device_state":
         status = device.get("state", "unknown")
         if device_type == "ac":
             target = device.get("target_temp", 22)
             message = f"{room['name']} AC is {status} with a target of {target}C."
+        elif device_type == "door":
+            message = f"{room['name']} {device['name']} is {status}."
         else:
             brightness = int(device.get("brightness", 0))
             message = f"{room['name']} light is {status} at {brightness}% brightness."
@@ -231,6 +247,9 @@ def _sensor_message(room_name, sensor_type, value, unit):
         return f"The current humidity in the {room_name.lower()} is {value}{unit}."
     if sensor_type == "light_level":
         return f"The current light level in the {room_name.lower()} is {value} {unit}."
+    if sensor_type == "gas_ppm":
+        alert = " WARNING: gas leak detected!" if value > GAS_THRESHOLD else ""
+        return f"Gas level in the {room_name.lower()} is {value} {unit}.{alert}"
     return f"The current {sensor_type} in the {room_name.lower()} is {value}{unit}."
 
 

@@ -18,6 +18,7 @@ class MQTTTopics:
     RESPONSES = "robocompagnon/home/responses"
     EVENTS = "robocompagnon/home/events"
     SNAPSHOT = "robocompagnon/home/snapshot"
+    ALERT_GAS = "robocompagnon/home/alerts/gas"
 
     @staticmethod
     def room_device_state(room_id, device_id):
@@ -56,6 +57,9 @@ class IoTMQTTSimulatorService:
             "details": result,
         }
         append_event(event)
+
+        if state.get("alerts", {}).get("gas"):
+            self.broker.publish(MQTTTopics.ALERT_GAS, {"alert": True, "message": "Gas leak detected!"})
 
         self._publish_room_state(state, command.get("room"))
         self.broker.publish(MQTTTopics.EVENTS, event)

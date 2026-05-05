@@ -10,6 +10,9 @@
     "source": "test",
     "updated_at": "2026-05-04T22:10:55.610897+00:00"
   },
+  "alerts": {
+    "gas": false
+  },
   "rooms": {
     "living_room": {
       "name": "Living Room",
@@ -31,13 +34,20 @@
           "target_temp": 22,
           "fan_speed": 2,
           "power_w": 1200
+        },
+        "door_main": {
+          "id": "door_main",
+          "type": "door",
+          "name": "Front Door",
+          "state": "locked"
         }
       },
       "sensors": {
         "temperature": 27.1,
         "humidity": 48,
         "occupancy": true,
-        "light_level": 40
+        "light_level": 40,
+        "gas_ppm": 120
       },
       "environment": {
         "insulation_factor": 0.72,

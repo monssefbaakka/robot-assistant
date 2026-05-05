@@ -23,12 +23,14 @@ DEVICE_ALIASES = {
         "clim",
         "climatiseur",
     ],
+    "door": ["door", "porte", "front door"],
 }
 
 SENSOR_ALIASES = {
     "temperature": ["temperature", "temp", "degrees", "degres"],
     "humidity": ["humidity", "humidite"],
     "light_level": ["light level", "brightness", "luminosite"],
+    "gas_ppm": ["gas", "gaz", "gas level", "gas leak", "fuite de gaz"],
 }
 
 TURN_ON_PATTERNS = [
@@ -46,6 +48,18 @@ TURN_OFF_PATTERNS = [
     r"\beteint\b",
     r"\bdesactive\b",
     r"\bshutdown\b",
+]
+
+LOCK_PATTERNS = [
+    r"\block\b",
+    r"\bverrouille\b",
+    r"\bferme\b",
+]
+
+UNLOCK_PATTERNS = [
+    r"\bunlock\b",
+    r"\bdeverrouille\b",
+    r"\bouvre\b",
 ]
 
 STATUS_PATTERNS = [
@@ -144,6 +158,30 @@ def parse_iot_command(message, source="chat"):
             "raw_text": message,
         }
 
+    if device_type == "door" and _matches_any(text, LOCK_PATTERNS):
+        return {
+            "action": "lock",
+            "room": room,
+            "target_type": "device",
+            "device_type": "door",
+            "device_id": None,
+            "parameters": {},
+            "source": source,
+            "raw_text": message,
+        }
+
+    if device_type == "door" and _matches_any(text, UNLOCK_PATTERNS):
+        return {
+            "action": "unlock",
+            "room": room,
+            "target_type": "device",
+            "device_type": "door",
+            "device_id": None,
+            "parameters": {},
+            "source": source,
+            "raw_text": message,
+        }
+
     set_temp_match = re.search(r"(\d{2})\s*(?:c|degrees|degree|degres)?", text)
     if device_type == "ac" and set_temp_match and any(
         token in text for token in ["set", "target", "regle", "regler", "mettre", "temperature"]
@@ -173,6 +211,7 @@ def parse_iot_command(message, source="chat"):
 
     if sensor_type and (
         _matches_any(text, SENSOR_QUERY_PATTERNS)
+        or _matches_any(text, STATUS_PATTERNS)
         or "temperature of the room" in text
         or "temperature du salon" in text
         or "temperature de la piece" in text
