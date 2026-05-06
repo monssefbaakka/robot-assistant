@@ -41,7 +41,47 @@ Detects combustible gas concentration (LPG, propane, methane). Returns analog vo
 - Publishes to `robocompagnon/home/alerts/gas`
 
 ### Simulation
-Static `gas_ppm` value in state. Set > 400 manually to trigger alert.
+`gas_ppm` can now be controlled by command:
+- turn gas on
+- turn gas off
+- set gas level to 300 ppm
+
+When the gas level rises above the alert threshold, the Wokwi hardware simulation now also turns on a red gas alert LED on `GPIO33` so the change is visible in the diagram.
+
+---
+
+## Red Alert LED — Gas Alarm Indicator
+
+### Purpose
+Provides a visible warning in the Wokwi simulation when gas level is above the alert threshold.
+
+### Pins
+- Anode → GPIO33
+- Cathode → GND
+
+### Used For
+- Visual gas alarm feedback in Wokwi when `gas_ppm > 400`
+
+### Simulation
+Turns on automatically when commanded or sensed gas level exceeds the threshold.
+
+---
+
+## Buzzer — Unconfirmed Gas Alarm
+
+### Purpose
+Warns locally if gas is activated and left unconfirmed for 30 seconds.
+
+### Pins
+- Signal → GPIO32
+- GND → GND
+
+### Used For
+- `devices.buzzer_main` state in `iot_state.json`
+- Local audible warning in Wokwi and future hardware mode
+
+### Simulation
+If gas remains active for 30 seconds without a confirmation command such as `it's me who did it`, the buzzer starts beeping.
 
 ---
 
@@ -94,9 +134,13 @@ Controls mains-voltage light fixture via GPIO. LOW signal = relay closed = light
 
 ### Used For
 - `devices.light_main` state in `iot_state.json`
+- `devices.light_main.brightness` in `iot_state.json`
 
 ### Simulation
-`light_main.state` toggled by `turn_on` / `turn_off` commands in `iot_simulator.py`.
+`light_main.state` and `brightness` can be controlled by command:
+- turn on the light
+- turn off the light
+- set light brightness to 60%
 
 ---
 

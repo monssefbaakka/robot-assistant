@@ -1,4 +1,6 @@
 __pycache__/
+.env
+firmware/wokwi/**/config.h
 *.pyc
 *.pyo
 *.pyd

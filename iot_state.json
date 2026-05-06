@@ -1,17 +1,19 @@
 {
   "meta": {
-    "last_update": "2026-05-05T15:09:55.155526+00:00",
-    "transport": "mqtt-loopback",
+    "last_update": "2026-05-06T02:23:40.027674+00:00",
+    "transport": "mqtt-wokwi-hardware",
     "version": 1
   },
   "outside": {
-    "temperature": 21.0,
-    "humidity": 46,
+    "temperature": 13.0,
+    "humidity": 82,
     "source": "Rabat",
-    "updated_at": "2026-05-05T15:08:57.244243+00:00"
+    "updated_at": "2026-05-06T02:16:22.797905+00:00"
   },
   "alerts": {
-    "gas": false
+    "gas": true,
+    "gas_unconfirmed": true,
+    "gas_buzzer": false
   },
   "rooms": {
     "living_room": {
@@ -23,36 +25,50 @@
           "name": "Main Light",
           "state": "on",
           "brightness": 80,
-          "power_w": 9
+          "power_w": 10
         },
         "ac_main": {
           "id": "ac_main",
           "type": "ac",
           "name": "Main AC",
-          "state": "off",
+          "state": "on",
           "mode": "cool",
-          "target_temp": 26,
+          "target_temp": 22,
           "fan_speed": 2,
-          "power_w": 0
+          "power_w": 1200
         },
         "door_main": {
           "id": "door_main",
           "type": "door",
           "name": "Front Door",
-          "state": "unlocked"
+          "state": "locked"
+        },
+        "buzzer_main": {
+          "id": "buzzer_main",
+          "type": "buzzer",
+          "name": "Gas Safety Buzzer",
+          "state": "off"
         }
       },
       "sensors": {
-        "temperature": 22.0,
-        "humidity": 48,
-        "occupancy": true,
-        "light_level": 1010,
-        "gas_ppm": 120
+        "temperature": 25,
+        "humidity": 50,
+        "occupancy": false,
+        "light_level": 227,
+        "gas_ppm": 1000
       },
       "environment": {
         "insulation_factor": 0.72,
         "sun_exposure": 0.65
       }
+    }
+  },
+  "safety": {
+    "gas_confirmation": {
+      "active": true,
+      "pending": true,
+      "armed_at": "2026-05-06T02:19:28.088446+00:00",
+      "confirmed": false
     }
   }
 }

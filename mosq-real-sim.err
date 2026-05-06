@@ -1,0 +1,17 @@
+1777994636: mosquitto version 2.1.2 starting
+1777994636: Using default config.
+1777994636: Bridge support available.
+1777994636: Persistence support available.
+1777994636: TLS support available.
+1777994636: TLS-PSK support available.
+1777994636: Websockets support available.
+1777994636: Starting in local only mode. Connections will only be possible from clients running on this machine.
+1777994636: Create a configuration file which defines a listener to allow remote access.
+1777994636: For more details see https://mosquitto.org/documentation/authentication-methods/
+1777994636: Opening ipv4 listen socket on port 1883.
+1777994636: Error: Only one usage of each socket address (protocol/network address/port) is normally permitted.
+
+1777994636: Opening ipv6 listen socket on port 1883.
+1777994636: Error: Only one usage of each socket address (protocol/network address/port) is normally permitted.
+
+1777994636: mosquitto version 2.1.2 terminating

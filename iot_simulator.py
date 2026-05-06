@@ -2,6 +2,7 @@ from copy import deepcopy
 from datetime import datetime, timezone
 
 GAS_THRESHOLD = 400
+GAS_CONFIRMATION_TIMEOUT_S = 60
 
 
 def _now():
@@ -14,6 +15,43 @@ def _parse_iso(value):
 
 def _round_value(value):
     return round(value, 1)
+
+
+def _gas_safety(state):
+    return state.setdefault(
+        "safety",
+        {"gas_confirmation": {"active": False, "pending": False, "armed_at": None, "confirmed": False}},
+    ).setdefault("gas_confirmation", {"active": False, "pending": False, "armed_at": None, "confirmed": False})
+
+
+def _buzzer_device(room):
+    return room.setdefault("devices", {}).setdefault(
+        "buzzer_main",
+        {"id": "buzzer_main", "type": "buzzer", "name": "Gas Safety Buzzer", "state": "off"},
+    )
+
+
+def _set_gas_monitor(state, now, gas_active, confirmed=False):
+    gas_confirmation = _gas_safety(state)
+    alerts = state.setdefault("alerts", {})
+    for room in state.get("rooms", {}).values():
+        buzzer = _buzzer_device(room)
+        if gas_active:
+            gas_confirmation["active"] = True
+            gas_confirmation["pending"] = not confirmed
+            gas_confirmation["armed_at"] = now.isoformat()
+            gas_confirmation["confirmed"] = confirmed
+            buzzer["state"] = "off"
+            alerts["gas_unconfirmed"] = not confirmed
+            alerts["gas_buzzer"] = False
+        else:
+            gas_confirmation["active"] = False
+            gas_confirmation["pending"] = False
+            gas_confirmation["armed_at"] = None
+            gas_confirmation["confirmed"] = False
+            buzzer["state"] = "off"
+            alerts["gas_unconfirmed"] = False
+            alerts["gas_buzzer"] = False
 
 
 def advance_state(state, now=None):
@@ -91,10 +129,33 @@ def advance_state(state, now=None):
             sensors["light_level"] = max(0, int(daylight + light_boost))
 
     alerts = state.setdefault("alerts", {})
+    alerts["gas"] = False
+    gas_confirmation = _gas_safety(state)
+    alerts["gas_unconfirmed"] = bool(gas_confirmation.get("active") and gas_confirmation.get("pending"))
+    alerts["gas_buzzer"] = False
     for room in state.get("rooms", {}).values():
+        buzzer = _buzzer_device(room)
         gas_ppm = room.get("sensors", {}).get("gas_ppm", 0)
         if gas_ppm > GAS_THRESHOLD:
             alerts["gas"] = True
+        if gas_ppm <= 0 or not gas_confirmation.get("active"):
+            buzzer["state"] = "off"
+            continue
+
+        armed_at_raw = gas_confirmation.get("armed_at")
+        if gas_confirmation.get("pending") and armed_at_raw:
+            armed_at = _parse_iso(armed_at_raw)
+            elapsed = max((now - armed_at).total_seconds(), 0)
+            if elapsed >= GAS_CONFIRMATION_TIMEOUT_S:
+                buzzer["state"] = "on"
+                alerts["gas_buzzer"] = True
+            else:
+                buzzer["state"] = "off"
+                alerts["gas_unconfirmed"] = True
+        elif gas_confirmation.get("confirmed"):
+            buzzer["state"] = "off"
+        else:
+            buzzer["state"] = "off"
 
     meta["last_update"] = now.isoformat()
     return state
@@ -157,6 +218,58 @@ def apply_command(state, command, now=None):
             "unit": unit,
         }
 
+    if action == "set_gas_state":
+        enabled = bool(command.get("parameters", {}).get("enabled"))
+        previous_gas = room["sensors"].get("gas_ppm", 120)
+        room["sensors"]["gas_ppm"] = 550 if enabled and previous_gas <= 0 else (previous_gas if enabled else 0)
+        _set_gas_monitor(state, now, room["sensors"]["gas_ppm"] > 0)
+        message = (
+            f"{room['name']} gas simulation turned {'on' if enabled else 'off'}."
+            + (" Confirm within 30 seconds to avoid buzzer alarm." if enabled else "")
+        )
+        advance_state(state, now)
+        return {
+            "ok": True,
+            "action": action,
+            "room": room_id,
+            "sensor_type": "gas_ppm",
+            "value": room["sensors"]["gas_ppm"],
+            "message": message,
+        }
+
+    if action == "set_gas_level":
+        gas_ppm = int(command.get("parameters", {}).get("gas_ppm", room["sensors"].get("gas_ppm", 0)))
+        gas_ppm = max(0, min(1000, gas_ppm))
+        room["sensors"]["gas_ppm"] = gas_ppm
+        _set_gas_monitor(state, now, gas_ppm > 0)
+        message = f"{room['name']} gas level set to {gas_ppm} ppm."
+        if gas_ppm > 0:
+            message += " Confirm within 30 seconds to avoid buzzer alarm."
+        advance_state(state, now)
+        return {
+            "ok": True,
+            "action": action,
+            "room": room_id,
+            "sensor_type": "gas_ppm",
+            "value": gas_ppm,
+            "message": message,
+        }
+
+    if action == "confirm_gas_owner":
+        gas_ppm = int(room.get("sensors", {}).get("gas_ppm", 0))
+        if gas_ppm <= 0:
+            return _error_result(command, "gas_not_active", "Gas is not active right now.")
+        _set_gas_monitor(state, now, True, confirmed=True)
+        advance_state(state, now)
+        return {
+            "ok": True,
+            "action": action,
+            "room": room_id,
+            "sensor_type": "gas_ppm",
+            "value": gas_ppm,
+            "message": f"{room['name']} gas action confirmed by user. Buzzer remains off.",
+        }
+
     device = _resolve_device(room, command)
     if not device:
         device_type = command.get("device_type") or command.get("device_id") or "device"
@@ -192,6 +305,16 @@ def apply_command(state, command, now=None):
         target_temp = max(16, min(30, target_temp))
         device["target_temp"] = target_temp
         message = f"{room['name']} AC target temperature set to {target_temp}C."
+
+    elif action == "set_brightness":
+        if device_type != "light":
+            return _error_result(command, "unsupported_action", "Only the light supports brightness control.")
+        brightness = int(command.get("parameters", {}).get("brightness", device.get("brightness", 80)))
+        brightness = max(0, min(100, brightness))
+        device["brightness"] = brightness
+        device["state"] = "on" if brightness > 0 else "off"
+        device["power_w"] = max(1, int(12 * (brightness / 100.0))) if brightness > 0 else 0
+        message = f"{room['name']} light brightness set to {brightness}%."
 
     elif action in ("lock", "unlock"):
         if device_type != "door":

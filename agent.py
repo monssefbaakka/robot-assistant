@@ -449,7 +449,7 @@ Réponse (naturelle et amicale):"""
         except Exception:
             pass
 
-        return resultat.get("message", "Commande MQTT exÃ©cutÃ©e.")
+        return resultat.get("message", "Commande MQTT exécutée.")
 
     def detecter_question_iot(self, message):
         """Détecte si le message demande des infos sur les capteurs ou la météo"""
@@ -637,7 +637,7 @@ Réponse (naturelle et amicale):"""
         # Générer la réponse de l'agent
         try:
             if self.llm is None:
-                reponse = "Le module LLM n'est pas installÃ© ici. Les commandes MQTT, rappels et Pomodoro restent disponibles."
+                reponse = "Le module LLM n'est pas installé ici. Les commandes MQTT, rappels et Pomodoro restent disponibles."
             else:
                 reponse = self.llm.invoke(prompt_complet)
         except Exception as e:
