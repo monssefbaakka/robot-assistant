@@ -982,7 +982,8 @@ def _ac_meta(ac, sensors):
 def _door_meta(door, sensors):
     occupancy = sensors.get("occupancy", False)
     occupancy_label = "Occupied" if occupancy else "No occupancy"
-    return f"{door.get('state', 'locked').capitalize()} • {occupancy_label}"
+    current_state = door.get("state", "locked").capitalize()
+    return f"Current: {current_state} • {occupancy_label}"
 
 
 def _expected_device_state(action, device_type, parameters):
@@ -1223,6 +1224,8 @@ def live_panel():
     door       = devices.get("door_main", {})
     gas_ppm    = sensors.get("gas_ppm", 0)
     gas_alert  = alerts.get("gas", False)
+    gas_buzzer = alerts.get("gas_buzzer", False)
+    gas_unconfirmed = alerts.get("gas_unconfirmed", False)
     occupancy  = sensors.get("occupancy", False)
     etat_robot = st.session_state.agent.robot.etat()
 
@@ -1274,6 +1277,24 @@ def live_panel():
             '<div class="rc-alert">'
             '<span class="material-symbols-outlined icon-fill">warning</span>'
             '<strong>CRITICAL ALERT:</strong>&nbsp; Gas sensor triggered in Living Room node. Open windows immediately.'
+            '</div>',
+            unsafe_allow_html=True,
+        )
+
+    if gas_unconfirmed and not gas_buzzer and gas_ppm > 0:
+        st.markdown(
+            '<div class="rc-alert" style="border-color:rgba(255,170,68,0.45);color:#ffaa44;">'
+            '<span class="material-symbols-outlined icon-fill">schedule</span>'
+            '<strong>CONFIRMATION REQUIRED:</strong>&nbsp; Confirm the gas action within 30 seconds to avoid buzzer alarm.'
+            '</div>',
+            unsafe_allow_html=True,
+        )
+
+    if gas_buzzer:
+        st.markdown(
+            '<div class="rc-alert" style="border-color:rgba(255,58,92,0.55);color:#ff8095;">'
+            '<span class="material-symbols-outlined icon-fill">campaign</span>'
+            '<strong>BUZZER ACTIVE:</strong>&nbsp; Gas was left active without confirmation. Confirm it was you or turn gas off.'
             '</div>',
             unsafe_allow_html=True,
         )
@@ -1371,10 +1392,10 @@ def live_panel():
                     unsafe_allow_html=True,
                 )
                 if is_locked:
-                    if st.button("Unlock", key="door_unlock", use_container_width=True):
+                    if st.button("Action: Unlock Door", key="door_unlock", use_container_width=True):
                         mqtt_command("unlock", device_type="door")
                 else:
-                    if st.button("Lock", key="door_lock", use_container_width=True, type="primary"):
+                    if st.button("Action: Lock Door", key="door_lock", use_container_width=True, type="primary"):
                         mqtt_command("lock", device_type="door")
 
         if st.session_state.last_manual_result:

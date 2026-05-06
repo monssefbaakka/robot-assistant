@@ -1,17 +1,19 @@
 {
   "meta": {
-    "last_update": "2026-05-05T21:19:34.967088+00:00",
+    "last_update": "2026-05-06T00:43:50.256444+00:00",
     "transport": "mqtt-wokwi-hardware",
     "version": 1
   },
   "outside": {
-    "temperature": 17.0,
-    "humidity": 68,
+    "temperature": 16.0,
+    "humidity": 72,
     "source": "Rabat",
-    "updated_at": "2026-05-05T21:19:34.967339+00:00"
+    "updated_at": "2026-05-06T00:38:46.629476+00:00"
   },
   "alerts": {
-    "gas": false
+    "gas": false,
+    "gas_unconfirmed": false,
+    "gas_buzzer": false
   },
   "rooms": {
     "living_room": {
@@ -31,7 +33,7 @@
           "name": "Main AC",
           "state": "off",
           "mode": "cool",
-          "target_temp": 19,
+          "target_temp": 22,
           "fan_speed": 2,
           "power_w": 0
         },
@@ -40,19 +42,32 @@
           "type": "door",
           "name": "Front Door",
           "state": "unlocked"
+        },
+        "buzzer_main": {
+          "id": "buzzer_main",
+          "type": "buzzer",
+          "name": "Gas Safety Buzzer",
+          "state": "off"
         }
       },
       "sensors": {
-        "temperature": 25.0,
+        "temperature": 25,
         "humidity": 50,
         "occupancy": true,
-        "light_level": 140,
-        "gas_ppm": 0
+        "light_level": 227,
+        "gas_ppm": 50
       },
       "environment": {
         "insulation_factor": 0.72,
         "sun_exposure": 0.65
       }
+    }
+  },
+  "safety": {
+    "gas_confirmation": {
+      "pending": false,
+      "armed_at": null,
+      "confirmed": false
     }
   }
 }

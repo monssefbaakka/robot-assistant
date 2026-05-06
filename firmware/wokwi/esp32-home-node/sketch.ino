@@ -9,10 +9,20 @@
 static const int LIGHT_PIN = 26;
 static const int AC_PIN = 27;
 static const int DOOR_PIN = 18;
+static const int DOOR_LOCKED_LED_PIN = 19;
+static const int DOOR_UNLOCKED_LED_PIN = 25;
+static const int DOOR_LOCKED_ANGLE = 180;
+static const int DOOR_UNLOCKED_ANGLE = 0;
 static const int OCCUPANCY_PIN = 5;
 static const int GAS_PIN = 34;
+static const int GAS_ALERT_PIN = 33;
+static const int BUZZER_PIN = 32;
 static const int LDR_PIN = 35;
 static const int DHT_PIN = 4;
+static const unsigned long GAS_CONFIRM_TIMEOUT_MS = 30000;
+static const unsigned long BUZZER_TOGGLE_MS = 300;
+static const int BUZZER_CHANNEL = 0;
+static const int BUZZER_FREQUENCY = 2200;
 
 WiFiClient wifiClient;
 PubSubClient mqttClient(wifiClient);
@@ -26,6 +36,12 @@ bool acOn = false;
 int acTargetTemp = 22;
 bool gasOverrideActive = false;
 int gasOverridePpm = 0;
+bool gasConfirmationPending = false;
+bool gasConfirmed = false;
+bool gasBuzzerActive = false;
+bool buzzerToneOn = false;
+unsigned long gasCommandMs = 0;
+unsigned long lastBuzzerToggleMs = 0;
 unsigned long lastSensorPublishMs = 0;
 
 String deviceTopic(const char *deviceId) {
@@ -38,7 +54,9 @@ String sensorTopic(const char *sensorName) {
 
 void setDoorLocked(bool locked) {
   doorState = locked ? "locked" : "unlocked";
-  doorServo.write(locked ? 0 : 90);
+  doorServo.write(locked ? DOOR_LOCKED_ANGLE : DOOR_UNLOCKED_ANGLE);
+  digitalWrite(DOOR_LOCKED_LED_PIN, locked ? HIGH : LOW);
+  digitalWrite(DOOR_UNLOCKED_LED_PIN, locked ? LOW : HIGH);
   Serial.println(locked ? "Door locked" : "Door unlocked");
 }
 
@@ -76,6 +94,13 @@ void publishDeviceStates() {
   doorDoc["name"] = "Front Door";
   doorDoc["state"] = doorState;
   publishJson(deviceTopic("door_main"), doorDoc);
+
+  StaticJsonDocument<128> buzzerDoc;
+  buzzerDoc["id"] = "buzzer_main";
+  buzzerDoc["type"] = "buzzer";
+  buzzerDoc["name"] = "Gas Safety Buzzer";
+  buzzerDoc["state"] = gasBuzzerActive ? "on" : "off";
+  publishJson(deviceTopic("buzzer_main"), buzzerDoc);
 }
 
 template <typename TValue>
@@ -110,6 +135,8 @@ void publishSensors() {
     publishJson(MQTT_ALERT_GAS_TOPIC, alertDoc);
     Serial.println("Gas alert published");
   }
+
+  digitalWrite(GAS_ALERT_PIN, gasPpm > 400 ? HIGH : LOW);
 }
 
 int currentGasPpm() {
@@ -117,6 +144,54 @@ int currentGasPpm() {
     return gasOverridePpm;
   }
   return map(analogRead(GAS_PIN), 0, 4095, 50, 800);
+}
+
+void setBuzzerOutput(bool enabled) {
+  if (enabled) {
+    ledcWriteTone(BUZZER_CHANNEL, BUZZER_FREQUENCY);
+  } else {
+    ledcWriteTone(BUZZER_CHANNEL, 0);
+  }
+  buzzerToneOn = enabled;
+}
+
+void resetGasSafety() {
+  gasConfirmationPending = false;
+  gasConfirmed = false;
+  gasBuzzerActive = false;
+  gasCommandMs = 0;
+  setBuzzerOutput(false);
+}
+
+void armGasSafety() {
+  gasConfirmationPending = true;
+  gasConfirmed = false;
+  gasBuzzerActive = false;
+  gasCommandMs = millis();
+  lastBuzzerToggleMs = millis();
+  setBuzzerOutput(false);
+}
+
+void updateGasSafety() {
+  int gasPpm = currentGasPpm();
+  if (gasPpm <= 0) {
+    resetGasSafety();
+    return;
+  }
+
+  if (gasConfirmationPending && !gasConfirmed && millis() - gasCommandMs >= GAS_CONFIRM_TIMEOUT_MS) {
+    gasBuzzerActive = true;
+  }
+
+  if (!gasBuzzerActive) {
+    setBuzzerOutput(false);
+    return;
+  }
+
+  if (millis() - lastBuzzerToggleMs >= BUZZER_TOGGLE_MS) {
+    lastBuzzerToggleMs = millis();
+    setBuzzerOutput(!buzzerToneOn);
+  }
 }
 
 void publishResponse(const char *correlationId, bool ok, const String &message, const char *action, const char *deviceType) {
@@ -252,12 +327,35 @@ void handleCommand(char *topic, byte *payload, unsigned int length) {
     } else if (!enabled) {
       gasOverridePpm = 0;
     }
-    message = String("Living Room gas simulation turned ") + (enabled ? "on." : "off.");
+    if (enabled) {
+      armGasSafety();
+      message = "Living Room gas simulation turned on. Confirm within 30 seconds to avoid buzzer alarm.";
+    } else {
+      resetGasSafety();
+      message = "Living Room gas simulation turned off.";
+    }
   } else if (String(action) == "set_gas_level") {
     gasOverrideActive = true;
     gasOverridePpm = command["parameters"]["gas_ppm"] | gasOverridePpm;
     gasOverridePpm = constrain(gasOverridePpm, 0, 1000);
-    message = "Living Room gas level set to " + String(gasOverridePpm) + " ppm.";
+    if (gasOverridePpm > 0) {
+      armGasSafety();
+      message = "Living Room gas level set to " + String(gasOverridePpm) + " ppm. Confirm within 30 seconds to avoid buzzer alarm.";
+    } else {
+      resetGasSafety();
+      message = "Living Room gas level set to 0 ppm.";
+    }
+  } else if (String(action) == "confirm_gas_owner") {
+    if (currentGasPpm() <= 0) {
+      ok = false;
+      message = "Gas is not active right now.";
+    } else {
+      gasConfirmationPending = false;
+      gasConfirmed = true;
+      gasBuzzerActive = false;
+      setBuzzerOutput(false);
+      message = "Living Room gas action confirmed by user. Buzzer remains off.";
+    }
   } else {
     ok = false;
   }
@@ -320,12 +418,21 @@ void setup() {
   Serial.println("Wokwi ESP32 home node booting...");
   pinMode(LIGHT_PIN, OUTPUT);
   pinMode(AC_PIN, OUTPUT);
+  pinMode(DOOR_LOCKED_LED_PIN, OUTPUT);
+  pinMode(DOOR_UNLOCKED_LED_PIN, OUTPUT);
+  pinMode(GAS_ALERT_PIN, OUTPUT);
   pinMode(OCCUPANCY_PIN, INPUT);
   digitalWrite(LIGHT_PIN, LOW);
   digitalWrite(AC_PIN, LOW);
+  digitalWrite(DOOR_LOCKED_LED_PIN, LOW);
+  digitalWrite(DOOR_UNLOCKED_LED_PIN, LOW);
+  digitalWrite(GAS_ALERT_PIN, LOW);
 
   dht.setup(DHT_PIN, DHTesp::DHT22);
   doorServo.attach(DOOR_PIN);
+  ledcSetup(BUZZER_CHANNEL, BUZZER_FREQUENCY, 8);
+  ledcAttachPin(BUZZER_PIN, BUZZER_CHANNEL);
+  setBuzzerOutput(false);
   setDoorLocked(true);
 
   ensureWiFi();
@@ -338,6 +445,7 @@ void loop() {
   ensureWiFi();
   ensureMqtt();
   mqttClient.loop();
+  updateGasSafety();
 
   if (millis() - lastSensorPublishMs > 5000) {
     publishDeviceStates();

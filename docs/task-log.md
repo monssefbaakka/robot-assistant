@@ -1,5 +1,320 @@
 # Task Log
 
+## Task: Add Visible Door Lock Indicators In Wokwi
+
+### Status
+Completed
+
+### Goal
+Make the Wokwi simulation clearly show whether the door is locked or unlocked without relying only on subtle servo movement.
+
+### What Was Implemented
+- Added a red `door locked` LED on `GPIO19`
+- Added a green `door unlocked` LED on `GPIO25`
+- Updated firmware so `setDoorLocked()` drives both LEDs with the servo
+
+### How It Works
+1. When the door is locked, the red LED turns on and the green LED turns off.
+2. When the door is unlocked, the green LED turns on and the red LED turns off.
+3. The servo still moves, but now the state is obvious in the simulation.
+
+### Files Changed
+- `firmware/wokwi/esp32-home-node/src/main.cpp`
+- `firmware/wokwi/esp32-home-node/sketch.ino`
+- `firmware/wokwi/esp32-home-node/diagram.json`
+- `docs/task-log.md`
+
+### MQTT Topics
+- No topic changes
+
+### Hardware Involved
+- Virtual ESP32 in Wokwi
+- Door servo on GPIO18
+- Red lock LED on GPIO19
+- Green unlock LED on GPIO25
+
+### How To Test
+1. Rebuild the Wokwi firmware.
+2. Restart the Wokwi simulation.
+3. Send `lock the door`.
+4. Verify the red LED turns on.
+5. Send `unlock the door`.
+6. Verify the green LED turns on.
+
+### Notes / Limitations
+- This is a visibility improvement for the simulation. The MQTT door state flow was already working.
+
+## Task: Increase Door Servo Travel In Wokwi
+
+### Status
+Completed
+
+### Goal
+Make lock and unlock visibly different in the Wokwi simulation so door movement is easier to see.
+
+### What Was Implemented
+- Changed the Wokwi door servo angles from `90/0` to `180/0`
+
+### How It Works
+1. `locked` now drives the servo to `180`
+2. `unlocked` drives the servo to `0`
+3. The wider range makes the servo movement easier to notice in the simulator
+
+### Files Changed
+- `firmware/wokwi/esp32-home-node/src/main.cpp`
+- `firmware/wokwi/esp32-home-node/sketch.ino`
+- `docs/task-log.md`
+
+### MQTT Topics
+- No topic changes
+
+### Hardware Involved
+- Virtual ESP32 in Wokwi
+- Door servo on GPIO18
+
+### How To Test
+1. Rebuild the Wokwi firmware.
+2. Restart the Wokwi simulation.
+3. Send `unlock the door`.
+4. Send `lock the door`.
+5. Verify the servo now rotates more visibly between the two states.
+
+### Notes / Limitations
+- The buzzer is unrelated to the door path; it only depends on active unconfirmed gas.
+
+## Task: Fix Door Servo Direction In Wokwi
+
+### Status
+Completed
+
+### Goal
+Align the website lock status with the visible Wokwi servo position by correcting the lock and unlock servo angles.
+
+### What Was Implemented
+- Reversed the Wokwi door servo angle mapping so `locked` and `unlocked` match the visible simulation position.
+- Added explicit `DOOR_LOCKED_ANGLE` and `DOOR_UNLOCKED_ANGLE` constants for easier adjustment later.
+
+### How It Works
+1. The firmware still publishes `door_main.state` as `locked` or `unlocked`.
+2. The servo output angle now matches that logical state in the Wokwi diagram.
+3. If needed later, the two constants can be swapped again without touching the command logic.
+
+### Files Changed
+- `firmware/wokwi/esp32-home-node/src/main.cpp`
+- `firmware/wokwi/esp32-home-node/sketch.ino`
+- `docs/task-log.md`
+
+### MQTT Topics
+- No topic changes
+- Existing door state topic remains:
+- `robocompagnon/home/rooms/living_room/devices/door_main/state`
+
+### Hardware Involved
+- Virtual ESP32 in Wokwi
+- Door servo on GPIO18
+
+### How To Test
+1. Rebuild the Wokwi firmware.
+2. Restart the Wokwi simulation.
+3. Send `lock the door`.
+4. Verify the servo moves to the visually locked position and the website shows `locked`.
+5. Send `unlock the door`.
+6. Verify the servo moves to the visually unlocked position and the website shows `unlocked`.
+
+### Notes / Limitations
+- This is a visual orientation fix for the Wokwi servo, not a change to the MQTT status flow.
+
+## Task: Clarify Door Status Versus Door Action In Dashboard
+
+### Status
+Completed
+
+### Goal
+Avoid confusion where the website shows `Lock` while the door is actually unlocked, because the button represented the next action rather than the current state.
+
+### What Was Implemented
+- Updated the door card meta text to show `Current: Locked` or `Current: Unlocked`
+- Renamed the door buttons to `Action: Lock Door` and `Action: Unlock Door`
+
+### How It Works
+1. The dashboard still reads the live `door_main.state` value from MQTT-backed state.
+2. The card now explicitly labels the displayed value as the current state.
+3. The button now clearly indicates that it is an action, not the current status.
+
+### Files Changed
+- `app_complet.py`
+- `docs/task-log.md`
+
+### MQTT Topics
+- No topic changes
+- Live status still comes from:
+- `robocompagnon/home/rooms/living_room/devices/door_main/state`
+
+### Hardware Involved
+- Virtual ESP32 in Wokwi
+- Door servo on GPIO18
+
+### How To Test
+1. Restart the dashboard.
+2. Lock or unlock the door from chat or button.
+3. Verify the card shows `Current: Locked` or `Current: Unlocked`.
+4. Verify the button text shows the next action as `Action: Lock Door` or `Action: Unlock Door`.
+
+### Notes / Limitations
+- This is a UI wording fix only; the underlying lock state flow was already correct.
+
+## Task: Add Unconfirmed Gas Buzzer Safety Rule
+
+### Status
+Completed
+
+### Goal
+Add a local safety alarm so the robot starts beeping if gas is activated and left unconfirmed for 30 seconds.
+
+### What Was Implemented
+- Added parser support for confirmation phrases like `it's me who did it`, `i confirm`, and `confirm gas`
+- Added simulator-side 30-second gas confirmation timer
+- Added `buzzer_main` device state to the shared IoT state
+- Added Wokwi buzzer support on `GPIO32`
+- Added hardware-side gas confirmation timer and buzzer beeping logic
+- Added dashboard warning banners for pending confirmation and active buzzer alarm
+
+### How It Works
+1. A gas-on or gas-level command arms a 30-second confirmation window.
+2. If the user confirms ownership before timeout, the buzzer stays off.
+3. If the user does not confirm and gas is still active after 30 seconds, the buzzer turns on and starts beeping.
+4. Turning gas off clears the safety alarm state.
+
+### Files Changed
+- `iot_parser.py`
+- `iot_simulator.py`
+- `iot_store.py`
+- `iot_hardware_bridge.py`
+- `app_complet.py`
+- `firmware/wokwi/esp32-home-node/src/main.cpp`
+- `firmware/wokwi/esp32-home-node/sketch.ino`
+- `firmware/wokwi/esp32-home-node/diagram.json`
+- `docs/hardware.md`
+- `docs/mqtt-topics.md`
+- `firmware/wokwi/esp32-home-node/README.md`
+- `docs/wokwi-simulation.md`
+- `docs/task-log.md`
+
+### MQTT Topics
+- `robocompagnon/home/commands`
+- `robocompagnon/home/rooms/living_room/devices/buzzer_main/state`
+- `robocompagnon/home/rooms/living_room/sensors/gas_ppm`
+
+### Hardware Involved
+- Virtual ESP32 in Wokwi
+- Gas sensor input on GPIO34
+- Gas alert LED on GPIO33
+- Gas safety buzzer on GPIO32
+
+### How To Test
+1. Rebuild and restart the Wokwi firmware.
+2. Send `turn the gaz on and make it at the maximum level`.
+3. Do not confirm.
+4. Wait 30 seconds.
+5. Verify the buzzer starts beeping and the dashboard shows the buzzer warning.
+6. Send `it's me who did it` or `confirm gas`.
+7. Verify the buzzer stops.
+
+### Notes / Limitations
+- In simulator mode, the buzzer is represented by `buzzer_main.state` and dashboard alerts.
+- In Wokwi, the gas slider still does not move automatically because it is an input widget.
+
+## Task: Add Visible Gas Alarm Feedback In Wokwi
+
+### Status
+Completed
+
+### Goal
+Make gas commands produce a visible change in the Wokwi diagram instead of only changing MQTT state and website values.
+
+### What Was Implemented
+- Added a red gas alert LED to `firmware/wokwi/esp32-home-node/diagram.json`
+- Wired the LED to `GPIO33`
+- Updated ESP32 firmware so the LED turns on whenever `gas_ppm > 400`
+- Updated hardware and Wokwi documentation
+
+### How It Works
+1. Gas level is still read from the sensor input or the command override.
+2. After sensor publishing, the firmware checks whether `gas_ppm > 400`.
+3. If true, it turns the red alert LED on.
+4. This gives visible feedback in the Wokwi simulation even though the gas sensor slider itself does not move automatically.
+
+### Files Changed
+- `firmware/wokwi/esp32-home-node/src/main.cpp`
+- `firmware/wokwi/esp32-home-node/sketch.ino`
+- `firmware/wokwi/esp32-home-node/diagram.json`
+- `docs/hardware.md`
+- `firmware/wokwi/esp32-home-node/README.md`
+- `docs/wokwi-simulation.md`
+- `docs/task-log.md`
+
+### MQTT Topics
+- No new topics
+- Existing gas state flow still uses:
+- `robocompagnon/home/rooms/living_room/sensors/gas_ppm`
+- `robocompagnon/home/alerts/gas`
+
+### Hardware Involved
+- Virtual ESP32 in Wokwi
+- Gas sensor input on GPIO34
+- Red alert LED on GPIO33
+
+### How To Test
+1. Rebuild the Wokwi firmware.
+2. Restart the Wokwi simulation.
+3. Send `turn the gaz on and make it at the maximum level`.
+4. Verify the website gas level rises.
+5. Verify the red gas alert LED turns on in the Wokwi diagram.
+
+### Notes / Limitations
+- The gas sensor slider itself is still an input widget and will not move automatically from a command.
+- The visible feedback is now the red alert LED, not the slider position.
+
+## Task: Fix Gas Max Command Parsing
+
+### Status
+Completed
+
+### Goal
+Make the robot understand natural gas-control phrases like `turn the gaz on and make it at the maximum level`.
+
+### What Was Implemented
+- Updated `iot_parser.py` to accept:
+- `gaz` as well as `gas`
+- `maximum` / `max` as gas level `1000`
+- `minimum` / `min` as gas level `0`
+- four-digit gas ppm values like `1000 ppm`
+
+### How It Works
+1. The parser now detects gas phrases with either English `gas` or French-style `gaz`.
+2. If the command mentions maximum gas level, it maps directly to `set_gas_level` with `1000 ppm`.
+3. If the command mentions minimum gas level, it maps to `0 ppm`.
+
+### Files Changed
+- `iot_parser.py`
+- `docs/task-log.md`
+
+### MQTT Topics
+- `robocompagnon/home/commands`
+
+### Hardware Involved
+- Virtual ESP32 in Wokwi
+
+### How To Test
+1. Restart the Python app.
+2. Send `turn the gaz on and make it at the maximum level`.
+3. Verify the parser produces `set_gas_level` with `1000`.
+4. Verify the website gas value rises and gas alert becomes active.
+
+### Notes / Limitations
+- This fixes the command understanding path.
+- The Wokwi gas sensor module itself is still an input component, so its knob or physical drawing will not move automatically from a chat command.
+
 ## Task: Add Mermaid Workflow And Sensor Control Documentation
 
 ### Status

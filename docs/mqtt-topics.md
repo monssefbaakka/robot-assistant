@@ -75,6 +75,7 @@ Publishes the latest state for each device in a room.
 ### Current Topics
 - `robocompagnon/home/rooms/living_room/devices/light_main/state`
 - `robocompagnon/home/rooms/living_room/devices/ac_main/state`
+- `robocompagnon/home/rooms/living_room/devices/buzzer_main/state`
 
 ### Used For
 - Device status updates in the dashboard

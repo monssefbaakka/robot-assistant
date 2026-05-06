@@ -74,6 +74,8 @@ The provided firmware handles:
 - `temperature`
 - `humidity`
 - `gas_ppm`
+- visible gas alert LED on GPIO33 when `gas_ppm > 400`
+- gas safety buzzer on GPIO32 if gas is left active without confirmation for 30 seconds
 - `light_level`
 - `occupancy`
 

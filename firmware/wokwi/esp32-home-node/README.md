@@ -9,6 +9,8 @@ This folder is the first hardware-simulation slice for moving device behavior ou
 - `door_main` on GPIO18 using a servo
 - `temperature` and `humidity` using a DHT22 on GPIO4
 - `gas_ppm` using a slide potentiometer on GPIO34
+- visible gas alarm LED on GPIO33 when gas level is high
+- gas safety buzzer on GPIO32 if gas stays unconfirmed for 30 seconds
 - `light_level` using a photoresistor on GPIO35
 - `occupancy` using a slide switch on GPIO5
 

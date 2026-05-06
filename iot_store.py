@@ -67,6 +67,12 @@ def default_state():
                         "name": "Front Door",
                         "state": "locked",
                     },
+                    "buzzer_main": {
+                        "id": "buzzer_main",
+                        "type": "buzzer",
+                        "name": "Gas Safety Buzzer",
+                        "state": "off",
+                    },
                 },
                 "sensors": {
                     "temperature": 27.4,
@@ -83,6 +89,15 @@ def default_state():
         },
         "alerts": {
             "gas": False,
+            "gas_unconfirmed": False,
+            "gas_buzzer": False,
+        },
+        "safety": {
+            "gas_confirmation": {
+                "pending": False,
+                "armed_at": None,
+                "confirmed": False,
+            }
         },
     }
 

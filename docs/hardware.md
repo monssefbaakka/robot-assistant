@@ -46,6 +46,43 @@ Detects combustible gas concentration (LPG, propane, methane). Returns analog vo
 - turn gas off
 - set gas level to 300 ppm
 
+When the gas level rises above the alert threshold, the Wokwi hardware simulation now also turns on a red gas alert LED on `GPIO33` so the change is visible in the diagram.
+
+---
+
+## Red Alert LED — Gas Alarm Indicator
+
+### Purpose
+Provides a visible warning in the Wokwi simulation when gas level is above the alert threshold.
+
+### Pins
+- Anode → GPIO33
+- Cathode → GND
+
+### Used For
+- Visual gas alarm feedback in Wokwi when `gas_ppm > 400`
+
+### Simulation
+Turns on automatically when commanded or sensed gas level exceeds the threshold.
+
+---
+
+## Buzzer — Unconfirmed Gas Alarm
+
+### Purpose
+Warns locally if gas is activated and left unconfirmed for 30 seconds.
+
+### Pins
+- Signal → GPIO32
+- GND → GND
+
+### Used For
+- `devices.buzzer_main` state in `iot_state.json`
+- Local audible warning in Wokwi and future hardware mode
+
+### Simulation
+If gas remains active for 30 seconds without a confirmation command such as `it's me who did it`, the buzzer starts beeping.
+
 ---
 
 ## HC-SR501 — PIR Motion Sensor

@@ -97,6 +97,15 @@ WEATHER_TERMS = [
     "exterieure",
 ]
 
+CONFIRM_GAS_PATTERNS = [
+    r"\bit'?s me\b",
+    r"\bit is me\b",
+    r"\bi did it\b",
+    r"\bi confirm\b",
+    r"\bconfirm gas\b",
+    r"\bc'?est moi\b",
+]
+
 
 def normalize_text(text):
     lowered = text.lower().strip()
@@ -135,9 +144,17 @@ def _matches_any(text, patterns):
 
 def _matches_gas_state(text, enabled):
     return (
-        (enabled and ("turn gas on" in text or "gas on" in text))
-        or ((not enabled) and ("turn gas off" in text or "gas off" in text))
+        (enabled and ("turn gas on" in text or "gas on" in text or "turn gaz on" in text or "gaz on" in text))
+        or ((not enabled) and ("turn gas off" in text or "gas off" in text or "turn gaz off" in text or "gaz off" in text))
     )
+
+
+def _gas_level_keyword(text):
+    if any(term in text for term in ["maximum", "max", "highest", "full", "au maximum"]):
+        return 1000
+    if any(term in text for term in ["minimum", "min", "lowest", "zero", "au minimum"]):
+        return 0
+    return None
 
 
 def parse_iot_command(message, source="chat"):
@@ -150,7 +167,20 @@ def parse_iot_command(message, source="chat"):
     device_type = resolve_device_type(text)
     sensor_type = resolve_sensor_type(text)
     percent_match = re.search(r"(\d{1,3})\s*%", text)
-    number_match = re.search(r"(\d{1,3})\s*(?:ppm|percent|pourcent)?", text)
+    number_match = re.search(r"(\d{1,4})\s*(?:ppm|percent|pourcent)?", text)
+    gas_keyword_level = _gas_level_keyword(text)
+
+    if "gas" in text or "gaz" in text or _matches_any(text, CONFIRM_GAS_PATTERNS):
+        if _matches_any(text, CONFIRM_GAS_PATTERNS):
+            return {
+                "action": "confirm_gas_owner",
+                "room": room,
+                "target_type": "sensor",
+                "sensor_type": "gas_ppm",
+                "parameters": {},
+                "source": source,
+                "raw_text": message,
+            }
 
     if device_type and _matches_any(text, TURN_ON_PATTERNS):
         return {
@@ -229,6 +259,23 @@ def parse_iot_command(message, source="chat"):
             "device_type": "light",
             "device_id": None,
             "parameters": {"brightness": brightness},
+            "source": source,
+            "raw_text": message,
+        }
+
+    if sensor_type == "gas_ppm" and gas_keyword_level is not None and (
+        "level" in text
+        or "niveau" in text
+        or "gas" in text
+        or "gaz" in text
+        or _matches_any(text, SET_PATTERNS)
+    ):
+        return {
+            "action": "set_gas_level",
+            "room": room,
+            "target_type": "sensor",
+            "sensor_type": "gas_ppm",
+            "parameters": {"gas_ppm": gas_keyword_level},
             "source": source,
             "raw_text": message,
         }

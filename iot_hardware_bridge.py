@@ -44,6 +44,9 @@ class HardwareStateBridge:
         def updater(state):
             room = state.setdefault("rooms", {}).setdefault(room_id, {"name": room_id, "devices": {}, "sensors": {}, "environment": {}})
             room.setdefault("devices", {})[device_id] = deepcopy(payload)
+            if device_id == "buzzer_main":
+                state.setdefault("alerts", {})["gas_buzzer"] = payload.get("state") == "on"
+                state.setdefault("alerts", {})["gas_unconfirmed"] = payload.get("state") == "on"
 
         self._update_state(updater)
 
@@ -66,6 +69,9 @@ class HardwareStateBridge:
             room.setdefault("sensors", {})[sensor_name] = sensor_value
             if sensor_name == "gas_ppm":
                 state.setdefault("alerts", {})["gas"] = bool(sensor_value > 400)
+                if sensor_value <= 0:
+                    state.setdefault("alerts", {})["gas_unconfirmed"] = False
+                    state.setdefault("alerts", {})["gas_buzzer"] = False
 
         self._update_state(updater)
 
