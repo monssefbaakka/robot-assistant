@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from html import escape
 import os
 import time
@@ -1037,6 +1037,32 @@ def wait_for_hardware_sync(action, device_type=None, parameters=None, timeout_s=
         time.sleep(0.12)
 
 
+@st.dialog("⚠️ Gas Detected — Action Required")
+def gas_confirm_dialog(gas_ppm, remaining_s):
+    st.markdown(
+        f"""
+        <div style="text-align:center;padding:8px 0 16px;">
+            <span style="font-size:48px;">🔥</span>
+            <p style="font-size:18px;font-weight:600;color:#ff3a5c;margin:8px 0 4px;">
+                Gas level: <strong>{gas_ppm} ppm</strong>
+            </p>
+            <p style="color:#aab8cc;font-size:14px;">
+                Confirm within <strong style="color:#ffaa44;">{remaining_s}s</strong>
+                or the buzzer will activate.
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    col1, col2 = st.columns(2, gap="small")
+    with col1:
+        if st.button("✓ It was me — Confirm", type="primary", use_container_width=True):
+            mqtt_command("confirm_gas_owner")
+    with col2:
+        if st.button("Turn off gas", use_container_width=True):
+            mqtt_command("set_gas_state", parameters={"enabled": False})
+
+
 def mqtt_command(action, device_type=None, parameters=None):
     command = {
         "action": action,
@@ -1272,6 +1298,9 @@ def live_panel():
         unsafe_allow_html=True,
     )
 
+    if not gas_unconfirmed and gas_ppm <= 0:
+        st.session_state.pop("gas_dialog_armed_at", None)
+
     if gas_alert:
         st.markdown(
             '<div class="rc-alert">'
@@ -1282,11 +1311,26 @@ def live_panel():
         )
 
     if gas_unconfirmed and not gas_buzzer and gas_ppm > 0:
+        armed_at_raw = snapshot.get("safety", {}).get("gas_confirmation", {}).get("armed_at")
+        if armed_at_raw:
+            try:
+                armed_at = datetime.fromisoformat(armed_at_raw)
+                if armed_at.tzinfo is None:
+                    armed_at = armed_at.replace(tzinfo=timezone.utc)
+                elapsed = (datetime.now(timezone.utc) - armed_at).total_seconds()
+                remaining_s = max(0, 60 - int(elapsed))
+            except (ValueError, TypeError):
+                remaining_s = 60
+        else:
+            remaining_s = 60
+        if "gas_dialog_armed_at" not in st.session_state or st.session_state.gas_dialog_armed_at != armed_at_raw:
+            st.session_state.gas_dialog_armed_at = armed_at_raw
+            gas_confirm_dialog(gas_ppm, remaining_s)
         st.markdown(
-            '<div class="rc-alert" style="border-color:rgba(255,170,68,0.45);color:#ffaa44;">'
-            '<span class="material-symbols-outlined icon-fill">schedule</span>'
-            '<strong>CONFIRMATION REQUIRED:</strong>&nbsp; Confirm the gas action within 30 seconds to avoid buzzer alarm.'
-            '</div>',
+            f'<div class="rc-alert" style="border-color:rgba(255,170,68,0.45);color:#ffaa44;">'
+            f'<span class="material-symbols-outlined icon-fill">schedule</span>'
+            f'<strong>CONFIRMATION REQUIRED:</strong>&nbsp; Confirm the gas action within {remaining_s}s to avoid buzzer alarm.'
+            f'</div>',
             unsafe_allow_html=True,
         )
 

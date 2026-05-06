@@ -45,8 +45,10 @@ class HardwareStateBridge:
             room = state.setdefault("rooms", {}).setdefault(room_id, {"name": room_id, "devices": {}, "sensors": {}, "environment": {}})
             room.setdefault("devices", {})[device_id] = deepcopy(payload)
             if device_id == "buzzer_main":
-                state.setdefault("alerts", {})["gas_buzzer"] = payload.get("state") == "on"
-                state.setdefault("alerts", {})["gas_unconfirmed"] = payload.get("state") == "on"
+                buzzer_on = payload.get("state") == "on"
+                state.setdefault("alerts", {})["gas_buzzer"] = buzzer_on
+                if buzzer_on:
+                    state["alerts"]["gas_unconfirmed"] = False
 
         self._update_state(updater)
 
@@ -68,10 +70,23 @@ class HardwareStateBridge:
             room = state.setdefault("rooms", {}).setdefault(room_id, {"name": room_id, "devices": {}, "sensors": {}, "environment": {}})
             room.setdefault("sensors", {})[sensor_name] = sensor_value
             if sensor_name == "gas_ppm":
-                state.setdefault("alerts", {})["gas"] = bool(sensor_value > 400)
-                if sensor_value <= 0:
-                    state.setdefault("alerts", {})["gas_unconfirmed"] = False
-                    state.setdefault("alerts", {})["gas_buzzer"] = False
+                alerts = state.setdefault("alerts", {})
+                alerts["gas"] = bool(sensor_value > 400)
+                gas_conf = state.setdefault("safety", {}).setdefault("gas_confirmation", {})
+                if sensor_value > 400 and not gas_conf.get("active"):
+                    gas_conf["active"] = True
+                    gas_conf["pending"] = True
+                    gas_conf["armed_at"] = _now_iso()
+                    gas_conf["confirmed"] = False
+                    alerts["gas_unconfirmed"] = True
+                    alerts["gas_buzzer"] = False
+                elif sensor_value <= 0:
+                    gas_conf["active"] = False
+                    gas_conf["pending"] = False
+                    gas_conf["armed_at"] = None
+                    gas_conf["confirmed"] = False
+                    alerts["gas_unconfirmed"] = False
+                    alerts["gas_buzzer"] = False
 
         self._update_state(updater)
 

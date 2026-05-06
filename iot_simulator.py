@@ -2,7 +2,7 @@ from copy import deepcopy
 from datetime import datetime, timezone
 
 GAS_THRESHOLD = 400
-GAS_CONFIRMATION_TIMEOUT_S = 30
+GAS_CONFIRMATION_TIMEOUT_S = 60
 
 
 def _now():
