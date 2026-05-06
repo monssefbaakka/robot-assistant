@@ -2292,6 +2292,409 @@
       "details": {
         "message": "Living Room Front Door unlocked."
       }
+    },
+    {
+      "timestamp": 143907,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_on",
+      "target": "ac",
+      "status": "success",
+      "raw_text": "dashboard:turn_on:ac",
+      "details": {
+        "message": "Living Room Main AC turned on."
+      }
+    },
+    {
+      "timestamp": 6160,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "unlock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "dashboard:unlock:door",
+      "details": {
+        "message": "Living Room Front Door unlocked."
+      }
+    },
+    {
+      "timestamp": 46119,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_on",
+      "target": "ac",
+      "status": "success",
+      "raw_text": "dashboard:turn_on:ac",
+      "details": {
+        "message": "Living Room Main AC turned on."
+      }
+    },
+    {
+      "timestamp": 47177,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "lock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "dashboard:lock:door",
+      "details": {
+        "message": "Living Room Front Door locked."
+      }
+    },
+    {
+      "timestamp": 47177,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "lock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "dashboard:lock:door",
+      "details": {
+        "message": "Living Room Front Door locked."
+      }
+    },
+    {
+      "timestamp": 5777,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "unlock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "dashboard:unlock:door",
+      "details": {
+        "message": "Living Room Front Door unlocked."
+      }
+    },
+    {
+      "timestamp": 9978,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "lock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "dashboard:lock:door",
+      "details": {
+        "message": "Living Room Front Door locked."
+      }
+    },
+    {
+      "timestamp": 9978,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "lock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "dashboard:lock:door",
+      "details": {
+        "message": "Living Room Front Door locked."
+      }
+    },
+    {
+      "timestamp": 9978,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "lock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "dashboard:lock:door",
+      "details": {
+        "message": "Living Room Front Door locked."
+      }
+    },
+    {
+      "timestamp": 9978,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "lock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "dashboard:lock:door",
+      "details": {
+        "message": "Living Room Front Door locked."
+      }
+    },
+    {
+      "timestamp": 67093,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_on",
+      "target": "light",
+      "status": "success",
+      "raw_text": "Turn On Light",
+      "details": {
+        "message": "Living Room Main Light turned on."
+      }
+    },
+    {
+      "timestamp": 70426,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "lock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "Lock All Doors",
+      "details": {
+        "message": "Living Room Front Door locked."
+      }
+    },
+    {
+      "timestamp": 78315,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "unlock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "dashboard:unlock:door",
+      "details": {
+        "message": "Living Room Front Door unlocked."
+      }
+    },
+    {
+      "timestamp": 78315,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "unlock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "dashboard:unlock:door",
+      "details": {
+        "message": "Living Room Front Door unlocked."
+      }
+    },
+    {
+      "timestamp": 146478,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "lock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "dashboard:lock:door",
+      "details": {
+        "message": "Living Room Front Door locked."
+      }
+    },
+    {
+      "timestamp": 146478,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "lock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "dashboard:lock:door",
+      "details": {
+        "message": "Living Room Front Door locked."
+      }
+    },
+    {
+      "timestamp": 209215,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_on",
+      "target": "ac",
+      "status": "success",
+      "raw_text": "dashboard:turn_on:ac",
+      "details": {
+        "message": "Living Room Main AC turned on."
+      }
+    },
+    {
+      "timestamp": 225552,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_off",
+      "target": "ac",
+      "status": "success",
+      "raw_text": "dashboard:turn_off:ac",
+      "details": {
+        "message": "Living Room Main AC turned off."
+      }
+    },
+    {
+      "timestamp": 226794,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_off",
+      "target": "light",
+      "status": "success",
+      "raw_text": "dashboard:turn_off:light",
+      "details": {
+        "message": "Living Room Main Light turned off."
+      }
+    },
+    {
+      "timestamp": 226794,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_off",
+      "target": "light",
+      "status": "success",
+      "raw_text": "dashboard:turn_off:light",
+      "details": {
+        "message": "Living Room Main Light turned off."
+      }
+    },
+    {
+      "timestamp": 16238,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "unlock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "dashboard:unlock:door",
+      "details": {
+        "message": "Living Room Front Door unlocked."
+      }
+    },
+    {
+      "timestamp": 14119,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "unlock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "unlock the door",
+      "details": {
+        "message": "Living Room Front Door unlocked."
+      }
+    },
+    {
+      "timestamp": 14119,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "unlock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "unlock the door",
+      "details": {
+        "message": "Living Room Front Door unlocked."
+      }
+    },
+    {
+      "timestamp": 8880,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "unlock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "dashboard:unlock:door",
+      "details": {
+        "message": "Living Room Front Door unlocked."
+      }
+    },
+    {
+      "timestamp": 30342,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "lock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "lock the door",
+      "details": {
+        "message": "Living Room Front Door locked."
+      }
+    },
+    {
+      "timestamp": 30342,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "lock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "lock the door",
+      "details": {
+        "message": "Living Room Front Door locked."
+      }
+    },
+    {
+      "timestamp": 30342,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "lock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "lock the door",
+      "details": {
+        "message": "Living Room Front Door locked."
+      }
+    },
+    {
+      "timestamp": 5856,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "unlock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "dashboard:unlock:door",
+      "details": {
+        "message": "Living Room Front Door unlocked."
+      }
+    },
+    {
+      "timestamp": 5856,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "unlock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "dashboard:unlock:door",
+      "details": {
+        "message": "Living Room Front Door unlocked."
+      }
+    },
+    {
+      "timestamp": 18179,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "unlock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "dashboard:unlock:door",
+      "details": {
+        "message": "Living Room Front Door unlocked."
+      }
+    },
+    {
+      "timestamp": 20662,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "lock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "dashboard:lock:door",
+      "details": {
+        "message": "Living Room Front Door locked."
+      }
     }
   ]
 }

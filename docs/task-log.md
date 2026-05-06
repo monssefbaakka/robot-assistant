@@ -1,5 +1,220 @@
 # Task Log
 
+## Task: Force Visible Door Lock Movement In Wokwi
+
+### Status
+Completed
+
+### Goal
+Make the simulated door lock visibly move every time a lock or unlock command is sent, even if the servo was already sitting at the requested angle.
+
+### What Was Implemented
+- Slowed the door sweep timing
+- Added a forced visual offset before returning to the target angle
+- Updated both `src/main.cpp` and `sketch.ino` so the two firmware paths stay aligned
+
+### How It Works
+1. When a lock or unlock command arrives, the servo now checks whether it is already at the target angle.
+2. If it is, the firmware first moves the servo away from that angle by a visible offset.
+3. The servo then sweeps back to the requested lock or unlock position.
+4. This guarantees visible motion for every door command in Wokwi.
+
+### Files Changed
+- `firmware/wokwi/esp32-home-node/src/main.cpp`
+- `firmware/wokwi/esp32-home-node/sketch.ino`
+- `docs/task-log.md`
+
+### MQTT Topics
+- No topic changes
+
+### Hardware Involved
+- Virtual ESP32 in Wokwi
+- Door servo on GPIO18
+
+### How To Test
+1. Rebuild and restart the Wokwi simulation.
+2. Send `unlock the door`.
+3. Verify the lock sweeps visibly.
+4. Send `unlock the door` again.
+5. Verify it still moves visibly even though the state was already unlocked.
+6. Repeat with `lock the door`.
+
+### Notes / Limitations
+- This is a simulation visibility fix.
+- You must restart Wokwi after rebuild or the old servo behavior will stay in memory.
+
+## Task: Recover From Corrupted State JSON
+
+### Status
+Completed
+
+### Goal
+Restore the dashboard after `iot_state.json` became malformed and caused `JSONDecodeError` during page load.
+
+### What Was Implemented
+- Removed the extra trailing `}` from `iot_state.json`
+- Added the missing `safety.gas_confirmation.active` field to the current state payload
+- Hardened `iot_store.load_state()` so it falls back to a valid default state if the state file becomes unreadable again
+
+### How It Works
+1. The current persisted state file is now valid JSON again.
+2. `load_state()` now catches malformed JSON instead of crashing the whole dashboard.
+3. If a future state file is corrupted, the loader rewrites it with a valid default state and keeps the app running.
+
+### Files Changed
+- `iot_state.json`
+- `iot_store.py`
+- `docs/task-log.md`
+
+### MQTT Topics
+- No topic changes
+
+### Hardware Involved
+- None
+
+### How To Test
+1. Start `py -m streamlit run app_complet.py`.
+2. Verify the dashboard opens without the `JSONDecodeError`.
+3. Trigger a few device commands.
+4. Verify the state still updates normally.
+
+### Notes / Limitations
+- If the state file becomes corrupted again, the fallback loader may restore defaults instead of preserving the broken payload.
+
+## Task: Decouple Gas Buzzer From Door Commands
+
+### Status
+Completed
+
+### Goal
+Stop the Wokwi buzzer from appearing to react to door lock and unlock commands when the buzzer should only belong to the gas safety flow.
+
+### What Was Implemented
+- Added an explicit gas safety active flag in the Python simulator state
+- Added an explicit gas safety armed flag in the ESP32 firmware
+- Updated buzzer logic so it only runs after a gas command arms the 30-second confirmation window
+- Kept door lock and unlock behavior unchanged
+
+### How It Works
+1. Gas commands arm the gas safety monitor.
+2. Door commands do not arm or reactivate that monitor.
+3. If the gas monitor is inactive, the buzzer is forced off.
+4. The buzzer now starts only when gas was explicitly activated and left unconfirmed for 30 seconds.
+
+### Files Changed
+- `iot_simulator.py`
+- `iot_store.py`
+- `firmware/wokwi/esp32-home-node/src/main.cpp`
+- `firmware/wokwi/esp32-home-node/sketch.ino`
+- `docs/task-log.md`
+
+### MQTT Topics
+- No topic changes
+
+### Hardware Involved
+- Virtual ESP32 in Wokwi
+- Gas safety buzzer on GPIO32
+- Door servo on GPIO18
+
+### How To Test
+1. Rebuild and restart the Wokwi simulation.
+2. Send `unlock the door`.
+3. Verify the door moves and the buzzer stays silent.
+4. Send `turn the gaz on and make it at the maximum level`.
+5. Wait 30 seconds without confirming.
+6. Verify the buzzer starts only for the gas case.
+
+### Notes / Limitations
+- This fix removes the false coupling between door commands and the gas buzzer.
+- If Wokwi is still running older firmware, the old buzzer behavior will remain until the simulator is restarted.
+
+## Task: Separate Door Servo Layout In Wokwi
+
+### Status
+Completed
+
+### Goal
+Make the door lock actuator visually obvious by moving it away from the gas and sensor area in the Wokwi diagram.
+
+### What Was Implemented
+- Moved the door servo to its own area on the upper-left side of the simulation
+- Moved the red and green door LEDs to stay next to the servo
+- Kept the wiring and firmware behavior unchanged
+
+### How It Works
+1. The servo remains connected to `GPIO18`.
+2. The lock and unlock LEDs still indicate final door state.
+3. The servo is now physically separated in the diagram so it is easier to identify during testing.
+
+### Files Changed
+- `firmware/wokwi/esp32-home-node/diagram.json`
+- `docs/task-log.md`
+
+### MQTT Topics
+- No topic changes
+
+### Hardware Involved
+- Virtual ESP32 in Wokwi
+- Door servo on GPIO18
+- Red lock LED on GPIO19
+- Green unlock LED on GPIO25
+
+### How To Test
+1. Restart the Wokwi simulation.
+2. Send `unlock the door`.
+3. Watch the upper-left servo and nearby LEDs.
+4. Send `lock the door`.
+5. Verify the same servo area shows the lock movement and state LEDs.
+
+### Notes / Limitations
+- This is a diagram clarity fix only.
+- If Wokwi is still running the old layout, restart the simulator fully.
+
+## Task: Make Door Servo Movement Obvious In Wokwi
+
+### Status
+Completed
+
+### Goal
+Make the Wokwi door lock visibly rotate during lock and unlock instead of appearing to jump so quickly that it looks static.
+
+### What Was Implemented
+- Added a small sweep animation helper for the door servo
+- Updated the lock and unlock path to move the servo in visible angle steps
+- Kept the existing red and green door state LEDs as the clearest state indicator
+
+### How It Works
+1. The firmware tracks the last servo angle in memory.
+2. When a lock or unlock command arrives, the servo moves toward the new target angle in 5-degree steps.
+3. A short delay between steps makes the motion visible in Wokwi.
+4. The red and green LEDs still show the final lock state immediately.
+
+### Files Changed
+- `firmware/wokwi/esp32-home-node/src/main.cpp`
+- `firmware/wokwi/esp32-home-node/sketch.ino`
+- `docs/task-log.md`
+
+### MQTT Topics
+- No topic changes
+
+### Hardware Involved
+- Virtual ESP32 in Wokwi
+- Door servo on GPIO18
+- Red lock LED on GPIO19
+- Green unlock LED on GPIO25
+
+### How To Test
+1. Rebuild the Wokwi firmware.
+2. Restart the Wokwi simulation.
+3. Send `unlock the door`.
+4. Verify the servo now sweeps visibly toward the unlock position and the green LED turns on.
+5. Send `lock the door`.
+6. Verify the servo sweeps back and the red LED turns on.
+
+### Notes / Limitations
+- This is a simulation visibility fix only.
+- If Wokwi is still running an older binary, the servo will still appear unchanged until the simulator is restarted.
+
 ## Task: Add Visible Door Lock Indicators In Wokwi
 
 ### Status

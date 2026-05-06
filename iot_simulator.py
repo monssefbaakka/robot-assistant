@@ -20,8 +20,8 @@ def _round_value(value):
 def _gas_safety(state):
     return state.setdefault(
         "safety",
-        {"gas_confirmation": {"pending": False, "armed_at": None, "confirmed": False}},
-    ).setdefault("gas_confirmation", {"pending": False, "armed_at": None, "confirmed": False})
+        {"gas_confirmation": {"active": False, "pending": False, "armed_at": None, "confirmed": False}},
+    ).setdefault("gas_confirmation", {"active": False, "pending": False, "armed_at": None, "confirmed": False})
 
 
 def _buzzer_device(room):
@@ -37,6 +37,7 @@ def _set_gas_monitor(state, now, gas_active, confirmed=False):
     for room in state.get("rooms", {}).values():
         buzzer = _buzzer_device(room)
         if gas_active:
+            gas_confirmation["active"] = True
             gas_confirmation["pending"] = not confirmed
             gas_confirmation["armed_at"] = now.isoformat()
             gas_confirmation["confirmed"] = confirmed
@@ -44,6 +45,7 @@ def _set_gas_monitor(state, now, gas_active, confirmed=False):
             alerts["gas_unconfirmed"] = not confirmed
             alerts["gas_buzzer"] = False
         else:
+            gas_confirmation["active"] = False
             gas_confirmation["pending"] = False
             gas_confirmation["armed_at"] = None
             gas_confirmation["confirmed"] = False
@@ -129,14 +131,14 @@ def advance_state(state, now=None):
     alerts = state.setdefault("alerts", {})
     alerts["gas"] = False
     gas_confirmation = _gas_safety(state)
-    alerts["gas_unconfirmed"] = bool(gas_confirmation.get("pending"))
+    alerts["gas_unconfirmed"] = bool(gas_confirmation.get("active") and gas_confirmation.get("pending"))
     alerts["gas_buzzer"] = False
     for room in state.get("rooms", {}).values():
         buzzer = _buzzer_device(room)
         gas_ppm = room.get("sensors", {}).get("gas_ppm", 0)
         if gas_ppm > GAS_THRESHOLD:
             alerts["gas"] = True
-        if gas_ppm <= 0:
+        if gas_ppm <= 0 or not gas_confirmation.get("active"):
             buzzer["state"] = "off"
             continue
 

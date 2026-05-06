@@ -94,6 +94,7 @@ def default_state():
         },
         "safety": {
             "gas_confirmation": {
+                "active": False,
                 "pending": False,
                 "armed_at": None,
                 "confirmed": False,
@@ -130,11 +131,32 @@ def _load_events_payload():
         return payload
 
 
+def _normalize_state_payload(payload):
+    payload.setdefault("meta", {})
+    payload.setdefault("outside", {})
+    payload.setdefault("rooms", {})
+    payload.setdefault("alerts", {})
+    safety = payload.setdefault("safety", {})
+    gas_confirmation = safety.setdefault("gas_confirmation", {})
+    gas_confirmation.setdefault("active", False)
+    gas_confirmation.setdefault("pending", False)
+    gas_confirmation.setdefault("armed_at", None)
+    gas_confirmation.setdefault("confirmed", False)
+    return payload
+
+
 def load_state():
     with _STORE_LOCK:
         ensure_files()
-        with open(STATE_PATH, "r", encoding="utf-8") as handle:
-            return json.load(handle)
+        try:
+            with open(STATE_PATH, "r", encoding="utf-8") as handle:
+                payload = json.load(handle)
+        except (json.JSONDecodeError, OSError):
+            payload = default_state()
+            _atomic_write(STATE_PATH, payload)
+            return payload
+        payload = _normalize_state_payload(payload)
+        return payload
 
 
 def save_state(state):
