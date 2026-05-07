@@ -445,7 +445,11 @@ Réponse (naturelle et amicale):"""
 
         try:
             snapshot = self.iot_controller.get_snapshot()
-            self.capteurs_data = snapshot["rooms"]["living_room"]["sensors"]
+            rooms = snapshot.get("rooms", {})
+            if "living_room" in rooms:
+                self.capteurs_data = rooms["living_room"]["sensors"]
+            elif rooms:
+                self.capteurs_data = next(iter(rooms.values())).get("sensors", {})
         except Exception:
             pass
 

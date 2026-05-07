@@ -6,6 +6,7 @@ import time
 import streamlit as st
 from agent import AgentRobot
 from config_env import load_env_file
+from house_config import ROOM_ORDER, ordered_room_ids, room_name
 from iot_store import load_state
 from meteo import MeteoAPI
 from objets_connectes import MaisonConnectee
@@ -950,9 +951,32 @@ def refresh_weather():
 
 def current_snapshot():
     snapshot = st.session_state.agent.iot_controller.get_snapshot()
-    living_room = snapshot["rooms"]["living_room"]
-    st.session_state.agent.mettre_a_jour_capteurs(living_room["sensors"])
-    return snapshot, living_room
+    room_id = st.session_state.get("selected_room_id", "living_room")
+    rooms = snapshot.get("rooms", {})
+    if room_id not in rooms and rooms:
+        room_id = next(iter(rooms))
+        st.session_state.selected_room_id = room_id
+    current_room = rooms.get(room_id, {})
+    st.session_state.agent.mettre_a_jour_capteurs(current_room.get("sensors", {}))
+    return snapshot, current_room
+
+
+def _room_name(room_id, room):
+    return room_name(room_id, room)
+
+
+def _room_choices(snapshot):
+    rooms = snapshot.get("rooms", {})
+    ordered_ids = ordered_room_ids(rooms)
+    return ordered_ids, {_room_name(room_id, rooms[room_id]): room_id for room_id in ordered_ids}
+
+
+def _room_device_count(room):
+    return sum(1 for device in room.get("devices", {}).values() if device.get("state") in {"on", "unlocked"})
+
+
+def _set_active_room(room_id, room_label=None):
+    st.session_state.selected_room_id = room_id
 
 
 def _device_name(device, fallback):
@@ -986,6 +1010,13 @@ def _door_meta(door, sensors):
     return f"Current: {current_state} • {occupancy_label}"
 
 
+def _gas_meta(sensors, alerts):
+    gas_ppm = sensors.get("gas_ppm", 0)
+    gas_state = "ON" if gas_ppm > 0 else "OFF"
+    alert_text = "Alert" if alerts.get("gas", False) and gas_ppm > 400 else "Normal"
+    return f"{gas_state} • {gas_ppm} ppm • {alert_text}"
+
+
 def _expected_device_state(action, device_type, parameters):
     if device_type == "light":
         if action == "turn_on":
@@ -1005,7 +1036,7 @@ def _expected_device_state(action, device_type, parameters):
     return None
 
 
-def wait_for_hardware_sync(action, device_type=None, parameters=None, timeout_s=2.5):
+def wait_for_hardware_sync(action, room_id, device_type=None, parameters=None, timeout_s=2.5):
     expected_state = _expected_device_state(action, device_type, parameters or {})
     if not expected_state or not device_type:
         return
@@ -1025,7 +1056,7 @@ def wait_for_hardware_sync(action, device_type=None, parameters=None, timeout_s=
             state = load_state()
             current_state = (
                 state.get("rooms", {})
-                .get("living_room", {})
+                .get(room_id, {})
                 .get("devices", {})
                 .get(device_id, {})
                 .get("state")
@@ -1063,20 +1094,21 @@ def gas_confirm_dialog(gas_ppm, remaining_s):
             mqtt_command("set_gas_state", parameters={"enabled": False})
 
 
-def mqtt_command(action, device_type=None, parameters=None):
+def mqtt_command(action, device_type=None, parameters=None, room_id=None):
+    room_id = room_id or st.session_state.get("selected_room_id", "living_room")
     command = {
         "action": action,
-        "room": "living_room",
+        "room": room_id,
         "target_type": "device" if device_type else "sensor",
         "device_type": device_type,
         "device_id": None,
         "parameters": parameters or {},
         "source": "dashboard",
-        "raw_text": f"dashboard:{action}:{device_type or 'sensor'}",
+        "raw_text": f"dashboard:{room_id}:{action}:{device_type or 'sensor'}",
     }
     result = st.session_state.agent.iot_controller.execute_command(command)
     if os.environ.get("IOT_MODE", "simulator").strip().lower() == "hardware" and result.get("ok"):
-        wait_for_hardware_sync(action, device_type=device_type, parameters=parameters)
+        wait_for_hardware_sync(action, room_id, device_type=device_type, parameters=parameters)
     st.session_state.last_manual_result = result
     st.rerun()
 
@@ -1088,8 +1120,8 @@ def submit_chat_message(user_input):
     if st.session_state.meteo_data:
         st.session_state.agent.mettre_a_jour_meteo(st.session_state.meteo_data)
     st.session_state.agent.mettre_a_jour_maison(st.session_state.maison)
-    snapshot, living_room = current_snapshot()
-    st.session_state.agent.mettre_a_jour_capteurs(living_room["sensors"])
+    snapshot, current_room = current_snapshot()
+    st.session_state.agent.mettre_a_jour_capteurs(current_room.get("sensors", {}))
     st.session_state.historique_chat.append({"role": "user", "message": cleaned, "timestamp": datetime.now().strftime("%H:%M")})
     with st.spinner("Processing..."):
         response = st.session_state.agent.repondre(cleaned)
@@ -1139,6 +1171,15 @@ def event_row(event):
 
 init_session()
 refresh_weather()
+
+snapshot_for_ui = st.session_state.agent.iot_controller.get_snapshot()
+room_ids, room_label_map = _room_choices(snapshot_for_ui)
+if "selected_room_id" not in st.session_state or st.session_state.selected_room_id not in room_ids:
+    st.session_state.selected_room_id = room_ids[0] if room_ids else "living_room"
+selected_room_label = next(
+    (label for label, room_id in room_label_map.items() if room_id == st.session_state.selected_room_id),
+    "Living Room",
+)
 
 _mode   = os.environ.get("IOT_MODE", "simulator").upper()
 _broker = os.environ.get("MQTT_HOST", "localhost")
@@ -1197,6 +1238,20 @@ with st.sidebar:
 
     st.markdown('<div class="sb-divider"></div>', unsafe_allow_html=True)
     st.markdown('<p class="sb-section-label">// Live Data</p>', unsafe_allow_html=True)
+    desired_room_label = next(
+        (label for label, room_id in room_label_map.items() if room_id == st.session_state.selected_room_id),
+        selected_room_label,
+    )
+    if "room_picker" not in st.session_state or st.session_state.room_picker != desired_room_label:
+        st.session_state.room_picker = desired_room_label
+    chosen_room_label = st.selectbox(
+        "Active Room",
+        options=list(room_label_map.keys()),
+        index=max(list(room_label_map.values()).index(st.session_state.selected_room_id), 0) if room_label_map else 0,
+        key="room_picker",
+    )
+    _set_active_room(room_label_map[chosen_room_label], chosen_room_label)
+    selected_room_label = chosen_room_label
     st.markdown(
         '<div style="padding:4px 20px 12px;font-size:10px;color:var(--text-dim);font-family:\'Fira Code\',monospace;">'
         'Partial refresh &mdash; 5s interval</div>',
@@ -1213,7 +1268,7 @@ st.markdown(
                 <h2 class="rc-topbar-title">System Dashboard</h2>
                 <p class="rc-breadcrumb">
                     <span class="material-symbols-outlined icon-sm">home</span>
-                    RoboCompagnon &rsaquo; Living Room
+                    RoboCompagnon &rsaquo; {escape(selected_room_label)}
                 </p>
             </div>
         </div>
@@ -1240,13 +1295,14 @@ st.markdown(
 
 @st.fragment(run_every=5)
 def live_panel():
-    snapshot, living_room = current_snapshot()
-
+    snapshot, current_room = current_snapshot()
+    selected_room_id = st.session_state.get("selected_room_id", "living_room")
+    room_name = _room_name(selected_room_id, current_room)
     alerts     = snapshot.get("alerts", {})
-    devices    = living_room["devices"]
-    sensors    = living_room["sensors"]
-    light      = devices["light_main"]
-    ac         = devices["ac_main"]
+    devices    = current_room.get("devices", {})
+    sensors    = current_room.get("sensors", {})
+    light      = devices.get("light_main", {"state": "off", "brightness": 0, "id": "light_main", "name": "Main Light"})
+    ac         = devices.get("ac_main", {"state": "off", "target_temp": 22, "id": "ac_main", "name": "Main AC"})
     door       = devices.get("door_main", {})
     gas_ppm    = sensors.get("gas_ppm", 0)
     gas_alert  = alerts.get("gas", False)
@@ -1255,11 +1311,7 @@ def live_panel():
     occupancy  = sensors.get("occupancy", False)
     etat_robot = st.session_state.agent.robot.etat()
 
-    devices_on = sum([
-        light["state"] == "on",
-        ac["state"] == "on",
-        door.get("state", "locked") == "unlocked" if door else False,
-    ])
+    devices_on = _room_device_count(current_room)
 
     # ── HERO ─────────────────────────────────────────────────────────────────
 
@@ -1273,7 +1325,7 @@ def live_panel():
             <div>
                 <div class="rc-hero-tag">
                     <span class="material-symbols-outlined">{'warning' if gas_alert else 'verified'}</span>
-                    {escape(_mode)} Mode
+                    {escape(room_name)} • {escape(_mode)} Mode
                 </div>
                 <h3 class="rc-hero-title">Welcome back,<br>Developer</h3>
                 <p class="rc-hero-sub" style="color:{_hero_sub_color};">{escape(_hero_sub)}</p>
@@ -1298,6 +1350,36 @@ def live_panel():
         unsafe_allow_html=True,
     )
 
+    overview_cols = st.columns(max(len(snapshot.get("rooms", {})), 1), gap="small")
+    for idx, (room_id, room) in enumerate(snapshot.get("rooms", {}).items()):
+        room_sensors = room.get("sensors", {})
+        room_gas = room_sensors.get("gas_ppm", 0)
+        room_occ = "Occupied" if room_sensors.get("occupancy", False) else "Idle"
+        room_active = _room_device_count(room)
+        room_alert = room_gas > 200
+        room_label = _room_name(room_id, room)
+        with overview_cols[idx]:
+            st.markdown(
+                f"""<div class="rc-card {'on' if room_id == selected_room_id else ''}">
+                    <div class="rc-device-hd">
+                        <p class="rc-device-name" style="margin:0;">{escape(room_label)}</p>
+                        <span class="rc-status-badge {'rc-status-off' if room_alert else 'rc-status-on'}">{room_occ.upper()}</span>
+                    </div>
+                    <p class="rc-device-meta">Devices active: {room_active}</p>
+                    <p class="rc-device-meta">Temp {room_sensors.get('temperature', 0)}°C • Humidity {room_sensors.get('humidity', 0)}%</p>
+                    <p class="rc-device-meta">Gas {room_gas} ppm</p>
+                </div>""",
+                unsafe_allow_html=True,
+            )
+            if st.button(
+                room_label,
+                key=f"room_select_{room_id}",
+                use_container_width=True,
+                type="primary" if room_id == selected_room_id else "secondary",
+            ):
+                _set_active_room(room_id, room_label)
+                st.rerun()
+
     if not gas_unconfirmed and gas_ppm <= 0:
         st.session_state.pop("gas_dialog_armed_at", None)
 
@@ -1305,7 +1387,7 @@ def live_panel():
         st.markdown(
             '<div class="rc-alert">'
             '<span class="material-symbols-outlined icon-fill">warning</span>'
-            '<strong>CRITICAL ALERT:</strong>&nbsp; Gas sensor triggered in Living Room node. Open windows immediately.'
+            '<strong>CRITICAL ALERT:</strong>&nbsp; Gas sensor triggered in the house. Open windows immediately.'
             '</div>',
             unsafe_allow_html=True,
         )
@@ -1351,7 +1433,7 @@ def live_panel():
         st.markdown(
             '<div class="rc-section-hd">'
             '<p class="rc-section-title">Active Devices</p>'
-            '<span class="rc-section-sub"><span class="rc-section-dot"></span>Living Room</span>'
+            f'<span class="rc-section-sub"><span class="rc-section-dot"></span>{escape(room_name)}</span>'
             '</div>',
             unsafe_allow_html=True,
         )
@@ -1378,41 +1460,79 @@ def live_panel():
             )
             if light_on:
                 if st.button("Turn Off", key="light_off", use_container_width=True):
-                    mqtt_command("turn_off", device_type="light")
+                    mqtt_command("turn_off", device_type="light", room_id=selected_room_id)
             else:
                 if st.button("Turn On", key="light_on", use_container_width=True, type="primary"):
-                    mqtt_command("turn_on", device_type="light")
+                    mqtt_command("turn_on", device_type="light", room_id=selected_room_id)
 
         # AC
         with dc1:
-            ac_on  = ac["state"] == "on"
-            on_cls = "on" if ac_on else ""
-            temp   = ac.get("target_temp", 22)
-            pct    = int((temp - 16) / (30 - 16) * 100)
-            st.markdown(
-                f"""<div class="rc-card {on_cls}">
-                    <div class="rc-device-hd">
-                        <div class="rc-device-icon-wrap">
-                            <span class="material-symbols-outlined rc-device-icon">ac_unit</span>
+            if "ac_main" in devices:
+                ac_on  = ac["state"] == "on"
+                on_cls = "on" if ac_on else ""
+                temp   = ac.get("target_temp", 22)
+                pct    = int((temp - 16) / (30 - 16) * 100)
+                st.markdown(
+                    f"""<div class="rc-card {on_cls}">
+                        <div class="rc-device-hd">
+                            <div class="rc-device-icon-wrap">
+                                <span class="material-symbols-outlined rc-device-icon">ac_unit</span>
+                            </div>
+                            <span class="rc-status-badge {'rc-status-on' if ac_on else 'rc-status-off'}">{_ac_badge(ac)}</span>
                         </div>
-                        <span class="rc-status-badge {'rc-status-on' if ac_on else 'rc-status-off'}">{_ac_badge(ac)}</span>
-                    </div>
-                    <p class="rc-device-name">{escape(_device_name(ac, 'AC Unit'))}</p>
-                    <p class="rc-device-id">{escape(_device_code(ac, 'ac_main'))}</p>
-                    <p class="rc-device-meta">{escape(_ac_meta(ac, sensors))}</p>
-                    <div class="rc-temp-bar">
-                        <div class="rc-temp-fill" style="width:{pct}%;"></div>
-                        <div class="rc-temp-thumb" style="left:{pct}%;"></div>
-                    </div>
-                </div>""",
-                unsafe_allow_html=True,
-            )
-            if ac_on:
-                if st.button("Turn Off", key="ac_off", use_container_width=True):
-                    mqtt_command("turn_off", device_type="ac")
+                        <p class="rc-device-name">{escape(_device_name(ac, 'AC Unit'))}</p>
+                        <p class="rc-device-id">{escape(_device_code(ac, 'ac_main'))}</p>
+                        <p class="rc-device-meta">{escape(_ac_meta(ac, sensors))}</p>
+                        <div class="rc-temp-bar">
+                            <div class="rc-temp-fill" style="width:{pct}%;"></div>
+                            <div class="rc-temp-thumb" style="left:{pct}%;"></div>
+                        </div>
+                    </div>""",
+                    unsafe_allow_html=True,
+                )
+                if ac_on:
+                    if st.button("Turn Off", key="ac_off", use_container_width=True):
+                        mqtt_command("turn_off", device_type="ac", room_id=selected_room_id)
+                else:
+                    if st.button("Turn On", key="ac_on", use_container_width=True, type="primary"):
+                        mqtt_command("turn_on", device_type="ac", room_id=selected_room_id)
+            elif "gas_ppm" in sensors:
+                gas_on = sensors.get("gas_ppm", 0) > 0
+                gas_level = int(sensors.get("gas_ppm", 0))
+                gas_alert_cls = "on" if gas_on else ""
+                st.markdown(
+                    f"""<div class="rc-card {gas_alert_cls}">
+                        <div class="rc-device-hd">
+                            <div class="rc-device-icon-wrap">
+                                <span class="material-symbols-outlined rc-device-icon">co2</span>
+                            </div>
+                            <span class="rc-status-badge {'rc-status-on' if gas_on else 'rc-status-off'}">{'ON' if gas_on else 'OFF'}</span>
+                        </div>
+                        <p class="rc-device-name">Kitchen Gas</p>
+                        <p class="rc-device-id">GAS_PPM</p>
+                        <p class="rc-device-meta">{escape(_gas_meta(sensors, alerts))}</p>
+                    </div>""",
+                    unsafe_allow_html=True,
+                )
+                gas_level_value = st.slider(
+                    "Gas Level (ppm)",
+                    min_value=0,
+                    max_value=1000,
+                    value=gas_level,
+                    step=50,
+                    key=f"gas_level_{selected_room_id}",
+                )
+                gas_btn_a, gas_btn_b = st.columns(2, gap="small")
+                with gas_btn_a:
+                    if st.button("Gas On", key="gas_on", use_container_width=True, type="primary" if not gas_on else "secondary"):
+                        mqtt_command("set_gas_state", parameters={"enabled": True}, room_id=selected_room_id)
+                with gas_btn_b:
+                    if st.button("Gas Off", key="gas_off", use_container_width=True):
+                        mqtt_command("set_gas_state", parameters={"enabled": False}, room_id=selected_room_id)
+                if st.button("Apply Gas Level", key="gas_apply", use_container_width=True):
+                    mqtt_command("set_gas_level", parameters={"gas_ppm": gas_level_value}, room_id=selected_room_id)
             else:
-                if st.button("Turn On", key="ac_on", use_container_width=True, type="primary"):
-                    mqtt_command("turn_on", device_type="ac")
+                st.empty()
 
         # Door
         with dc2:
@@ -1437,10 +1557,10 @@ def live_panel():
                 )
                 if is_locked:
                     if st.button("Action: Unlock Door", key="door_unlock", use_container_width=True):
-                        mqtt_command("unlock", device_type="door")
+                        mqtt_command("unlock", device_type="door", room_id=selected_room_id)
                 else:
                     if st.button("Action: Lock Door", key="door_lock", use_container_width=True, type="primary"):
-                        mqtt_command("lock", device_type="door")
+                        mqtt_command("lock", device_type="door", room_id=selected_room_id)
 
         if st.session_state.last_manual_result:
             r = st.session_state.last_manual_result

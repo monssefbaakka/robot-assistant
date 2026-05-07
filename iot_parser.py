@@ -9,8 +9,25 @@ ROOM_ALIASES = {
         "salon",
         "sejour",
         "main room",
-        "room",
-    ]
+    ],
+    "kitchen": [
+        "kitchen",
+        "cuisine",
+    ],
+    "bedroom": [
+        "bedroom",
+        "bed room",
+        "chambre",
+    ],
+    "toilet": [
+        "toilet",
+        "bathroom",
+        "restroom",
+        "wc",
+        "washroom",
+        "toilets",
+        "salle de bain",
+    ],
 }
 
 DEVICE_ALIASES = {

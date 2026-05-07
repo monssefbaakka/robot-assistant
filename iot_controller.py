@@ -45,8 +45,13 @@ def _now_iso():
     return datetime.now(timezone.utc).isoformat()
 
 
+def _room_label(room_id):
+    return str(room_id or "living_room").replace("_", " ").title()
+
+
 def _hardware_expected_device_update(command):
     room_id = command.get("room") or "living_room"
+    room_label = _room_label(room_id)
     device_type = command.get("device_type")
     sensor_type = command.get("sensor_type")
     action = command.get("action")
@@ -62,7 +67,7 @@ def _hardware_expected_device_update(command):
                     "action": action,
                     "room": room_id,
                     "device_type": device_type,
-                    "message": "Living Room Main Light turned on.",
+                    "message": f"{room_label} Main Light turned on.",
                 },
             }
         if action == "set_brightness":
@@ -77,7 +82,7 @@ def _hardware_expected_device_update(command):
                     "action": action,
                     "room": room_id,
                     "device_type": device_type,
-                    "message": f"Living Room light brightness set to {brightness}%.",
+                    "message": f"{room_label} light brightness set to {brightness}%.",
                 },
             }
         if action == "turn_off":
@@ -90,7 +95,7 @@ def _hardware_expected_device_update(command):
                     "action": action,
                     "room": room_id,
                     "device_type": device_type,
-                    "message": "Living Room Main Light turned off.",
+                    "message": f"{room_label} Main Light turned off.",
                 },
             }
 
@@ -105,7 +110,7 @@ def _hardware_expected_device_update(command):
                     "action": action,
                     "room": room_id,
                     "device_type": device_type,
-                    "message": "Living Room Main AC turned on.",
+                    "message": f"{room_label} Main AC turned on.",
                 },
             }
         if action == "turn_off":
@@ -118,7 +123,7 @@ def _hardware_expected_device_update(command):
                     "action": action,
                     "room": room_id,
                     "device_type": device_type,
-                    "message": "Living Room Main AC turned off.",
+                    "message": f"{room_label} Main AC turned off.",
                 },
             }
         if action == "set_temperature":
@@ -132,7 +137,7 @@ def _hardware_expected_device_update(command):
                     "action": action,
                     "room": room_id,
                     "device_type": device_type,
-                    "message": "Living Room AC target temperature updated.",
+                    "message": f"{room_label} AC target temperature updated.",
                 },
             }
 
@@ -147,7 +152,7 @@ def _hardware_expected_device_update(command):
                     "action": action,
                     "room": room_id,
                     "device_type": device_type,
-                    "message": "Living Room Front Door locked.",
+                    "message": f"{room_label} Front Door locked.",
                 },
             }
         if action == "unlock":
@@ -160,7 +165,7 @@ def _hardware_expected_device_update(command):
                     "action": action,
                     "room": room_id,
                     "device_type": device_type,
-                    "message": "Living Room Front Door unlocked.",
+                    "message": f"{room_label} Front Door unlocked.",
                 },
             }
 
@@ -178,7 +183,7 @@ def _hardware_expected_device_update(command):
                     "action": action,
                     "room": room_id,
                     "sensor_type": sensor_type,
-                    "message": f"Living Room gas simulation turned {'on' if enabled else 'off'}.",
+                    "message": f"{room_label} gas simulation turned {'on' if enabled else 'off'}.",
                 },
             }
         if action == "set_gas_level":
@@ -192,7 +197,7 @@ def _hardware_expected_device_update(command):
                     "action": action,
                     "room": room_id,
                     "sensor_type": sensor_type,
-                    "message": f"Living Room gas level set to {gas_ppm} ppm.",
+                    "message": f"{room_label} gas level set to {gas_ppm} ppm.",
                 },
             }
 
@@ -225,6 +230,23 @@ def _hardware_result_from_persisted_state(command, expected_device_update):
     if expected_device_update["matcher"](payload):
         return deepcopy(expected_device_update["result"])
     return None
+
+
+def _publish_room_state_via_broker(broker, state, room_id):
+    room = state.get("rooms", {}).get(room_id)
+    if not room:
+        return
+
+    for device_id, device in room.get("devices", {}).items():
+        broker.publish(MQTTTopics.room_device_state(room_id, device_id), deepcopy(device))
+
+    for sensor_name, value in room.get("sensors", {}).items():
+        broker.publish(
+            MQTTTopics.room_sensor_state(room_id, sensor_name),
+            {"name": sensor_name, "value": value},
+        )
+
+    broker.publish(MQTTTopics.SNAPSHOT, deepcopy(state))
 
 
 class IoTMQTTSimulatorService:
@@ -325,6 +347,30 @@ class IoTMQTTController:
             return None
         return self.execute_command(command)
 
+    def _execute_local_room_fallback(self, command):
+        state = load_state()
+        advance_state(state)
+        result = apply_command(state, command)
+        save_state(state)
+
+        event = {
+            "timestamp": _now_iso(),
+            "source": command.get("source", "mqtt"),
+            "topic": MQTTTopics.COMMANDS,
+            "room": command.get("room"),
+            "action": command.get("action"),
+            "target": command.get("device_type") or command.get("sensor_type") or command.get("device_id"),
+            "status": "success" if result.get("ok") else "error",
+            "raw_text": command.get("raw_text"),
+            "details": result,
+        }
+        append_event(event)
+        if state.get("alerts", {}).get("gas"):
+            self.broker.publish(MQTTTopics.ALERT_GAS, {"alert": True, "message": "Gas leak detected!"})
+        _publish_room_state_via_broker(self.broker, state, command.get("room"))
+        self.broker.publish(MQTTTopics.EVENTS, event)
+        return result
+
     def execute_command(self, command):
         correlation_id = str(uuid.uuid4())
         response_event = threading.Event()
@@ -403,7 +449,7 @@ class IoTMQTTController:
                         "No MQTT response came back from the hardware node. "
                         f"Check that Wokwi is running, subscribed to {MQTTTopics.COMMANDS}, "
                         f"and using the same broker as Python ({host}:{port}). "
-                        "If you changed firmware config, rebuild the ESP32 project from "
+                        "If you changed firmware config or diagram wiring, rebuild the ESP32 project from "
                         "firmware/wokwi/esp32-home-node/src/main.cpp and confirm the serial monitor shows "
                         "'MQTT connected' and 'Subscribed to: robocompagnon/home/commands'."
                         f"{callback_hint}"

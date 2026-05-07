@@ -1,5 +1,635 @@
 # Task Log
 
+## Task: Add Consolidated Full Project Report
+
+### Status
+Completed
+
+### Goal
+Create one full documentation report in `/docs` that explains the project end to end, including what it does, what technologies it uses, how the flows work, and the main sequence diagrams.
+
+### What Was Implemented
+- Added `docs/project-full-report.md`
+- Consolidated the current project behavior into one report
+- Documented:
+- project purpose
+- room and device model
+- runtime modes
+- MQTT topic usage
+- simulator and hardware flows
+- gas alert and confirmation logic
+- dashboard behavior
+- sequence diagrams and flow diagrams
+
+### How It Works
+1. The new report acts as the main reference document for the current system.
+2. It summarizes the already implemented architecture and behavior from the codebase and existing docs.
+3. It includes high-level and detailed sequences for command handling, simulator mode, hardware mode, dashboard flow, and gas safety flow.
+
+### Files Changed
+- `docs/project-full-report.md`
+- `docs/task-log.md`
+
+### MQTT Topics
+- No topic changes
+- Documented existing topics:
+- `robocompagnon/home/commands`
+- `robocompagnon/home/responses`
+- `robocompagnon/home/events`
+- `robocompagnon/home/snapshot`
+- `robocompagnon/home/alerts/gas`
+- `robocompagnon/home/rooms/{room_id}/devices/{device_id}/state`
+- `robocompagnon/home/rooms/{room_id}/sensors/{sensor_name}`
+
+### Hardware Involved
+- None
+
+### How To Test
+1. Open `docs/project-full-report.md`.
+2. Confirm it explains the project scope, architecture, rooms, devices, sensors, MQTT topics, runtime modes, and safety logic.
+3. Confirm Mermaid diagrams render correctly in the Markdown viewer used for the project.
+
+### Notes / Limitations
+- This task adds consolidated documentation only.
+- It does not change runtime code or MQTT behavior.
+
+## Task: Connect Wokwi Multi-Room Hardware To Website
+
+### Status
+Completed
+
+### Goal
+Make the website talk to actual Wokwi-backed room components instead of using a mix of one real room and local fallback rooms.
+
+### What Was Implemented
+- Replaced the one-room ESP32 firmware with a simple multi-room firmware model
+- The Wokwi node now handles dashboard commands for:
+- living room
+- kitchen
+- bedroom
+- toilet
+- Wired extra room components in `diagram.json` to real ESP32 pins:
+- kitchen light
+- bedroom light
+- bedroom AC
+- bedroom door
+- toilet light
+- toilet door
+- Removed the Python hardware-mode fallback that previously simulated non-living-room actions locally
+- Updated the Wokwi README to document the connected room/device mapping
+
+### How It Works
+1. The website publishes commands to `robocompagnon/home/commands`.
+2. The Wokwi ESP32 now accepts commands for all dashboard rooms.
+3. The ESP32 publishes room device and sensor states back on the existing MQTT topics.
+4. The Python hardware bridge persists those MQTT updates, and the website refreshes from that shared state.
+
+### Files Changed
+- `firmware/wokwi/esp32-home-node/src/main.cpp`
+- `firmware/wokwi/esp32-home-node/diagram.json`
+- `firmware/wokwi/esp32-home-node/README.md`
+- `firmware/wokwi/esp32-home-node/sketch.ino`
+- `firmware/wokwi/esp32-home-node/config.example.h`
+- `firmware/wokwi/esp32-home-node/config.h`
+- `iot_controller.py`
+- `docs/task-log.md`
+
+### MQTT Topics
+- `robocompagnon/home/commands`
+- `robocompagnon/home/responses`
+- `robocompagnon/home/events`
+- `robocompagnon/home/alerts/gas`
+- `robocompagnon/home/rooms/{room_id}/devices/{device_id}/state`
+- `robocompagnon/home/rooms/{room_id}/sensors/{sensor_name}`
+
+### Hardware Involved
+- ESP32 DevKit
+- LEDs
+- DHT22
+- Photoresistor
+- Slide potentiometer
+- Slide switch
+- Servo
+- Buzzer
+
+### How To Test
+1. Rebuild and run the Wokwi ESP32 project from `firmware/wokwi/esp32-home-node`.
+2. Start the website with `IOT_MODE=hardware`.
+3. Open the kitchen, bedroom, and toilet in the website.
+4. Toggle lights, AC, doors, and kitchen gas.
+5. Confirm the Wokwi LEDs/servos move and the website updates from MQTT without local fallback.
+
+### Notes / Limitations
+- One ESP32 still uses shared sensors to generate several room sensor topics, so this is a simple demo mapping rather than separate real hardware per room.
+
+## Task: Align Wokwi House Diagram With Website Rooms
+
+### Status
+Completed
+
+### Goal
+Fix `firmware/wokwi/esp32-home-node/diagram.json` so the Wokwi house diagram visibly matches the rooms and components shown in the website.
+
+### What Was Implemented
+- Rebuilt the full Wokwi diagram layout around the website room model
+- Added a real visible bedroom zone instead of only a bedroom label
+- Added visible room components for:
+- living room: light, AC, front door, DHT22, light sensor
+- kitchen: light, gas level, gas alert LED, buzzer
+- bedroom: light, AC, door
+- toilet: light, door
+- garage: visual extension area
+- Updated the Wokwi README so the layout description matches the actual dashboard components
+
+### How It Works
+1. The diagram now shows the same core rooms as the dashboard.
+2. Connected ESP32 parts still represent the live hardware-driven signals.
+3. Extra room parts are used as visual house components so the Wokwi view stays consistent with the website.
+
+### Files Changed
+- `firmware/wokwi/esp32-home-node/diagram.json`
+- `firmware/wokwi/esp32-home-node/README.md`
+- `docs/task-log.md`
+
+### MQTT Topics
+- No topic changes
+
+### Hardware Involved
+- ESP32 DevKit
+- LEDs
+- DHT22
+- Photoresistor
+- Slide potentiometer
+- Slide switch
+- Servo
+- Buzzer
+
+### How To Test
+1. Open `firmware/wokwi/esp32-home-node/diagram.json` in Wokwi.
+2. Confirm the house layout shows living room, kitchen, bedroom, toilet, and garage.
+3. Confirm the bedroom shows visible light, AC, and door components.
+4. Confirm the toilet shows visible light and door components.
+5. Confirm the connected living room and kitchen gas hardware still appear on-screen.
+
+### Notes / Limitations
+- The diagram now matches the website visually, but the current ESP32 firmware still drives a smaller set of connected hardware signals than the full multi-room dashboard.
+
+## Task: Fix Wokwi Diagram Layout
+
+### Status
+Completed
+
+### Goal
+Fix `diagram.json` so the Wokwi hardware diagram has a cleaner, more stable layout.
+
+### What Was Implemented
+- Rebuilt the Wokwi diagram with normalized positive coordinates
+- Kept the same connected parts and firmware pin mapping
+- Kept the same room-zone labeling idea
+- Simplified placement so the canvas is easier to read and less likely to open with awkward off-screen positioning
+
+### How It Works
+1. The ESP32 stays in the control area.
+2. Components are grouped into living room, kitchen, bedroom, toilet, and garage zones.
+3. The existing GPIO wiring remains the same.
+
+### Files Changed
+- `firmware/wokwi/esp32-home-node/diagram.json`
+- `docs/task-log.md`
+
+### MQTT Topics
+- No topic changes
+
+### Hardware Involved
+- ESP32 DevKit
+- LEDs
+- DHT22
+- Photoresistor
+- Slide potentiometer
+- Slide switch
+- Servo
+- Buzzer
+
+### How To Test
+1. Open `firmware/wokwi/esp32-home-node/diagram.json` in Wokwi.
+2. Confirm the diagram loads with all parts visible.
+3. Confirm the room labels and connected components are placed on-screen.
+
+### Notes / Limitations
+- This fixes the layout/diagram structure, not the firmware behavior.
+
+## Task: Draw Real Room Components In Simulation
+
+### Status
+Completed
+
+### Goal
+Replace abstract room badges in the visual simulator with actual visible room components.
+
+### What Was Implemented
+- Added explicit in-room component drawings in `simulation.py`
+- Kitchen now visibly shows:
+- kitchen light
+- kitchen gas component
+- Bedroom now visibly shows:
+- bedroom light
+- bedroom AC
+- bedroom door
+- Toilet now visibly shows:
+- toilet light
+- toilet door
+
+### How It Works
+1. Each room now draws simple component shapes inside the room area.
+2. The component color follows the current room state.
+3. Lights, AC, doors, and gas are now visible as room objects instead of only text or badges.
+
+### Files Changed
+- `simulation.py`
+- `docs/task-log.md`
+
+### MQTT Topics
+- No topic changes
+
+### Hardware Involved
+- None
+
+### How To Test
+1. Run `.\.venv\Scripts\python.exe simulation.py`.
+2. Confirm the kitchen shows a light and gas component.
+3. Confirm the bedroom shows light, AC, and door.
+4. Confirm the toilet shows light and door.
+
+### Notes / Limitations
+- Components are simple drawn symbols, not sprite assets.
+
+## Task: Match Room Devices Between Website And Simulation
+
+### Status
+Completed
+
+### Goal
+Show the correct per-room devices in both the website and the visual simulation, with kitchen gas controls and no fake AC cards in rooms that do not have AC.
+
+### What Was Implemented
+- Added visible room device badges in `simulation.py` for:
+- kitchen light
+- bedroom light, AC, and door
+- toilet light and door
+- Updated the website device row in `app_complet.py`
+- Removed the fake AC placeholder card from kitchen and toilet
+- Added kitchen gas controls with:
+- gas on
+- gas off
+- gas level slider and apply action
+
+### How It Works
+1. The simulator now draws device chips inside each room based on the room state.
+2. The website checks which devices and sensors exist in the selected room.
+3. If the room has AC, it shows the AC card.
+4. If the room does not have AC but has gas data, it shows gas controls instead.
+5. Rooms without AC and without gas no longer show a fake AC placeholder.
+
+### Files Changed
+- `app_complet.py`
+- `simulation.py`
+- `docs/task-log.md`
+
+### MQTT Topics
+- No new topics
+- Reuses:
+- `robocompagnon/home/rooms/{room_id}/devices/light_main/state`
+- `robocompagnon/home/rooms/{room_id}/devices/ac_main/state`
+- `robocompagnon/home/rooms/{room_id}/devices/door_main/state`
+- `robocompagnon/home/rooms/{room_id}/sensors/gas_ppm`
+
+### Hardware Involved
+- None
+
+### How To Test
+1. Run `streamlit run app_complet.py`.
+2. Open `Kitchen` and confirm the page shows light plus gas controls, not AC.
+3. Open `Toilet` and confirm the page shows light and door, not AC.
+4. Open `Bedroom` and confirm the page shows light, AC, and door.
+5. Run `.\.venv\Scripts\python.exe simulation.py` and confirm room device badges match the same room contents.
+
+### Notes / Limitations
+- Kitchen gas controls operate through the existing gas simulator actions.
+
+## Task: Prevent Hardware-Mode Timeouts For Non-Wokwi Rooms
+
+### Status
+Completed
+
+### Goal
+Make room controls such as `Kitchen` work in hardware mode even though the current Wokwi node only represents one physical room.
+
+### What Was Implemented
+- Added a hardware-mode local fallback in `iot_controller.py`
+- Kept `living_room` on the real Wokwi ESP32 path
+- Routed `kitchen`, `bedroom`, and `toilet` commands through the local simulator/state path when hardware mode is active
+- Continued publishing updated room state and events so the dashboard stays consistent
+
+### How It Works
+1. In hardware mode, commands for `living_room` still go to the Wokwi MQTT node.
+2. Commands for the other rooms are executed locally in Python.
+3. The controller saves state, appends events, and republishes room updates for those fallback rooms.
+4. This avoids MQTT timeouts for rooms the single Wokwi node does not physically implement.
+
+### Files Changed
+- `iot_controller.py`
+- `docs/task-log.md`
+
+### MQTT Topics
+- No new topics
+- Existing room topics are republished for fallback rooms
+
+### Hardware Involved
+- Wokwi ESP32 still represents the `living_room` hardware path
+
+### How To Test
+1. Run the app in hardware mode with Wokwi connected.
+2. Click `Kitchen` and turn the light on.
+3. Confirm the command returns immediately instead of timing out.
+4. Click `Living Room` and confirm those commands still use the Wokwi path.
+
+### Notes / Limitations
+- This is a hybrid approach: one real Wokwi room plus locally simulated extra rooms.
+- It keeps the demo simple and avoids forcing a multi-node firmware redesign.
+
+## Task: Sync Website And Simulation House Definitions
+
+### Status
+Completed
+
+### Goal
+Make the website and the visual simulation use the same house definition so they stay matched.
+
+### What Was Implemented
+- Added a shared `house_config.py` module
+- Moved room names, room ordering, and simulation room layout metadata into the shared config
+- Updated `iot_store.py` to build default room state from the same shared room definitions
+- Updated `app_complet.py` and `simulation.py` to use the shared room helpers
+
+### How It Works
+1. `house_config.py` defines the source-of-truth room list.
+2. The website reads room labels and order from that shared config.
+3. The visual simulation reads the same room labels and room layout mapping from that config.
+4. The default IoT state also uses the same room definitions, reducing drift.
+
+### Files Changed
+- `house_config.py`
+- `iot_store.py`
+- `app_complet.py`
+- `simulation.py`
+- `docs/task-log.md`
+
+### MQTT Topics
+- No new topics
+- Existing room topics remain unchanged
+
+### Hardware Involved
+- None
+
+### How To Test
+1. Run `streamlit run app_complet.py`.
+2. Run `.\.venv\Scripts\python.exe simulation.py`.
+3. Confirm both show the same room names and same room set: `Living Room`, `Kitchen`, `Bedroom`, `Toilet`.
+4. Confirm room ordering is consistent between the two.
+
+### Notes / Limitations
+- This syncs the shared house definition, not every visual style detail.
+- Wokwi remains a separate hardware schematic and is not part of this website/simulation sync.
+
+## Task: Fix Room Picker Streamlit State Error
+
+### Status
+Completed
+
+### Goal
+Remove the Streamlit session-state crash that happened after adding clickable room switching.
+
+### What Was Implemented
+- Removed the unsafe write to `st.session_state.room_picker` after the selectbox widget was instantiated
+- Synced the room picker value before widget creation using the current `selected_room_id`
+
+### How It Works
+1. The dashboard computes the desired room label from `selected_room_id`.
+2. It updates `room_picker` only before `st.selectbox()` is created.
+3. The selectbox and room buttons now stay in sync without triggering the Streamlit exception.
+
+### Files Changed
+- `app_complet.py`
+- `docs/task-log.md`
+
+### MQTT Topics
+- No topic changes
+
+### Hardware Involved
+- None
+
+### How To Test
+1. Run `streamlit run app_complet.py`.
+2. Click room buttons and also change the sidebar room picker.
+3. Confirm the page switches rooms without showing a Streamlit API exception.
+
+### Notes / Limitations
+- This fixes the state-management crash only; room switching behavior remains the same.
+
+## Task: Make Room Cards Switch Dashboard Context
+
+### Status
+Completed
+
+### Goal
+Let the user click room controls on the website so the dashboard content and actions switch to the selected room.
+
+### What Was Implemented
+- Added active-room state helper logic in the dashboard
+- Connected the sidebar room picker to shared room state
+- Added clickable room buttons in the main room overview section
+- Kept device control commands tied to the selected room so light, AC, door, and gas actions now follow the room the user picked
+
+### How It Works
+1. The dashboard stores the current room in `selected_room_id`.
+2. Each room card now has a clickable button with the room name.
+3. Clicking `Kitchen`, `Bedroom`, `Toilet`, or `Living Room` updates the active room and rerenders the page.
+4. The device section and command buttons then show and control only that room.
+
+### Files Changed
+- `app_complet.py`
+- `docs/task-log.md`
+
+### MQTT Topics
+- No new topics
+- Existing room topics are reused based on the selected room
+
+### Hardware Involved
+- None
+
+### How To Test
+1. Run `streamlit run app_complet.py`.
+2. Click `Kitchen`, `Bedroom`, `Toilet`, or `Living Room` in the room overview area.
+3. Confirm the page title, room stats, and device controls switch to that room.
+4. Trigger a room action such as light or door control and confirm it applies to the selected room.
+
+### Notes / Limitations
+- The room card body itself is not native clickable HTML in Streamlit, so the clickable room control is the button attached to each room card.
+
+## Task: Expand Wokwi House Schema
+
+### Status
+Completed
+
+### Goal
+Make the Wokwi diagram larger and clearer by turning it into a house-style schema with more room zones, including a garage.
+
+### What Was Implemented
+- Rebuilt `firmware/wokwi/esp32-home-node/diagram.json` into a much larger room-zoned layout
+- Added visible zone labels for `Living Room`, `Kitchen`, `Bedroom`, `Toilet`, `Garage`, and `Control / Entry Area`
+- Repositioned the existing connected parts so they are grouped by house area instead of stacked in one tight cluster
+- Kept the current firmware pin mapping unchanged so the Wokwi circuit still matches the code
+- Updated the Wokwi README to describe the larger room-based diagram
+
+### How It Works
+1. The ESP32 stays connected to the same devices and GPIO pins as before.
+2. The diagram now spreads those devices across a larger canvas.
+3. Text labels divide the Wokwi project into house zones.
+4. Living-room devices, kitchen gas monitoring, bedroom occupancy, and garage door hardware are easier to understand visually.
+
+### Files Changed
+- `firmware/wokwi/esp32-home-node/diagram.json`
+- `firmware/wokwi/esp32-home-node/README.md`
+- `docs/task-log.md`
+
+### MQTT Topics
+- No topic changes
+
+### Hardware Involved
+- ESP32 DevKit
+- LEDs for light, AC, gas alert, and door status
+- Servo for door control
+- DHT22
+- Photoresistor
+- Slide potentiometer for gas simulation
+- Slide switch for occupancy simulation
+- Buzzer
+
+### How To Test
+1. Open `firmware/wokwi/esp32-home-node/diagram.json` in Wokwi or VS Code Wokwi.
+2. Confirm the canvas now shows a larger house layout.
+3. Verify the labels `Living Room`, `Kitchen`, `Bedroom`, `Toilet`, and `Garage` are visible.
+4. Start the simulation and confirm the existing LEDs, servo, buzzer, and sensors still appear in the new positions.
+
+### Notes / Limitations
+- This change improves the visual schema and room organization only.
+- The firmware behavior and GPIO mapping were intentionally kept simple and unchanged.
+- Some room zones are visual groupings around the current single ESP32 node, not separate microcontroller rooms.
+
+## Task: Add House Layout To Visual Simulation
+
+### Status
+Completed
+
+### Goal
+Make the visual simulation look like a house with the requested rooms instead of only showing a robot on an empty grid.
+
+### What Was Implemented
+- Reworked `simulation.py` into a simple house floor plan
+- Added visible rooms for `Living Room`, `Kitchen`, `Bedroom`, and `Toilet`
+- Added room walls, door gaps, room labels, and per-room IoT status text
+- Started the robot inside the house so movement now feels tied to the home layout
+- Loaded current room state from `iot_state.json` so the house view can show light, door, temperature, humidity, and gas data
+
+### How It Works
+1. The Pygame simulator draws a fixed house plan with four named rooms.
+2. Each room reads its latest data from the IoT state file.
+3. The room panel changes visually based on light and gas state.
+4. The robot still uses the same movement controls, but now moves inside a visible house map.
+
+### Files Changed
+- `simulation.py`
+- `docs/task-log.md`
+
+### MQTT Topics
+- No new MQTT topics
+
+### Hardware Involved
+- None
+
+### How To Test
+1. Run `.\.venv\Scripts\python.exe simulation.py`.
+2. Confirm the window shows four rooms: `Living Room`, `Kitchen`, `Bedroom`, and `Toilet`.
+3. Move the robot with the arrow keys.
+4. Change a room device or gas value through the dashboard or `iot_state.json`.
+5. Confirm the room status text in the simulator updates.
+
+### Notes / Limitations
+- This is a simple fixed floor plan, not full collision-based navigation.
+- The simulator reads the persisted IoT state; it does not publish MQTT messages by itself.
+
+## Task: Expand Simulation To Multi-Room House
+
+### Status
+Completed
+
+### Goal
+Turn the simulator from a single-room setup into a simple house layout with a living room, kitchen, bedroom, and toilet.
+
+### What Was Implemented
+- Added `kitchen`, `bedroom`, and `toilet` to the IoT state model
+- Kept the existing `living_room` and added room backfill logic so old state files gain the missing rooms automatically
+- Added parser aliases so text commands can target the new rooms
+- Updated dashboard controls to work on the selected room and show a compact whole-house overview
+- Updated architecture and MQTT topic documentation for the new room layout
+
+### How It Works
+1. The simulator now stores four rooms under `rooms` in `iot_state.json`.
+2. Each room has simple local devices and sensors based on the demo needs.
+3. The parser detects words like `kitchen`, `bedroom`, and `toilet` and sends the command to that room.
+4. The MQTT simulator publishes device and sensor topics per room using the same room topic pattern.
+5. The dashboard lets you choose one room for control while still showing the status of the full house.
+
+### Files Changed
+- `iot_store.py`
+- `iot_state.json`
+- `iot_parser.py`
+- `iot_controller.py`
+- `agent.py`
+- `app_complet.py`
+- `docs/architecture.md`
+- `docs/mqtt-topics.md`
+- `docs/task-log.md`
+
+### MQTT Topics
+- `robocompagnon/home/rooms/living_room/devices/light_main/state`
+- `robocompagnon/home/rooms/living_room/devices/ac_main/state`
+- `robocompagnon/home/rooms/living_room/devices/door_main/state`
+- `robocompagnon/home/rooms/living_room/sensors/gas_ppm`
+- `robocompagnon/home/rooms/kitchen/devices/light_main/state`
+- `robocompagnon/home/rooms/kitchen/sensors/gas_ppm`
+- `robocompagnon/home/rooms/bedroom/devices/light_main/state`
+- `robocompagnon/home/rooms/bedroom/devices/ac_main/state`
+- `robocompagnon/home/rooms/bedroom/devices/door_main/state`
+- `robocompagnon/home/rooms/toilet/devices/light_main/state`
+- `robocompagnon/home/rooms/toilet/devices/door_main/state`
+
+### Hardware Involved
+- None new
+- Existing devices remain simulated in Python
+
+### How To Test
+1. Run `streamlit run app_complet.py`.
+2. In the sidebar, switch between `Living Room`, `Kitchen`, `Bedroom`, and `Toilet`.
+3. Verify each room shows its own device and sensor state.
+4. Send chat commands like `turn on the kitchen light`, `lock the bedroom door`, and `what is the gas level in the kitchen`.
+5. Confirm the correct room updates in the dashboard and `iot_state.json`.
+
+### Notes / Limitations
+- This stays a simple demo house, not a floor-plan engine.
+- Kitchen has gas simulation; the dashboard still exposes the shared house gas alert at top level.
+- Room controls only operate on devices that actually exist in that room.
+
 ## Task: Force Visible Door Lock Movement In Wokwi
 
 ### Status

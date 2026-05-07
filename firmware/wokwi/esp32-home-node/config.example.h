@@ -17,7 +17,6 @@
 #define MQTT_ALERT_GAS_TOPIC "robocompagnon/home/alerts/gas"
 
 // Device identity
-#define ROOM_ID "living_room"
 #define NODE_NAME "wokwi-esp32-home-node"
 
 #endif

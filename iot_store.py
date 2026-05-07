@@ -5,6 +5,7 @@ from copy import deepcopy
 from datetime import datetime, timezone
 
 from config_env import load_env_file
+from house_config import default_rooms_payload
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -40,52 +41,7 @@ def default_state():
             "updated_at": now,
         },
         "rooms": {
-            "living_room": {
-                "name": "Living Room",
-                "devices": {
-                    "light_main": {
-                        "id": "light_main",
-                        "type": "light",
-                        "name": "Main Light",
-                        "state": "on",
-                        "brightness": 80,
-                        "power_w": 12,
-                    },
-                    "ac_main": {
-                        "id": "ac_main",
-                        "type": "ac",
-                        "name": "Main AC",
-                        "state": "off",
-                        "mode": "cool",
-                        "target_temp": 22,
-                        "fan_speed": 2,
-                        "power_w": 0,
-                    },
-                    "door_main": {
-                        "id": "door_main",
-                        "type": "door",
-                        "name": "Front Door",
-                        "state": "locked",
-                    },
-                    "buzzer_main": {
-                        "id": "buzzer_main",
-                        "type": "buzzer",
-                        "name": "Gas Safety Buzzer",
-                        "state": "off",
-                    },
-                },
-                "sensors": {
-                    "temperature": 27.4,
-                    "humidity": 48,
-                    "occupancy": True,
-                    "light_level": 760,
-                    "gas_ppm": 120,
-                },
-                "environment": {
-                    "insulation_factor": 0.72,
-                    "sun_exposure": 0.65,
-                },
-            }
+            **default_rooms_payload()
         },
         "alerts": {
             "gas": False,
@@ -132,6 +88,7 @@ def _load_events_payload():
 
 
 def _normalize_state_payload(payload):
+    defaults = default_state()
     payload.setdefault("meta", {})
     payload.setdefault("outside", {})
     payload.setdefault("rooms", {})
@@ -142,6 +99,25 @@ def _normalize_state_payload(payload):
     gas_confirmation.setdefault("pending", False)
     gas_confirmation.setdefault("armed_at", None)
     gas_confirmation.setdefault("confirmed", False)
+
+    for room_id, default_room in defaults["rooms"].items():
+        room = payload["rooms"].setdefault(room_id, deepcopy(default_room))
+        room.setdefault("name", default_room["name"])
+        room.setdefault("devices", {})
+        room.setdefault("sensors", {})
+        room.setdefault("environment", {})
+
+        for device_id, default_device in default_room["devices"].items():
+            device = room["devices"].setdefault(device_id, deepcopy(default_device))
+            for key, value in default_device.items():
+                device.setdefault(key, value)
+
+        for sensor_name, sensor_value in default_room["sensors"].items():
+            room["sensors"].setdefault(sensor_name, sensor_value)
+
+        for env_key, env_value in default_room["environment"].items():
+            room["environment"].setdefault(env_key, env_value)
+
     return payload
 
 

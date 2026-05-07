@@ -4,15 +4,27 @@ This folder is the first hardware-simulation slice for moving device behavior ou
 
 ## What it simulates
 
-- `light_main` on GPIO26 using a yellow LED
-- `ac_main` on GPIO27 using a blue LED
-- `door_main` on GPIO18 using a servo
-- `temperature` and `humidity` using a DHT22 on GPIO4
-- `gas_ppm` using a slide potentiometer on GPIO34
-- visible gas alarm LED on GPIO33 when gas level is high
-- gas safety buzzer on GPIO32 if gas stays unconfirmed for 30 seconds
-- `light_level` using a photoresistor on GPIO35
-- `occupancy` using a slide switch on GPIO5
+- A house-style Wokwi layout with labeled zones for:
+- `living room`
+- `kitchen`
+- `bedroom`
+- `toilet`
+- `garage`
+- A single ESP32 firmware that now publishes room topics for the same dashboard rooms:
+- `robocompagnon/home/rooms/living_room/...`
+- `robocompagnon/home/rooms/kitchen/...`
+- `robocompagnon/home/rooms/bedroom/...`
+- `robocompagnon/home/rooms/toilet/...`
+- Connected components mapped to the dashboard device model:
+- living room: light LED on GPIO26, AC LED on GPIO27, door servo on GPIO18
+- kitchen: light LED on GPIO21, gas slider on GPIO34, gas alert LED on GPIO33, buzzer on GPIO32
+- bedroom: light LED on GPIO14, AC LED on GPIO13, door servo on GPIO23
+- toilet: light LED on GPIO22, door servo on GPIO15
+- shared sensors and indicators:
+- DHT22 on GPIO4
+- photoresistor on GPIO35
+- occupancy switch on GPIO5
+- living room door state LEDs on GPIO19 and GPIO25
 
 ## MQTT contract
 
@@ -32,10 +44,13 @@ For local development with the Python app:
 - run the Python app with `IOT_MODE=hardware`
 - point both sides to the same reachable MQTT broker
 
+The firmware uses one set of shared physical sensors to generate the room sensor topics, so not every room has a dedicated temperature or humidity sensor. The main goal is to keep the Wokwi simulation simple while making the website and MQTT room model line up.
+
 ## Files
 
-- `sketch.ino`: ESP32 MQTT firmware
-- `diagram.json`: Wokwi wiring
+- `src/main.cpp`: ESP32 MQTT firmware
+- `sketch.ino`: thin include wrapper for Wokwi/Arduino compatibility
+- `diagram.json`: Wokwi wiring and enlarged room-based house schema
 - `libraries.txt`: Arduino libraries needed by Wokwi
 - `config.example.h`: copy to `config.h` and set your broker host if needed
   The template now defaults to `broker.emqx.io` to match the current Python hardware-mode setup in this repo.

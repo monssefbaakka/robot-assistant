@@ -76,6 +76,15 @@ Publishes the latest state for each device in a room.
 - `robocompagnon/home/rooms/living_room/devices/light_main/state`
 - `robocompagnon/home/rooms/living_room/devices/ac_main/state`
 - `robocompagnon/home/rooms/living_room/devices/buzzer_main/state`
+- `robocompagnon/home/rooms/kitchen/devices/light_main/state`
+- `robocompagnon/home/rooms/kitchen/devices/buzzer_main/state`
+- `robocompagnon/home/rooms/bedroom/devices/light_main/state`
+- `robocompagnon/home/rooms/bedroom/devices/ac_main/state`
+- `robocompagnon/home/rooms/bedroom/devices/door_main/state`
+- `robocompagnon/home/rooms/bedroom/devices/buzzer_main/state`
+- `robocompagnon/home/rooms/toilet/devices/light_main/state`
+- `robocompagnon/home/rooms/toilet/devices/door_main/state`
+- `robocompagnon/home/rooms/toilet/devices/buzzer_main/state`
 
 ### Used For
 - Device status updates in the dashboard
@@ -92,6 +101,20 @@ Publishes the latest sensor value for each room sensor.
 - `robocompagnon/home/rooms/living_room/sensors/humidity`
 - `robocompagnon/home/rooms/living_room/sensors/occupancy`
 - `robocompagnon/home/rooms/living_room/sensors/light_level`
+- `robocompagnon/home/rooms/living_room/sensors/gas_ppm`
+- `robocompagnon/home/rooms/kitchen/sensors/temperature`
+- `robocompagnon/home/rooms/kitchen/sensors/humidity`
+- `robocompagnon/home/rooms/kitchen/sensors/occupancy`
+- `robocompagnon/home/rooms/kitchen/sensors/light_level`
+- `robocompagnon/home/rooms/kitchen/sensors/gas_ppm`
+- `robocompagnon/home/rooms/bedroom/sensors/temperature`
+- `robocompagnon/home/rooms/bedroom/sensors/humidity`
+- `robocompagnon/home/rooms/bedroom/sensors/occupancy`
+- `robocompagnon/home/rooms/bedroom/sensors/light_level`
+- `robocompagnon/home/rooms/toilet/sensors/temperature`
+- `robocompagnon/home/rooms/toilet/sensors/humidity`
+- `robocompagnon/home/rooms/toilet/sensors/occupancy`
+- `robocompagnon/home/rooms/toilet/sensors/light_level`
 
 ### Used For
 - Sensor monitoring in the dashboard
@@ -118,6 +141,8 @@ Publishes door lock state after lock/unlock commands.
 
 ### Current Topics
 - `robocompagnon/home/rooms/living_room/devices/door_main/state`
+- `robocompagnon/home/rooms/bedroom/devices/door_main/state`
+- `robocompagnon/home/rooms/toilet/devices/door_main/state`
 
 ### Used For
 - Door lock status display in dashboard
