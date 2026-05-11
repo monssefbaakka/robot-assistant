@@ -3,45 +3,127 @@
   "author": "OpenAI Codex",
   "editor": "wokwi",
   "parts": [
-    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": -18.6, "left": -70.2, "attrs": {} },
-    { "type": "wokwi-led", "id": "lightLed", "top": -150, "left": 230, "attrs": { "color": "yellow" } },
-    { "type": "wokwi-led", "id": "acLed", "top": -90, "left": 230, "attrs": { "color": "blue" } },
-    { "type": "wokwi-led", "id": "doorLockedLed", "top": -250, "left": 130, "attrs": { "color": "red" } },
-    { "type": "wokwi-led", "id": "doorUnlockedLed", "top": -250, "left": 170, "attrs": { "color": "green" } },
-    { "type": "wokwi-led", "id": "gasAlertLed", "top": -30, "left": 230, "attrs": { "color": "red" } },
-    { "type": "wokwi-buzzer", "id": "gasBuzzer", "top": 30, "left": 230, "attrs": {} },
-{ "type": "wokwi-dht22", "id": "dht1", "top": 120, "left": 240, "attrs": {} },
-    { "type": "wokwi-photoresistor-sensor", "id": "ldr1", "top": 10, "left": 260, "attrs": {} },
-    { "type": "wokwi-slide-potentiometer", "id": "gasPot", "top": 210, "left": 245, "attrs": {} },
-    { "type": "wokwi-slide-switch", "id": "occSwitch", "top": -10, "left": 240, "attrs": {} },
-    { "type": "wokwi-servo", "id": "doorServo", "top": -215, "left": 85, "attrs": {} }
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 500, "left": 590, "attrs": {} },
+
+    { "type": "wokwi-text", "id": "title", "top": 20, "left": 350, "attrs": { "text": "ROBOCOMPAGNON SMART HOUSE" } },
+    { "type": "wokwi-text", "id": "subtitle", "top": 55, "left": 260, "attrs": { "text": "Wokwi layout matched to dashboard rooms and devices" } },
+
+    { "type": "wokwi-text", "id": "livingLabel", "top": 120, "left": 70, "attrs": { "text": "LIVING ROOM" } },
+    { "type": "wokwi-text", "id": "livingNote", "top": 150, "left": 70, "attrs": { "text": "Dashboard: light + AC + front door + sensors" } },
+
+    { "type": "wokwi-text", "id": "kitchenLabel", "top": 120, "left": 520, "attrs": { "text": "KITCHEN" } },
+    { "type": "wokwi-text", "id": "kitchenNote", "top": 150, "left": 520, "attrs": { "text": "Dashboard: light + gas + buzzer" } },
+
+    { "type": "wokwi-text", "id": "bedroomLabel", "top": 430, "left": 70, "attrs": { "text": "BEDROOM" } },
+    { "type": "wokwi-text", "id": "bedroomNote", "top": 460, "left": 70, "attrs": { "text": "Dashboard: light + AC + door" } },
+
+    { "type": "wokwi-text", "id": "toiletLabel", "top": 430, "left": 520, "attrs": { "text": "TOILET" } },
+    { "type": "wokwi-text", "id": "toiletNote", "top": 460, "left": 520, "attrs": { "text": "Dashboard: light + door" } },
+
+    { "type": "wokwi-text", "id": "garageLabel", "top": 120, "left": 950, "attrs": { "text": "GARAGE" } },
+    { "type": "wokwi-text", "id": "garageNote", "top": 150, "left": 950, "attrs": { "text": "Extra house area - visual extension" } },
+
+    { "type": "wokwi-text", "id": "entryLabel", "top": 755, "left": 610, "attrs": { "text": "CONTROL / ENTRY AREA" } },
+    { "type": "wokwi-text", "id": "entryNote", "top": 785, "left": 480, "attrs": { "text": "Connected Wokwi hardware proxies the same device types used by the website" } },
+
+    { "type": "wokwi-led", "id": "lightLed", "top": 225, "left": 90, "attrs": { "color": "yellow" } },
+    { "type": "wokwi-text", "id": "livingLightText", "top": 255, "left": 55, "attrs": { "text": "Living Light" } },
+    { "type": "wokwi-led", "id": "acLed", "top": 225, "left": 180, "attrs": { "color": "blue" } },
+    { "type": "wokwi-text", "id": "livingAcText", "top": 255, "left": 160, "attrs": { "text": "Living AC" } },
+    { "type": "wokwi-photoresistor-sensor", "id": "ldr1", "top": 205, "left": 300, "attrs": {} },
+    { "type": "wokwi-text", "id": "livingLdrText", "top": 315, "left": 290, "attrs": { "text": "LDR" } },
+    { "type": "wokwi-dht22", "id": "dht1", "top": 235, "left": 385, "attrs": {} },
+    { "type": "wokwi-text", "id": "livingDhtText", "top": 345, "left": 385, "attrs": { "text": "DHT22" } },
+    { "type": "wokwi-servo", "id": "doorServo", "top": 290, "left": 230, "attrs": {} },
+    { "type": "wokwi-text", "id": "livingDoorText", "top": 395, "left": 185, "attrs": { "text": "Front Door Servo" } },
+    { "type": "wokwi-led", "id": "doorLockedLed", "top": 235, "left": 250, "attrs": { "color": "red" } },
+    { "type": "wokwi-led", "id": "doorUnlockedLed", "top": 235, "left": 280, "attrs": { "color": "green" } },
+    { "type": "wokwi-text", "id": "livingDoorStateText", "top": 255, "left": 235, "attrs": { "text": "Door" } },
+
+    { "type": "wokwi-led", "id": "kitchenLightVisual", "top": 225, "left": 545, "attrs": { "color": "yellow" } },
+    { "type": "wokwi-text", "id": "kitchenLightText", "top": 255, "left": 505, "attrs": { "text": "Kitchen Light" } },
+    { "type": "wokwi-slide-potentiometer", "id": "gasPot", "top": 205, "left": 665, "attrs": {} },
+    { "type": "wokwi-text", "id": "kitchenGasText", "top": 315, "left": 670, "attrs": { "text": "Gas Level" } },
+    { "type": "wokwi-led", "id": "gasAlertLed", "top": 225, "left": 845, "attrs": { "color": "red" } },
+    { "type": "wokwi-text", "id": "kitchenAlertText", "top": 255, "left": 805, "attrs": { "text": "Gas Alert" } },
+    { "type": "wokwi-buzzer", "id": "gasBuzzer", "top": 295, "left": 845, "attrs": {} },
+    { "type": "wokwi-text", "id": "kitchenBuzzerText", "top": 355, "left": 820, "attrs": { "text": "Gas Buzzer" } },
+
+    { "type": "wokwi-led", "id": "bedroomLightVisual", "top": 530, "left": 90, "attrs": { "color": "yellow" } },
+    { "type": "wokwi-text", "id": "bedroomLightText", "top": 560, "left": 48, "attrs": { "text": "Bedroom Light" } },
+    { "type": "wokwi-led", "id": "bedroomAcVisual", "top": 530, "left": 180, "attrs": { "color": "blue" } },
+    { "type": "wokwi-text", "id": "bedroomAcText", "top": 560, "left": 150, "attrs": { "text": "Bedroom AC" } },
+    { "type": "wokwi-servo", "id": "bedroomDoorVisual", "top": 585, "left": 285, "attrs": {} },
+    { "type": "wokwi-text", "id": "bedroomDoorText", "top": 690, "left": 230, "attrs": { "text": "Bedroom Door" } },
+
+    { "type": "wokwi-led", "id": "toiletLightVisual", "top": 530, "left": 545, "attrs": { "color": "yellow" } },
+    { "type": "wokwi-text", "id": "toiletLightText", "top": 560, "left": 515, "attrs": { "text": "Toilet Light" } },
+    { "type": "wokwi-servo", "id": "toiletDoorVisual", "top": 585, "left": 680, "attrs": {} },
+    { "type": "wokwi-text", "id": "toiletDoorText", "top": 690, "left": 635, "attrs": { "text": "Toilet Door" } },
+    { "type": "wokwi-slide-switch", "id": "occSwitch", "top": 540, "left": 810, "attrs": {} },
+    { "type": "wokwi-text", "id": "occText", "top": 595, "left": 775, "attrs": { "text": "Occupancy" } },
+
+    { "type": "wokwi-servo", "id": "garageDoorVisual", "top": 225, "left": 1045, "attrs": {} },
+    { "type": "wokwi-text", "id": "garageDoorText", "top": 330, "left": 995, "attrs": { "text": "Garage Door" } },
+    { "type": "wokwi-led", "id": "garageLightVisual", "top": 225, "left": 960, "attrs": { "color": "yellow" } },
+    { "type": "wokwi-text", "id": "garageLightText", "top": 255, "left": 930, "attrs": { "text": "Garage Light" } }
   ],
   "connections": [
-    [ "esp:26", "lightLed:A", "green", [ "h0" ] ],
-    [ "lightLed:C", "esp:GND.1", "black", [ "h0" ] ],
-    [ "esp:27", "acLed:A", "blue", [ "h0" ] ],
-    [ "acLed:C", "esp:GND.1", "black", [ "h0" ] ],
-    [ "esp:19", "doorLockedLed:A", "red", [ "h0" ] ],
-    [ "doorLockedLed:C", "esp:GND.1", "black", [ "h0" ] ],
-    [ "esp:25", "doorUnlockedLed:A", "green", [ "h0" ] ],
-    [ "doorUnlockedLed:C", "esp:GND.1", "black", [ "h0" ] ],
-    [ "esp:33", "gasAlertLed:A", "red", [ "h0" ] ],
-    [ "gasAlertLed:C", "esp:GND.1", "black", [ "h0" ] ],
-    [ "esp:32", "gasBuzzer:1", "orange", [ "h0" ] ],
-    [ "gasBuzzer:2", "esp:GND.1", "black", [ "h0" ] ],
-    [ "esp:4", "dht1:SDA", "green", [ "h0" ] ],
-    [ "esp:3V3", "dht1:VCC", "red", [ "h0" ] ],
-    [ "esp:GND.2", "dht1:GND", "black", [ "h0" ] ],
-    [ "esp:35", "ldr1:AO", "orange", [ "h0" ] ],
-    [ "esp:3V3", "ldr1:VCC", "red", [ "h0" ] ],
-    [ "esp:GND.2", "ldr1:GND", "black", [ "h0" ] ],
-    [ "esp:34", "gasPot:SIG", "orange", [ "h0" ] ],
-    [ "esp:3V3", "gasPot:VCC", "red", [ "h0" ] ],
-    [ "esp:GND.2", "gasPot:GND", "black", [ "h0" ] ],
-    [ "esp:5", "occSwitch:1", "green", [ "h0" ] ],
-    [ "occSwitch:2", "esp:3V3", "red", [ "h0" ] ],
-    [ "esp:18", "doorServo:PWM", "purple", [ "h0" ] ],
-    [ "esp:5V", "doorServo:V+", "red", [ "h0" ] ],
-    [ "esp:GND.1", "doorServo:GND", "black", [ "h0" ] ]
+    [ "esp:26", "lightLed:A", "green", [ "v-260", "h-500", "v-20" ] ],
+    [ "lightLed:C", "esp:GND.1", "black", [ "h20", "v340", "h500" ] ],
+
+    [ "esp:21", "kitchenLightVisual:A", "green", [ "v-315", "h-55", "v-10" ] ],
+    [ "kitchenLightVisual:C", "esp:GND.1", "black", [ "h20", "v340", "h-45" ] ],
+
+    [ "esp:14", "bedroomLightVisual:A", "green", [ "v-35", "h-500", "v-5" ] ],
+    [ "bedroomLightVisual:C", "esp:GND.1", "black", [ "h20", "v35", "h500" ] ],
+
+    [ "esp:22", "toiletLightVisual:A", "green", [ "v-10", "h-45", "v-5" ] ],
+    [ "toiletLightVisual:C", "esp:GND.1", "black", [ "h20", "v35", "h45" ] ],
+
+    [ "esp:27", "acLed:A", "blue", [ "v-275", "h-430", "v-10" ] ],
+    [ "acLed:C", "esp:GND.1", "black", [ "h20", "v340", "h410" ] ],
+
+    [ "esp:13", "bedroomAcVisual:A", "blue", [ "v-60", "h-405", "v-5" ] ],
+    [ "bedroomAcVisual:C", "esp:GND.1", "black", [ "h20", "v60", "h405" ] ],
+
+    [ "esp:35", "ldr1:AO", "orange", [ "v-245", "h-300", "v-10" ] ],
+    [ "esp:3V3", "ldr1:VCC", "red", [ "v-190", "h-270", "v-10" ] ],
+    [ "esp:GND.2", "ldr1:GND", "black", [ "v-150", "h-255", "v-10" ] ],
+
+    [ "esp:4", "dht1:SDA", "green", [ "v-90", "h-205", "v-165" ] ],
+    [ "esp:3V3", "dht1:VCC", "red", [ "v-175", "h-180", "v-40" ] ],
+    [ "esp:GND.2", "dht1:GND", "black", [ "v-135", "h-165", "v-35" ] ],
+
+    [ "esp:18", "doorServo:PWM", "purple", [ "v-230", "h-350", "v-15" ] ],
+    [ "esp:5V", "doorServo:V+", "red", [ "v-190", "h-355", "v-10" ] ],
+    [ "esp:GND.1", "doorServo:GND", "black", [ "v-155", "h-335", "v-5" ] ],
+
+    [ "esp:23", "bedroomDoorVisual:PWM", "purple", [ "v20", "h-290", "v35" ] ],
+    [ "esp:5V", "bedroomDoorVisual:V+", "red", [ "v-190", "h-280", "v95" ] ],
+    [ "esp:GND.1", "bedroomDoorVisual:GND", "black", [ "v-155", "h-270", "v100" ] ],
+
+    [ "esp:15", "toiletDoorVisual:PWM", "purple", [ "v55", "h-115", "v25" ] ],
+    [ "esp:5V", "toiletDoorVisual:V+", "red", [ "v-190", "h-100", "v95" ] ],
+    [ "esp:GND.1", "toiletDoorVisual:GND", "black", [ "v-155", "h-85", "v100" ] ],
+
+    [ "esp:19", "doorLockedLed:A", "red", [ "v-300", "h-355", "v5" ] ],
+    [ "doorLockedLed:C", "esp:GND.1", "black", [ "h20", "v330", "h365" ] ],
+
+    [ "esp:25", "doorUnlockedLed:A", "green", [ "v-285", "h-330", "v5" ] ],
+    [ "doorUnlockedLed:C", "esp:GND.1", "black", [ "h20", "v325", "h340" ] ],
+
+    [ "esp:34", "gasPot:SIG", "orange", [ "v-250", "h65", "v-15" ] ],
+    [ "esp:3V3", "gasPot:VCC", "red", [ "v-175", "h95", "v-35" ] ],
+    [ "esp:GND.2", "gasPot:GND", "black", [ "v-140", "h115", "v-25" ] ],
+
+    [ "esp:33", "gasAlertLed:A", "red", [ "v-260", "h180", "v-20" ] ],
+    [ "gasAlertLed:C", "esp:GND.1", "black", [ "h20", "v340", "h-190" ] ],
+
+    [ "esp:32", "gasBuzzer:1", "orange", [ "v-205", "h195", "v-10" ] ],
+    [ "gasBuzzer:2", "esp:GND.1", "black", [ "h20", "v280", "h-205" ] ],
+
+    [ "esp:5", "occSwitch:1", "green", [ "v-60", "h220", "v-25" ] ],
+    [ "occSwitch:2", "esp:3V3", "red", [ "h-30", "v115", "h-200" ] ]
   ]
 }

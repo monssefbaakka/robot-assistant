@@ -1,19 +1,14 @@
 {
   "meta": {
-    "last_update": "2026-05-06T02:23:40.027674+00:00",
+    "last_update": "2026-05-11T20:19:17.261468+00:00",
     "transport": "mqtt-wokwi-hardware",
     "version": 1
   },
   "outside": {
-    "temperature": 13.0,
-    "humidity": 82,
-    "source": "Rabat",
-    "updated_at": "2026-05-06T02:16:22.797905+00:00"
-  },
-  "alerts": {
-    "gas": true,
-    "gas_unconfirmed": true,
-    "gas_buzzer": false
+    "temperature": 29.0,
+    "humidity": 45,
+    "source": "default",
+    "updated_at": "2026-05-11T20:19:11.362877+00:00"
   },
   "rooms": {
     "living_room": {
@@ -23,19 +18,19 @@
           "id": "light_main",
           "type": "light",
           "name": "Main Light",
-          "state": "on",
-          "brightness": 80,
-          "power_w": 10
+          "state": "off",
+          "brightness": 0,
+          "power_w": 0
         },
         "ac_main": {
           "id": "ac_main",
           "type": "ac",
           "name": "Main AC",
-          "state": "on",
+          "state": "off",
           "mode": "cool",
           "target_temp": 22,
           "fan_speed": 2,
-          "power_w": 1200
+          "power_w": 0
         },
         "door_main": {
           "id": "door_main",
@@ -53,21 +48,136 @@
       "sensors": {
         "temperature": 25,
         "humidity": 50,
-        "occupancy": false,
+        "occupancy": true,
         "light_level": 227,
-        "gas_ppm": 1000
+        "gas_ppm": 50
       },
       "environment": {
         "insulation_factor": 0.72,
         "sun_exposure": 0.65
       }
+    },
+    "kitchen": {
+      "name": "Kitchen",
+      "devices": {
+        "light_main": {
+          "id": "light_main",
+          "type": "light",
+          "name": "Kitchen Light",
+          "state": "off",
+          "brightness": 0,
+          "power_w": 0
+        },
+        "buzzer_main": {
+          "id": "buzzer_main",
+          "type": "buzzer",
+          "name": "Gas Safety Buzzer",
+          "state": "off"
+        }
+      },
+      "sensors": {
+        "temperature": 26.2,
+        "humidity": 54,
+        "occupancy": false,
+        "light_level": 40,
+        "gas_ppm": 50
+      },
+      "environment": {
+        "insulation_factor": 0.68,
+        "sun_exposure": 0.45
+      }
+    },
+    "bedroom": {
+      "name": "Bedroom",
+      "devices": {
+        "light_main": {
+          "id": "light_main",
+          "type": "light",
+          "name": "Bedroom Light",
+          "state": "off",
+          "brightness": 0,
+          "power_w": 0
+        },
+        "ac_main": {
+          "id": "ac_main",
+          "type": "ac",
+          "name": "Bedroom AC",
+          "state": "off",
+          "mode": "cool",
+          "target_temp": 23,
+          "fan_speed": 1,
+          "power_w": 0
+        },
+        "door_main": {
+          "id": "door_main",
+          "type": "door",
+          "name": "Bedroom Door",
+          "state": "unlocked"
+        },
+        "buzzer_main": {
+          "id": "buzzer_main",
+          "type": "buzzer",
+          "name": "Gas Safety Buzzer",
+          "state": "off"
+        }
+      },
+      "sensors": {
+        "temperature": 24.3,
+        "humidity": 47,
+        "occupancy": true,
+        "light_level": 40
+      },
+      "environment": {
+        "insulation_factor": 0.8,
+        "sun_exposure": 0.25
+      }
+    },
+    "toilet": {
+      "name": "Toilet",
+      "devices": {
+        "light_main": {
+          "id": "light_main",
+          "type": "light",
+          "name": "Toilet Light",
+          "state": "off",
+          "brightness": 0,
+          "power_w": 0
+        },
+        "door_main": {
+          "id": "door_main",
+          "type": "door",
+          "name": "Toilet Door",
+          "state": "unlocked"
+        },
+        "buzzer_main": {
+          "id": "buzzer_main",
+          "type": "buzzer",
+          "name": "Gas Safety Buzzer",
+          "state": "off"
+        }
+      },
+      "sensors": {
+        "temperature": 23.8,
+        "humidity": 58,
+        "occupancy": false,
+        "light_level": 35
+      },
+      "environment": {
+        "insulation_factor": 0.76,
+        "sun_exposure": 0.1
+      }
     }
+  },
+  "alerts": {
+    "gas": false,
+    "gas_unconfirmed": false,
+    "gas_buzzer": false
   },
   "safety": {
     "gas_confirmation": {
-      "active": true,
-      "pending": true,
-      "armed_at": "2026-05-06T02:19:28.088446+00:00",
+      "active": false,
+      "pending": false,
+      "armed_at": null,
       "confirmed": false
     }
   }

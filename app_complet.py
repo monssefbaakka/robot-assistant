@@ -1,11 +1,14 @@
 from datetime import datetime, timezone
 from html import escape
+import math
 import os
 import time
 
 import streamlit as st
+import streamlit.components.v1 as components
 from agent import AgentRobot
 from config_env import load_env_file
+from house_config import ROOM_ORDER, ROBOT_SIMULATION_WORLD, ordered_room_ids, room_name
 from iot_store import load_state
 from meteo import MeteoAPI
 from objets_connectes import MaisonConnectee
@@ -719,6 +722,23 @@ div[data-testid="stAlert"] {
 .rc-bat-fill  { height: 100%; background: linear-gradient(90deg, rgba(0,212,184,0.5), var(--teal)); border-radius: 999px; box-shadow: 0 0 8px rgba(0,212,184,0.4); }
 .rc-info-row  { display: flex; align-items: center; gap: 7px; margin-top: 10px; font-size: 11px; color: var(--text-muted); font-family: 'Fira Code', monospace; }
 .rc-info-row .material-symbols-outlined { font-size: 14px; color: var(--teal); }
+.rc-robot-map {
+    background:
+        radial-gradient(circle at top right, rgba(0,212,184,0.12), transparent 32%),
+        linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00)),
+        var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 0.55rem;
+    margin-top: 12px;
+}
+.rc-robot-map svg { display: block; width: 100%; height: auto; }
+.rc-robot-note {
+    margin-top: 10px;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: 'Fira Code', monospace;
+}
 
 /* ═══════════════════════════════════════════════════════
    POMODORO CARD
@@ -926,10 +946,21 @@ def init_session():
         st.session_state.robot_voix = RobotVoix(langue="fr")
         st.session_state.auto_play_voice = False
         st.session_state.last_manual_result = None
+        st.session_state.last_robot_result = None
         st.session_state.last_voice_message = None
         st.session_state.live_refresh = os.environ.get("IOT_MODE", "simulator").strip().lower() == "hardware"
+        robot_state = st.session_state.agent.robot.etat()
+        st.session_state.robot_trace = [(robot_state["position"]["x"], robot_state["position"]["y"])]
+        st.session_state.robot_nav_target = "kitchen"
         st.session_state.maison = MaisonConnectee()
         st.session_state.agent.mettre_a_jour_maison(st.session_state.maison)
+    if "last_robot_result" not in st.session_state:
+        st.session_state.last_robot_result = None
+    if "robot_trace" not in st.session_state:
+        robot_state = st.session_state.agent.robot.etat()
+        st.session_state.robot_trace = [(robot_state["position"]["x"], robot_state["position"]["y"])]
+    if "robot_nav_target" not in st.session_state:
+        st.session_state.robot_nav_target = "kitchen"
 
 
 def refresh_weather():
@@ -950,9 +981,32 @@ def refresh_weather():
 
 def current_snapshot():
     snapshot = st.session_state.agent.iot_controller.get_snapshot()
-    living_room = snapshot["rooms"]["living_room"]
-    st.session_state.agent.mettre_a_jour_capteurs(living_room["sensors"])
-    return snapshot, living_room
+    room_id = st.session_state.get("selected_room_id", "living_room")
+    rooms = snapshot.get("rooms", {})
+    if room_id not in rooms and rooms:
+        room_id = next(iter(rooms))
+        st.session_state.selected_room_id = room_id
+    current_room = rooms.get(room_id, {})
+    st.session_state.agent.mettre_a_jour_capteurs(current_room.get("sensors", {}))
+    return snapshot, current_room
+
+
+def _room_name(room_id, room):
+    return room_name(room_id, room)
+
+
+def _room_choices(snapshot):
+    rooms = snapshot.get("rooms", {})
+    ordered_ids = ordered_room_ids(rooms)
+    return ordered_ids, {_room_name(room_id, rooms[room_id]): room_id for room_id in ordered_ids}
+
+
+def _room_device_count(room):
+    return sum(1 for device in room.get("devices", {}).values() if device.get("state") in {"on", "unlocked"})
+
+
+def _set_active_room(room_id, room_label=None):
+    st.session_state.selected_room_id = room_id
 
 
 def _device_name(device, fallback):
@@ -986,6 +1040,318 @@ def _door_meta(door, sensors):
     return f"Current: {current_state} • {occupancy_label}"
 
 
+def _gas_meta(sensors, alerts):
+    gas_ppm = sensors.get("gas_ppm", 0)
+    gas_state = "ON" if gas_ppm > 0 else "OFF"
+    alert_text = "Alert" if alerts.get("gas", False) and gas_ppm > 400 else "Normal"
+    return f"{gas_state} • {gas_ppm} ppm • {alert_text}"
+
+
+def _append_robot_trace():
+    etat = st.session_state.agent.robot.etat()
+    point = (round(etat["position"]["x"], 1), round(etat["position"]["y"], 1))
+    trace = st.session_state.robot_trace
+    if not trace or trace[-1] != point:
+        trace.append(point)
+    st.session_state.robot_trace = trace[-90:]
+
+
+def _navigation_route_points(etat_robot, target_zone):
+    if not target_zone:
+        return []
+
+    route_nodes = {
+        "living_room": {"entry": (-20.0, 95.0), "center": (-120.0, 95.0)},
+        "hallway": {"entry": (0.0, 20.0), "center": (0.0, 20.0)},
+        "kitchen": {"entry": (20.0, 95.0), "center": (95.0, 115.0)},
+        "bedroom": {"entry": (20.0, -55.0), "center": (95.0, -55.0)},
+        "toilet": {"entry": (170.0, 95.0), "center": (210.0, 100.0)},
+    }
+    hallway_hubs = {
+        "upper": (0.0, 95.0),
+        "lower": (0.0, -55.0),
+    }
+
+    current_zone = etat_robot.get("zone")
+    current_pos = (float(etat_robot["position"]["x"]), float(etat_robot["position"]["y"]))
+    if target_zone not in route_nodes:
+        return [current_pos]
+
+    if current_zone == target_zone:
+        return [current_pos, route_nodes[target_zone]["center"]]
+
+    points = [current_pos]
+
+    def add_if_new(point):
+        rounded = (round(point[0], 1), round(point[1], 1))
+        if points[-1] != rounded:
+            points.append(rounded)
+
+    zone_to_hub = {
+        "living_room": "upper",
+        "kitchen": "upper",
+        "toilet": "upper",
+        "bedroom": "lower",
+        "hallway": "upper",
+    }
+    target_hub = "lower" if target_zone == "bedroom" else "upper"
+
+    if current_zone in route_nodes and current_zone != "hallway":
+        add_if_new(route_nodes[current_zone]["entry"])
+        add_if_new(hallway_hubs[zone_to_hub.get(current_zone, "upper")])
+    elif current_zone == "hallway":
+        current_hub = "lower" if current_pos[1] < 0 else "upper"
+        add_if_new(hallway_hubs[current_hub])
+
+    add_if_new(hallway_hubs[target_hub])
+    add_if_new(route_nodes[target_zone]["entry"])
+    add_if_new(route_nodes[target_zone]["center"])
+    return points
+
+
+def _navigation_hint(etat_robot, target_zone):
+    route = _navigation_route_points(etat_robot, target_zone)
+    if len(route) < 2:
+        return "Select a room to get a route hint."
+
+    current = route[0]
+    next_point = None
+    for point in route[1:]:
+        dx = point[0] - current[0]
+        dy = point[1] - current[1]
+        if abs(dx) > 6 or abs(dy) > 6:
+            next_point = point
+            break
+
+    if next_point is None:
+        return f"You are already at the {target_zone.replace('_', ' ')} target area."
+
+    dx = next_point[0] - current[0]
+    dy = next_point[1] - current[1]
+    distance = int(round(math.hypot(dx, dy)))
+    absolute_angle = (math.degrees(math.atan2(dx, dy)) + 360.0) % 360.0
+    turn_delta = ((absolute_angle - etat_robot["direction"] + 540.0) % 360.0) - 180.0
+
+    if abs(turn_delta) <= 20:
+        turn_text = "Go forward"
+    elif turn_delta > 0:
+        turn_text = f"Turn right about {int(round(turn_delta / 5.0) * 5)}deg"
+    else:
+        turn_text = f"Turn left about {int(round(abs(turn_delta) / 5.0) * 5)}deg"
+
+    return f"{turn_text}, then move about {distance}cm toward {target_zone.replace('_', ' ').title()}."
+
+
+def _robot_visual_svg(etat_robot, trace_points, snapshot, navigation_points=None):
+    width = 420
+    height = 290
+    pad = 20
+    world = ROBOT_SIMULATION_WORLD
+    walkable_areas = world["walkable_areas"]
+    obstacles = world["obstacles"]
+    components = world.get("components", [])
+    zone_id = etat_robot.get("zone")
+    rooms_state = snapshot.get("rooms", {})
+
+    min_x = min(area["x1"] for area in walkable_areas) - 10
+    max_x = max(area["x2"] for area in walkable_areas) + 10
+    min_y = min(area["y1"] for area in walkable_areas) - 10
+    max_y = max(area["y2"] for area in walkable_areas) + 10
+    scale_x = (width - pad * 2) / (max_x - min_x)
+    scale_y = (height - pad * 2) / (max_y - min_y)
+    scale = min(scale_x, scale_y)
+
+    def to_canvas(x_cm, y_cm):
+        x = pad + (x_cm - min_x) * scale
+        y = height - pad - (y_cm - min_y) * scale
+        return round(x, 1), round(y, 1)
+
+    def rect_to_svg(rect):
+        x1, y1 = to_canvas(rect["x1"], rect["y2"])
+        x2, y2 = to_canvas(rect["x2"], rect["y1"])
+        return x1, y1, round(x2 - x1, 1), round(y2 - y1, 1)
+
+    trace_svg = ""
+    if len(trace_points) > 1:
+        path_points = " ".join(
+            f"{px},{py}" for px, py in (to_canvas(x, y) for x, y in trace_points)
+        )
+        trace_svg = (
+            f"<polyline points='{path_points}' fill='none' "
+            "stroke='rgba(255,170,68,0.95)' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/>"
+        )
+
+    nav_svg = ""
+    if navigation_points and len(navigation_points) > 1:
+        nav_points = " ".join(
+            f"{px},{py}" for px, py in (to_canvas(x, y) for x, y in navigation_points)
+        )
+        target_x, target_y = to_canvas(navigation_points[-1][0], navigation_points[-1][1])
+        nav_svg = (
+            f"<polyline points='{nav_points}' fill='none' "
+            "stroke='rgba(0,212,184,0.80)' stroke-width='3' stroke-linecap='round' stroke-linejoin='round' "
+            "stroke-dasharray='7 6'/>"
+            f"<circle cx='{target_x}' cy='{target_y}' r='9' fill='rgba(0,212,184,0.18)' stroke='#00d4b8' stroke-width='2'/>"
+            f"<circle cx='{target_x}' cy='{target_y}' r='3' fill='#dff7f3'/>"
+        )
+
+    robot_x, robot_y = to_canvas(etat_robot["position"]["x"], etat_robot["position"]["y"])
+    angle = math.radians(etat_robot["direction"])
+    head_x = round(robot_x + math.sin(angle) * 18, 1)
+    head_y = round(robot_y - math.cos(angle) * 18, 1)
+
+    room_svg = []
+    for area in walkable_areas:
+        x, y, w, h = rect_to_svg(area)
+        active_fill = "rgba(0,212,184,0.12)" if area["id"] == zone_id else "rgba(4,8,16,0.72)"
+        active_stroke = "rgba(0,212,184,0.42)" if area["id"] == zone_id else "rgba(0,212,184,0.18)"
+        room_svg.append(
+            f"<rect x='{x}' y='{y}' width='{w}' height='{h}' rx='12' fill='{active_fill}' "
+            f"stroke='{active_stroke}' stroke-width='1.5'/>"
+            f"<text x='{x + 10}' y='{y + 18}' fill='#6f8aa4' font-size='10' font-family='DM Sans, sans-serif'>{escape(area['label'])}</text>"
+        )
+
+    obstacle_svg = []
+    for obstacle in obstacles:
+        x, y, w, h = rect_to_svg(obstacle)
+        obstacle_svg.append(
+            f"<rect x='{x}' y='{y}' width='{w}' height='{h}' rx='8' fill='rgba(255,170,68,0.12)' "
+            "stroke='rgba(255,170,68,0.32)' stroke-width='1.2'/>"
+            f"<text x='{x + 6}' y='{y + 16}' fill='#c9924f' font-size='8' font-family='DM Sans, sans-serif'>{escape(obstacle['label'])}</text>"
+        )
+
+    component_svg = []
+    for component in components:
+        room_state = rooms_state.get(component["room_id"], {})
+        devices = room_state.get("devices", {})
+        sensors = room_state.get("sensors", {})
+
+        if component["kind"] == "sensor":
+            active = True
+            accent = "#7eb6ff"
+        elif component["kind"] == "gas":
+            gas_ppm = sensors.get(component["component_id"], 0)
+            active = gas_ppm > 0
+            accent = "#ff3a5c" if gas_ppm > 400 else "#ffaa44" if gas_ppm > 0 else "#4a6078"
+        elif component["kind"] == "door":
+            active = devices.get(component["component_id"], {}).get("state") == "unlocked"
+            accent = "#39ffa0" if active else "#7b8697"
+        elif component["kind"] == "light":
+            active = devices.get(component["component_id"], {}).get("state") == "on"
+            accent = "#ffd166" if active else "#4a6078"
+        elif component["kind"] == "ac":
+            active = devices.get(component["component_id"], {}).get("state") == "on"
+            accent = "#59c3ff" if active else "#4a6078"
+        elif component["kind"] == "buzzer":
+            active = devices.get(component["component_id"], {}).get("state") == "on"
+            accent = "#ff7a59" if active else "#4a6078"
+        else:
+            active = False
+            accent = "#4a6078"
+
+        cx, cy = to_canvas(component["x"], component["y"])
+        glow = (
+            f"<circle cx='{cx}' cy='{cy}' r='14' fill='{accent}' opacity='0.18'/>"
+            if active else ""
+        )
+        stroke = accent if active else "rgba(126,144,167,0.55)"
+        fill = "rgba(8,16,29,0.95)"
+        component_svg.append(
+            f"{glow}"
+            f"<circle cx='{cx}' cy='{cy}' r='10' fill='{fill}' stroke='{stroke}' stroke-width='1.8'/>"
+            f"<text x='{cx}' y='{cy + 3}' text-anchor='middle' fill='{stroke}' font-size='7' font-family='Fira Code, monospace'>{escape(component['label'])}</text>"
+        )
+
+    scan_svg = ""
+    last_scan = etat_robot.get("last_scan") or {}
+    if last_scan:
+        beams = []
+        labels = []
+        directions = [
+            ("F", etat_robot["direction"], last_scan.get("avant", 0)),
+            ("R", etat_robot["direction"] + 90, last_scan.get("droite", 0)),
+            ("L", etat_robot["direction"] - 90, last_scan.get("gauche", 0)),
+            ("B", etat_robot["direction"] + 180, last_scan.get("arriere", 0)),
+        ]
+        for label, angle_deg, distance in directions:
+            angle_rad = math.radians(angle_deg)
+            end_x, end_y = to_canvas(
+                etat_robot["position"]["x"] + math.sin(angle_rad) * distance,
+                etat_robot["position"]["y"] + math.cos(angle_rad) * distance,
+            )
+            beams.append(
+                f"<line x1='{robot_x}' y1='{robot_y}' x2='{end_x}' y2='{end_y}' "
+                "stroke='rgba(57,255,160,0.30)' stroke-width='2' stroke-dasharray='5 5'/>"
+            )
+            labels.append(
+                f"<text x='{end_x + 4}' y='{end_y - 4}' fill='#39ffa0' font-size='8' font-family='Fira Code, monospace'>{label}:{distance}</text>"
+            )
+        scan_svg = "".join(beams + labels)
+
+    return f"""
+    <svg viewBox="0 0 {width} {height}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Robot movement map">
+      <rect x="1" y="1" width="{width - 2}" height="{height - 2}" rx="16" fill="#08101d" stroke="rgba(0,212,184,0.18)"/>
+      <path d="M {width/2} {pad} V {height-pad}" stroke="rgba(0,212,184,0.06)" stroke-dasharray="4 6"/>
+      <path d="M {pad} {height/2} H {width-pad}" stroke="rgba(0,212,184,0.06)" stroke-dasharray="4 6"/>
+      {''.join(room_svg)}
+      {''.join(obstacle_svg)}
+      {''.join(component_svg)}
+      {trace_svg}
+      {nav_svg}
+      {scan_svg}
+      <circle cx="{robot_x}" cy="{robot_y}" r="12" fill="#00d4b8" stroke="#dff7f3" stroke-width="2"/>
+      <line x1="{robot_x}" y1="{robot_y}" x2="{head_x}" y2="{head_y}" stroke="#dff7f3" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="{robot_x}" cy="{robot_y}" r="3" fill="#08101d"/>
+    </svg>
+    """
+
+
+def _run_robot_action(action):
+    robot = st.session_state.agent.robot
+    if action == "forward":
+        result = robot.avancer(20)
+        _append_robot_trace()
+    elif action == "backward":
+        result = robot.reculer(20)
+        _append_robot_trace()
+    elif action == "left":
+        result = robot.tourner_gauche(45)
+    elif action == "right":
+        result = robot.tourner_droite(45)
+    elif action == "scan":
+        result, _ = robot.scanner()
+    elif action == "charge":
+        result = robot.recharger()
+    elif action == "clear":
+        st.session_state.robot_trace = []
+        _append_robot_trace()
+        result = "Robot path cleared."
+    else:
+        result = "Unknown robot action."
+
+    st.session_state.last_robot_result = result
+
+
+def _render_robot_visual(etat_robot, trace_points, snapshot, navigation_points=None):
+    svg = _robot_visual_svg(etat_robot, trace_points, snapshot, navigation_points)
+    html = f"""
+    <div style="margin-top:12px;">
+      <div style="
+        background:
+          radial-gradient(circle at top right, rgba(0,212,184,0.12), transparent 32%),
+          linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00)),
+          #0d1829;
+        border:1px solid rgba(0,212,184,0.10);
+        border-radius:12px;
+        padding:8px;
+      ">
+        {svg}
+      </div>
+    </div>
+    """
+    components.html(html, height=320)
+
+
 def _expected_device_state(action, device_type, parameters):
     if device_type == "light":
         if action == "turn_on":
@@ -1005,7 +1371,7 @@ def _expected_device_state(action, device_type, parameters):
     return None
 
 
-def wait_for_hardware_sync(action, device_type=None, parameters=None, timeout_s=2.5):
+def wait_for_hardware_sync(action, room_id, device_type=None, parameters=None, timeout_s=2.5):
     expected_state = _expected_device_state(action, device_type, parameters or {})
     if not expected_state or not device_type:
         return
@@ -1025,7 +1391,7 @@ def wait_for_hardware_sync(action, device_type=None, parameters=None, timeout_s=
             state = load_state()
             current_state = (
                 state.get("rooms", {})
-                .get("living_room", {})
+                .get(room_id, {})
                 .get("devices", {})
                 .get(device_id, {})
                 .get("state")
@@ -1063,20 +1429,21 @@ def gas_confirm_dialog(gas_ppm, remaining_s):
             mqtt_command("set_gas_state", parameters={"enabled": False})
 
 
-def mqtt_command(action, device_type=None, parameters=None):
+def mqtt_command(action, device_type=None, parameters=None, room_id=None):
+    room_id = room_id or st.session_state.get("selected_room_id", "living_room")
     command = {
         "action": action,
-        "room": "living_room",
+        "room": room_id,
         "target_type": "device" if device_type else "sensor",
         "device_type": device_type,
         "device_id": None,
         "parameters": parameters or {},
         "source": "dashboard",
-        "raw_text": f"dashboard:{action}:{device_type or 'sensor'}",
+        "raw_text": f"dashboard:{room_id}:{action}:{device_type or 'sensor'}",
     }
     result = st.session_state.agent.iot_controller.execute_command(command)
     if os.environ.get("IOT_MODE", "simulator").strip().lower() == "hardware" and result.get("ok"):
-        wait_for_hardware_sync(action, device_type=device_type, parameters=parameters)
+        wait_for_hardware_sync(action, room_id, device_type=device_type, parameters=parameters)
     st.session_state.last_manual_result = result
     st.rerun()
 
@@ -1088,8 +1455,8 @@ def submit_chat_message(user_input):
     if st.session_state.meteo_data:
         st.session_state.agent.mettre_a_jour_meteo(st.session_state.meteo_data)
     st.session_state.agent.mettre_a_jour_maison(st.session_state.maison)
-    snapshot, living_room = current_snapshot()
-    st.session_state.agent.mettre_a_jour_capteurs(living_room["sensors"])
+    snapshot, current_room = current_snapshot()
+    st.session_state.agent.mettre_a_jour_capteurs(current_room.get("sensors", {}))
     st.session_state.historique_chat.append({"role": "user", "message": cleaned, "timestamp": datetime.now().strftime("%H:%M")})
     with st.spinner("Processing..."):
         response = st.session_state.agent.repondre(cleaned)
@@ -1140,6 +1507,15 @@ def event_row(event):
 init_session()
 refresh_weather()
 
+snapshot_for_ui = st.session_state.agent.iot_controller.get_snapshot()
+room_ids, room_label_map = _room_choices(snapshot_for_ui)
+if "selected_room_id" not in st.session_state or st.session_state.selected_room_id not in room_ids:
+    st.session_state.selected_room_id = room_ids[0] if room_ids else "living_room"
+selected_room_label = next(
+    (label for label, room_id in room_label_map.items() if room_id == st.session_state.selected_room_id),
+    "Living Room",
+)
+
 _mode   = os.environ.get("IOT_MODE", "simulator").upper()
 _broker = os.environ.get("MQTT_HOST", "localhost")
 
@@ -1189,6 +1565,12 @@ with st.sidebar:
 
     if st.button("System Reset", use_container_width=True):
         st.session_state.agent.iot_controller.reset()
+        st.session_state.agent.robot.reset()
+        st.session_state.robot_trace = [(
+            st.session_state.agent.robot.etat()["position"]["x"],
+            st.session_state.agent.robot.etat()["position"]["y"],
+        )]
+        st.session_state.last_robot_result = "Robot reset."
         st.rerun()
 
     if st.button("Clear Chat", use_container_width=True):
@@ -1197,6 +1579,20 @@ with st.sidebar:
 
     st.markdown('<div class="sb-divider"></div>', unsafe_allow_html=True)
     st.markdown('<p class="sb-section-label">// Live Data</p>', unsafe_allow_html=True)
+    desired_room_label = next(
+        (label for label, room_id in room_label_map.items() if room_id == st.session_state.selected_room_id),
+        selected_room_label,
+    )
+    if "room_picker" not in st.session_state or st.session_state.room_picker != desired_room_label:
+        st.session_state.room_picker = desired_room_label
+    chosen_room_label = st.selectbox(
+        "Active Room",
+        options=list(room_label_map.keys()),
+        index=max(list(room_label_map.values()).index(st.session_state.selected_room_id), 0) if room_label_map else 0,
+        key="room_picker",
+    )
+    _set_active_room(room_label_map[chosen_room_label], chosen_room_label)
+    selected_room_label = chosen_room_label
     st.markdown(
         '<div style="padding:4px 20px 12px;font-size:10px;color:var(--text-dim);font-family:\'Fira Code\',monospace;">'
         'Partial refresh &mdash; 5s interval</div>',
@@ -1213,7 +1609,7 @@ st.markdown(
                 <h2 class="rc-topbar-title">System Dashboard</h2>
                 <p class="rc-breadcrumb">
                     <span class="material-symbols-outlined icon-sm">home</span>
-                    RoboCompagnon &rsaquo; Living Room
+                    RoboCompagnon &rsaquo; {escape(selected_room_label)}
                 </p>
             </div>
         </div>
@@ -1240,13 +1636,14 @@ st.markdown(
 
 @st.fragment(run_every=5)
 def live_panel():
-    snapshot, living_room = current_snapshot()
-
+    snapshot, current_room = current_snapshot()
+    selected_room_id = st.session_state.get("selected_room_id", "living_room")
+    room_name = _room_name(selected_room_id, current_room)
     alerts     = snapshot.get("alerts", {})
-    devices    = living_room["devices"]
-    sensors    = living_room["sensors"]
-    light      = devices["light_main"]
-    ac         = devices["ac_main"]
+    devices    = current_room.get("devices", {})
+    sensors    = current_room.get("sensors", {})
+    light      = devices.get("light_main", {"state": "off", "brightness": 0, "id": "light_main", "name": "Main Light"})
+    ac         = devices.get("ac_main", {"state": "off", "target_temp": 22, "id": "ac_main", "name": "Main AC"})
     door       = devices.get("door_main", {})
     gas_ppm    = sensors.get("gas_ppm", 0)
     gas_alert  = alerts.get("gas", False)
@@ -1255,11 +1652,7 @@ def live_panel():
     occupancy  = sensors.get("occupancy", False)
     etat_robot = st.session_state.agent.robot.etat()
 
-    devices_on = sum([
-        light["state"] == "on",
-        ac["state"] == "on",
-        door.get("state", "locked") == "unlocked" if door else False,
-    ])
+    devices_on = _room_device_count(current_room)
 
     # ── HERO ─────────────────────────────────────────────────────────────────
 
@@ -1273,7 +1666,7 @@ def live_panel():
             <div>
                 <div class="rc-hero-tag">
                     <span class="material-symbols-outlined">{'warning' if gas_alert else 'verified'}</span>
-                    {escape(_mode)} Mode
+                    {escape(room_name)} • {escape(_mode)} Mode
                 </div>
                 <h3 class="rc-hero-title">Welcome back,<br>Developer</h3>
                 <p class="rc-hero-sub" style="color:{_hero_sub_color};">{escape(_hero_sub)}</p>
@@ -1298,6 +1691,36 @@ def live_panel():
         unsafe_allow_html=True,
     )
 
+    overview_cols = st.columns(max(len(snapshot.get("rooms", {})), 1), gap="small")
+    for idx, (room_id, room) in enumerate(snapshot.get("rooms", {}).items()):
+        room_sensors = room.get("sensors", {})
+        room_gas = room_sensors.get("gas_ppm", 0)
+        room_occ = "Occupied" if room_sensors.get("occupancy", False) else "Idle"
+        room_active = _room_device_count(room)
+        room_alert = room_gas > 200
+        room_label = _room_name(room_id, room)
+        with overview_cols[idx]:
+            st.markdown(
+                f"""<div class="rc-card {'on' if room_id == selected_room_id else ''}">
+                    <div class="rc-device-hd">
+                        <p class="rc-device-name" style="margin:0;">{escape(room_label)}</p>
+                        <span class="rc-status-badge {'rc-status-off' if room_alert else 'rc-status-on'}">{room_occ.upper()}</span>
+                    </div>
+                    <p class="rc-device-meta">Devices active: {room_active}</p>
+                    <p class="rc-device-meta">Temp {room_sensors.get('temperature', 0)}°C • Humidity {room_sensors.get('humidity', 0)}%</p>
+                    <p class="rc-device-meta">Gas {room_gas} ppm</p>
+                </div>""",
+                unsafe_allow_html=True,
+            )
+            if st.button(
+                room_label,
+                key=f"room_select_{room_id}",
+                use_container_width=True,
+                type="primary" if room_id == selected_room_id else "secondary",
+            ):
+                _set_active_room(room_id, room_label)
+                st.rerun()
+
     if not gas_unconfirmed and gas_ppm <= 0:
         st.session_state.pop("gas_dialog_armed_at", None)
 
@@ -1305,7 +1728,7 @@ def live_panel():
         st.markdown(
             '<div class="rc-alert">'
             '<span class="material-symbols-outlined icon-fill">warning</span>'
-            '<strong>CRITICAL ALERT:</strong>&nbsp; Gas sensor triggered in Living Room node. Open windows immediately.'
+            '<strong>CRITICAL ALERT:</strong>&nbsp; Gas sensor triggered in the house. Open windows immediately.'
             '</div>',
             unsafe_allow_html=True,
         )
@@ -1351,7 +1774,7 @@ def live_panel():
         st.markdown(
             '<div class="rc-section-hd">'
             '<p class="rc-section-title">Active Devices</p>'
-            '<span class="rc-section-sub"><span class="rc-section-dot"></span>Living Room</span>'
+            f'<span class="rc-section-sub"><span class="rc-section-dot"></span>{escape(room_name)}</span>'
             '</div>',
             unsafe_allow_html=True,
         )
@@ -1378,41 +1801,79 @@ def live_panel():
             )
             if light_on:
                 if st.button("Turn Off", key="light_off", use_container_width=True):
-                    mqtt_command("turn_off", device_type="light")
+                    mqtt_command("turn_off", device_type="light", room_id=selected_room_id)
             else:
                 if st.button("Turn On", key="light_on", use_container_width=True, type="primary"):
-                    mqtt_command("turn_on", device_type="light")
+                    mqtt_command("turn_on", device_type="light", room_id=selected_room_id)
 
         # AC
         with dc1:
-            ac_on  = ac["state"] == "on"
-            on_cls = "on" if ac_on else ""
-            temp   = ac.get("target_temp", 22)
-            pct    = int((temp - 16) / (30 - 16) * 100)
-            st.markdown(
-                f"""<div class="rc-card {on_cls}">
-                    <div class="rc-device-hd">
-                        <div class="rc-device-icon-wrap">
-                            <span class="material-symbols-outlined rc-device-icon">ac_unit</span>
+            if "ac_main" in devices:
+                ac_on  = ac["state"] == "on"
+                on_cls = "on" if ac_on else ""
+                temp   = ac.get("target_temp", 22)
+                pct    = int((temp - 16) / (30 - 16) * 100)
+                st.markdown(
+                    f"""<div class="rc-card {on_cls}">
+                        <div class="rc-device-hd">
+                            <div class="rc-device-icon-wrap">
+                                <span class="material-symbols-outlined rc-device-icon">ac_unit</span>
+                            </div>
+                            <span class="rc-status-badge {'rc-status-on' if ac_on else 'rc-status-off'}">{_ac_badge(ac)}</span>
                         </div>
-                        <span class="rc-status-badge {'rc-status-on' if ac_on else 'rc-status-off'}">{_ac_badge(ac)}</span>
-                    </div>
-                    <p class="rc-device-name">{escape(_device_name(ac, 'AC Unit'))}</p>
-                    <p class="rc-device-id">{escape(_device_code(ac, 'ac_main'))}</p>
-                    <p class="rc-device-meta">{escape(_ac_meta(ac, sensors))}</p>
-                    <div class="rc-temp-bar">
-                        <div class="rc-temp-fill" style="width:{pct}%;"></div>
-                        <div class="rc-temp-thumb" style="left:{pct}%;"></div>
-                    </div>
-                </div>""",
-                unsafe_allow_html=True,
-            )
-            if ac_on:
-                if st.button("Turn Off", key="ac_off", use_container_width=True):
-                    mqtt_command("turn_off", device_type="ac")
+                        <p class="rc-device-name">{escape(_device_name(ac, 'AC Unit'))}</p>
+                        <p class="rc-device-id">{escape(_device_code(ac, 'ac_main'))}</p>
+                        <p class="rc-device-meta">{escape(_ac_meta(ac, sensors))}</p>
+                        <div class="rc-temp-bar">
+                            <div class="rc-temp-fill" style="width:{pct}%;"></div>
+                            <div class="rc-temp-thumb" style="left:{pct}%;"></div>
+                        </div>
+                    </div>""",
+                    unsafe_allow_html=True,
+                )
+                if ac_on:
+                    if st.button("Turn Off", key="ac_off", use_container_width=True):
+                        mqtt_command("turn_off", device_type="ac", room_id=selected_room_id)
+                else:
+                    if st.button("Turn On", key="ac_on", use_container_width=True, type="primary"):
+                        mqtt_command("turn_on", device_type="ac", room_id=selected_room_id)
+            elif "gas_ppm" in sensors:
+                gas_on = sensors.get("gas_ppm", 0) > 0
+                gas_level = int(sensors.get("gas_ppm", 0))
+                gas_alert_cls = "on" if gas_on else ""
+                st.markdown(
+                    f"""<div class="rc-card {gas_alert_cls}">
+                        <div class="rc-device-hd">
+                            <div class="rc-device-icon-wrap">
+                                <span class="material-symbols-outlined rc-device-icon">co2</span>
+                            </div>
+                            <span class="rc-status-badge {'rc-status-on' if gas_on else 'rc-status-off'}">{'ON' if gas_on else 'OFF'}</span>
+                        </div>
+                        <p class="rc-device-name">Kitchen Gas</p>
+                        <p class="rc-device-id">GAS_PPM</p>
+                        <p class="rc-device-meta">{escape(_gas_meta(sensors, alerts))}</p>
+                    </div>""",
+                    unsafe_allow_html=True,
+                )
+                gas_level_value = st.slider(
+                    "Gas Level (ppm)",
+                    min_value=0,
+                    max_value=1000,
+                    value=gas_level,
+                    step=50,
+                    key=f"gas_level_{selected_room_id}",
+                )
+                gas_btn_a, gas_btn_b = st.columns(2, gap="small")
+                with gas_btn_a:
+                    if st.button("Gas On", key="gas_on", use_container_width=True, type="primary" if not gas_on else "secondary"):
+                        mqtt_command("set_gas_state", parameters={"enabled": True}, room_id=selected_room_id)
+                with gas_btn_b:
+                    if st.button("Gas Off", key="gas_off", use_container_width=True):
+                        mqtt_command("set_gas_state", parameters={"enabled": False}, room_id=selected_room_id)
+                if st.button("Apply Gas Level", key="gas_apply", use_container_width=True):
+                    mqtt_command("set_gas_level", parameters={"gas_ppm": gas_level_value}, room_id=selected_room_id)
             else:
-                if st.button("Turn On", key="ac_on", use_container_width=True, type="primary"):
-                    mqtt_command("turn_on", device_type="ac")
+                st.empty()
 
         # Door
         with dc2:
@@ -1437,10 +1898,10 @@ def live_panel():
                 )
                 if is_locked:
                     if st.button("Action: Unlock Door", key="door_unlock", use_container_width=True):
-                        mqtt_command("unlock", device_type="door")
+                        mqtt_command("unlock", device_type="door", room_id=selected_room_id)
                 else:
                     if st.button("Action: Lock Door", key="door_lock", use_container_width=True, type="primary"):
-                        mqtt_command("lock", device_type="door")
+                        mqtt_command("lock", device_type="door", room_id=selected_room_id)
 
         if st.session_state.last_manual_result:
             r = st.session_state.last_manual_result
@@ -1532,6 +1993,15 @@ def live_panel():
 
     with col_robot:
         bat = etat_robot["batterie"]
+        nav_options = {
+            "Living Room": "living_room",
+            "Kitchen": "kitchen",
+            "Bedroom": "bedroom",
+            "Toilet": "toilet",
+        }
+        current_target = st.session_state.get("robot_nav_target", "kitchen")
+        navigation_points = _navigation_route_points(etat_robot, current_target)
+        navigation_hint = _navigation_hint(etat_robot, current_target)
         st.markdown(
             f"""<div class="rc-robot-card">
                 <div class="rc-robot-hd">
@@ -1558,9 +2028,90 @@ def live_panel():
                     <span class="material-symbols-outlined">explore</span>
                     Heading: {etat_robot['direction_text']}
                 </div>
+                <div class="rc-info-row">
+                    <span class="material-symbols-outlined">my_location</span>
+                    Position: ({etat_robot['position']['x']:.1f}, {etat_robot['position']['y']:.1f}) cm
+                </div>
+                <div class="rc-info-row">
+                    <span class="material-symbols-outlined">home_pin</span>
+                    Zone: {escape(etat_robot.get('zone_label', 'Unknown Area'))}
+                </div>
             </div>""",
             unsafe_allow_html=True,
         )
+
+        selected_nav_label = st.selectbox(
+            "Guide To",
+            options=list(nav_options.keys()),
+            index=max(0, list(nav_options.values()).index(current_target)) if current_target in nav_options.values() else 1,
+            key="robot_nav_target_label",
+        )
+        st.session_state.robot_nav_target = nav_options[selected_nav_label]
+        navigation_points = _navigation_route_points(etat_robot, st.session_state.robot_nav_target)
+        navigation_hint = _navigation_hint(etat_robot, st.session_state.robot_nav_target)
+
+        _render_robot_visual(etat_robot, st.session_state.robot_trace, snapshot, navigation_points)
+
+        up_a, up_b, up_c = st.columns([1, 1, 1], gap="small")
+        with up_b:
+            if st.button("Forward", key="robot_forward", use_container_width=True):
+                _run_robot_action("forward")
+                st.rerun()
+
+        mid_a, mid_b, mid_c = st.columns([1, 1, 1], gap="small")
+        with mid_a:
+            if st.button("Left", key="robot_left", use_container_width=True):
+                _run_robot_action("left")
+                st.rerun()
+        with mid_b:
+            if st.button("Scan", key="robot_scan", use_container_width=True):
+                _run_robot_action("scan")
+                st.rerun()
+        with mid_c:
+            if st.button("Right", key="robot_right", use_container_width=True):
+                _run_robot_action("right")
+                st.rerun()
+
+        down_a, down_b, down_c = st.columns([1, 1, 1], gap="small")
+        with down_b:
+            if st.button("Back", key="robot_back", use_container_width=True):
+                _run_robot_action("backward")
+                st.rerun()
+
+        util_a, util_b = st.columns(2, gap="small")
+        with util_a:
+            if st.button("Recharge", key="robot_charge", use_container_width=True):
+                _run_robot_action("charge")
+                st.rerun()
+        with util_b:
+            if st.button("Clear Path", key="robot_clear", use_container_width=True):
+                _run_robot_action("clear")
+                st.rerun()
+
+        if st.session_state.last_robot_result:
+            st.markdown(
+                f'<div class="rc-robot-note">{escape(st.session_state.last_robot_result)}</div>',
+                unsafe_allow_html=True,
+            )
+        st.markdown(
+            f'<div class="rc-robot-note">Route hint: {escape(navigation_hint)}</div>',
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            '<div class="rc-robot-note">Map markers: L=light, AC=air conditioner, D=door, BZ=buzzer, T=temperature, G=gas sensor.</div>',
+            unsafe_allow_html=True,
+        )
+        if etat_robot.get("last_scan"):
+            scan = etat_robot["last_scan"]
+            st.markdown(
+                (
+                    '<div class="rc-robot-note">'
+                    f"Scan F:{scan.get('avant', 0)}cm | R:{scan.get('droite', 0)}cm | "
+                    f"L:{scan.get('gauche', 0)}cm | B:{scan.get('arriere', 0)}cm"
+                    "</div>"
+                ),
+                unsafe_allow_html=True,
+            )
 
         st.markdown(
             '<div class="rc-pomo-card">'

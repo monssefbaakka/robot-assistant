@@ -127,9 +127,13 @@ See `docs/hardware.md` for pin mapping and `docs/execution-plan.md` Phase 3 for 
 
 ## Current State (real-simulation branch)
 
-- One room: `living_room`
-- Devices: `light_main`, `ac_main`, `door_main`
-- Sensors: `temperature`, `humidity`, `occupancy`, `light_level`, `gas_ppm`
+- Four rooms: `living_room`, `kitchen`, `bedroom`, `toilet`
+- `living_room`: `light_main`, `ac_main`, `door_main`, `buzzer_main`
+- `kitchen`: `light_main`, `buzzer_main`, `gas_ppm`
+- `bedroom`: `light_main`, `ac_main`, `door_main`, `buzzer_main`
+- `toilet`: `light_main`, `door_main`, `buzzer_main`
+- Shared room sensors: `temperature`, `humidity`, `occupancy`, `light_level`
+- Gas simulation available in `living_room` and `kitchen`
 - Alerts: `gas`
 - Transport: Mosquitto via `mqtt_client.py`
 - Modes:
