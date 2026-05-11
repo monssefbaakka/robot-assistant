@@ -1,14 +1,14 @@
 {
   "meta": {
-    "last_update": "2026-05-07T02:54:38.540935+00:00",
-    "transport": "mqtt-wokwi-hardware",
+    "last_update": "2026-05-11T20:18:03.697273+00:00",
+    "transport": "mqtt-python-simulator",
     "version": 1
   },
   "outside": {
-    "temperature": 22.0,
-    "humidity": 50,
+    "temperature": 19.0,
+    "humidity": 64,
     "source": "Rabat",
-    "updated_at": "2026-05-07T02:50:19.751018+00:00"
+    "updated_at": "2026-05-11T20:16:28.213802+00:00"
   },
   "rooms": {
     "living_room": {
@@ -20,7 +20,7 @@
           "name": "Main Light",
           "state": "on",
           "brightness": 80,
-          "power_w": 10
+          "power_w": 9
         },
         "ac_main": {
           "id": "ac_main",
@@ -42,14 +42,14 @@
           "id": "buzzer_main",
           "type": "buzzer",
           "name": "Gas Safety Buzzer",
-          "state": "off"
+          "state": "on"
         }
       },
       "sensors": {
-        "temperature": 25,
+        "temperature": 25.0,
         "humidity": 50,
         "occupancy": true,
-        "light_level": 550,
+        "light_level": 500,
         "gas_ppm": 1000
       },
       "environment": {
@@ -72,14 +72,14 @@
           "id": "buzzer_main",
           "type": "buzzer",
           "name": "Gas Safety Buzzer",
-          "state": "off"
+          "state": "on"
         }
       },
       "sensors": {
         "temperature": 26.2,
         "humidity": 54,
         "occupancy": false,
-        "light_level": 40,
+        "light_level": 140,
         "gas_ppm": 1000
       },
       "environment": {
@@ -96,7 +96,7 @@
           "name": "Bedroom Light",
           "state": "on",
           "brightness": 80,
-          "power_w": 10
+          "power_w": 9
         },
         "ac_main": {
           "id": "ac_main",
@@ -122,10 +122,10 @@
         }
       },
       "sensors": {
-        "temperature": 24.3,
+        "temperature": 23.0,
         "humidity": 47,
         "occupancy": true,
-        "light_level": 380
+        "light_level": 500
       },
       "environment": {
         "insulation_factor": 0.8,
@@ -160,7 +160,7 @@
         "temperature": 23.8,
         "humidity": 58,
         "occupancy": false,
-        "light_level": 35
+        "light_level": 140
       },
       "environment": {
         "insulation_factor": 0.76,
@@ -171,7 +171,7 @@
   "alerts": {
     "gas": true,
     "gas_unconfirmed": true,
-    "gas_buzzer": false
+    "gas_buzzer": true
   },
   "safety": {
     "gas_confirmation": {
