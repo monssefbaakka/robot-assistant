@@ -13,6 +13,8 @@ from iot_store import append_event, load_events, load_state, reset_state, save_s
 from mqtt_client import get_mqtt_client as get_loopback_broker
 from mqtt_topics import MQTTTopics
 
+SIMULATION_FALLBACK_ROOMS = {"garage"}
+
 
 class _GasAlertTelegramNotifier:
     """Subscribes to gas alert topic and forwards to Telegram if configured."""
@@ -372,6 +374,7 @@ class IoTMQTTController:
         return result
 
     def execute_command(self, command):
+        room_id = command.get("room") or "living_room"
         correlation_id = str(uuid.uuid4())
         response_event = threading.Event()
         response_holder = {}
@@ -389,7 +392,6 @@ class IoTMQTTController:
         if self.mode == "hardware":
             expected_device_update = _hardware_expected_device_update(command)
             if expected_device_update:
-                room_id = command.get("room") or "living_room"
                 if expected_device_update.get("topic_kind") == "sensor":
                     state_topic = MQTTTopics.room_sensor_state(room_id, expected_device_update["target_id"])
                 else:
@@ -432,6 +434,9 @@ class IoTMQTTController:
             persisted_result = _hardware_result_from_persisted_state(command, expected_device_update)
             if persisted_result:
                 return persisted_result
+
+        if "result" not in response_holder and self.mode == "hardware" and room_id in SIMULATION_FALLBACK_ROOMS:
+            return self._execute_local_room_fallback(command)
 
         if "result" not in response_holder:
             host = os.environ.get("MQTT_HOST", "localhost")

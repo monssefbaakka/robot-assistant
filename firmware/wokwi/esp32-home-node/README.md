@@ -20,6 +20,7 @@ This folder is the first hardware-simulation slice for moving device behavior ou
 - kitchen: light LED on GPIO21, gas slider on GPIO34, gas alert LED on GPIO33, buzzer on GPIO32
 - bedroom: light LED on GPIO14, AC LED on GPIO13, door servo on GPIO23
 - toilet: light LED on GPIO22, door servo on GPIO15
+- garage: light LED on GPIO17, door servo on GPIO16
 - shared sensors and indicators:
 - DHT22 on GPIO4
 - photoresistor on GPIO35

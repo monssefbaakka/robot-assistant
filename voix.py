@@ -25,6 +25,7 @@ class AssistantVocal:
         # État
         self.en_ecoute = False
         self.derniere_transcription = ""
+        self.langues_reconnaissance = ["en-US", "fr-FR", "en-GB"]
     
     def _configurer_voix(self):
         """Configure les paramètres de la voix du robot"""
@@ -70,7 +71,28 @@ class AssistantVocal:
         except Exception as e:
             print(f"Erreur dans thread TTS: {e}")
     
-    def ecouter(self, timeout=5, phrase_time_limit=10):
+    def _transcrire_audio(self, audio, langues=None):
+        """Essaie plusieurs langues de reconnaissance pour améliorer les commandes mixtes FR/EN."""
+        langues_a_tester = langues or self.langues_reconnaissance
+        derniere_erreur = None
+
+        for langue in langues_a_tester:
+            try:
+                texte = self.recognizer.recognize_google(audio, language=langue)
+                if texte:
+                    return texte
+            except sr.UnknownValueError as exc:
+                derniere_erreur = exc
+                continue
+            except sr.RequestError as exc:
+                derniere_erreur = exc
+                continue
+
+        if derniere_erreur:
+            raise derniere_erreur
+        raise sr.UnknownValueError()
+
+    def ecouter(self, timeout=5, phrase_time_limit=10, langues=None):
         """
         Écoute la voix de l'utilisateur et retourne le texte
         
@@ -97,9 +119,9 @@ class AssistantVocal:
                     phrase_time_limit=phrase_time_limit
                 )
             
-            # Reconnaissance vocale (Google Speech Recognition - gratuit)
+            # Reconnaissance vocale avec essai multi-langue
             print("🔄 Transcription en cours...")
-            texte = self.recognizer.recognize_google(audio, language="fr-FR")
+            texte = self._transcrire_audio(audio, langues=langues)
             
             self.derniere_transcription = texte
             print(f"✅ Vous avez dit: '{texte}'")
@@ -122,7 +144,7 @@ class AssistantVocal:
             print(f"❌ Erreur inattendue: {e}")
             return None
     
-    def ecouter_avec_mot_cle(self, mot_cle="robot", timeout=30):
+    def ecouter_avec_mot_cle(self, mot_cle="robot", timeout=30, langues=None):
         """
         Écoute en continu jusqu'à détecter un mot-clé
         
@@ -138,7 +160,7 @@ class AssistantVocal:
         debut = time.time()
         
         while (time.time() - debut) < timeout:
-            texte = self.ecouter(timeout=5)
+            texte = self.ecouter(timeout=5, langues=langues)
             
             if texte and mot_cle.lower() in texte.lower():
                 print(f"✅ Mot-clé détecté ! Suite: '{texte}'")

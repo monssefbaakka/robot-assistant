@@ -85,6 +85,9 @@ Publishes the latest state for each device in a room.
 - `robocompagnon/home/rooms/toilet/devices/light_main/state`
 - `robocompagnon/home/rooms/toilet/devices/door_main/state`
 - `robocompagnon/home/rooms/toilet/devices/buzzer_main/state`
+- `robocompagnon/home/rooms/garage/devices/light_main/state`
+- `robocompagnon/home/rooms/garage/devices/door_main/state`
+- `robocompagnon/home/rooms/garage/devices/buzzer_main/state`
 
 ### Used For
 - Device status updates in the dashboard
@@ -115,6 +118,10 @@ Publishes the latest sensor value for each room sensor.
 - `robocompagnon/home/rooms/toilet/sensors/humidity`
 - `robocompagnon/home/rooms/toilet/sensors/occupancy`
 - `robocompagnon/home/rooms/toilet/sensors/light_level`
+- `robocompagnon/home/rooms/garage/sensors/temperature`
+- `robocompagnon/home/rooms/garage/sensors/humidity`
+- `robocompagnon/home/rooms/garage/sensors/occupancy`
+- `robocompagnon/home/rooms/garage/sensors/light_level`
 
 ### Used For
 - Sensor monitoring in the dashboard
@@ -143,6 +150,7 @@ Publishes door lock state after lock/unlock commands.
 - `robocompagnon/home/rooms/living_room/devices/door_main/state`
 - `robocompagnon/home/rooms/bedroom/devices/door_main/state`
 - `robocompagnon/home/rooms/toilet/devices/door_main/state`
+- `robocompagnon/home/rooms/garage/devices/door_main/state`
 
 ### Used For
 - Door lock status display in dashboard

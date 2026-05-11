@@ -1,7 +1,68 @@
 # app.py - Interface web Streamlit pour le robot assistant
 import streamlit as st
+import streamlit.components.v1 as components
 from agent import AgentRobot
 import time
+
+
+@st.cache_data
+def _get_robot_css():
+    with open('robot_realistic.html', 'r', encoding='utf-8') as f:
+        content = f.read()
+    css_start = content.index('<style>') + len('<style>')
+    css_end = content.index('</style>')
+    return content[css_start:css_end]
+
+
+def get_robot_html(state='idle'):
+    css = _get_robot_css()
+    return (
+        '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>'
+        + css
+        + 'body{background:transparent!important;min-height:unset!important;'
+        'height:360px!important;overflow:hidden!important;padding:0!important;'
+        'align-items:flex-start!important;}'
+        '.robot-display{transform:scale(0.58);transform-origin:top center;}'
+        '</style></head><body>'
+        '<div class="robot-display">'
+        '<div class="robot-3d">'
+        '<div class="robot idle" id="robot">'
+        '<div class="antenna-base"><div class="antenna-light"></div></div>'
+        '<div class="head-3d">'
+        '<div class="screen-panel">'
+        '<div class="eyes-display">'
+        '<div class="eye-lcd"></div><div class="eye-lcd"></div>'
+        '</div></div>'
+        '<div class="mouth-lcd"></div>'
+        '</div>'
+        '<div class="body-metal">'
+        '<div class="status-indicator"></div>'
+        '<div class="vent"></div><div class="vent"></div>'
+        '<div class="vent"></div><div class="vent"></div>'
+        '</div></div></div>'
+        '<div class="control-panel" style="width:300px;margin-top:20px;">'
+        '<div class="status-display" id="statusDisplay">STANDBY MODE</div>'
+        '<div class="status-info" id="statusInfo">Awaiting instructions...</div>'
+        '</div></div>'
+        '<script>'
+        'const robot=document.getElementById("robot");'
+        'const statusDisplay=document.getElementById("statusDisplay");'
+        'const statusInfo=document.getElementById("statusInfo");'
+        'const states={'
+        'idle:{display:"STANDBY MODE",info:"Awaiting instructions..."},'
+        'listening:{display:"LISTENING MODE",info:"Audio input active..."},'
+        'thinking:{display:"PROCESSING",info:"Computing response..."},'
+        'speaking:{display:"SPEAKING MODE",info:"Audio output active..."}'
+        '};'
+        'function setState(s){'
+        'robot.className="robot "+s;'
+        'statusDisplay.textContent=states[s].display;'
+        'statusInfo.textContent=states[s].info;'
+        'if(s==="speaking")setTimeout(()=>setState("idle"),3500);'
+        '}'
+        f'setState("{state}");'
+        '</script></body></html>'
+    )
 
 # Configuration de la page
 st.set_page_config(
@@ -123,8 +184,15 @@ st.markdown("""
 if 'agent' not in st.session_state:
     st.session_state.agent = AgentRobot(nom_utilisateur="Monssef")
     st.session_state.historique_chat = []
+if 'robot_state' not in st.session_state:
+    st.session_state.robot_state = 'idle'
 
 agent = st.session_state.agent
+
+# Capture current state for this render, then reset so next render is idle
+current_robot_state = st.session_state.robot_state
+if current_robot_state == 'speaking':
+    st.session_state.robot_state = 'idle'
 
 # En-tête
 st.markdown('<p class="main-header">🤖 RoboCompagnon - Ton Assistant Personnel</p>', unsafe_allow_html=True)
@@ -134,6 +202,7 @@ col1, col2 = st.columns([2, 3])
 
 # ========== COLONNE 1: État du robot ==========
 with col1:
+    components.html(get_robot_html(current_robot_state), height=360)
     st.subheader("📊 État du Robot")
     
     # Récupérer l'état actuel
@@ -284,7 +353,8 @@ with col2:
             'role': 'robot',
             'message': reponse
         })
-        
+        st.session_state.robot_state = 'speaking'
+
         st.rerun()
     
     # Bouton pour effacer l'historique

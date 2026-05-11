@@ -1,14 +1,14 @@
 {
   "meta": {
-    "last_update": "2026-05-11T20:19:17.261468+00:00",
+    "last_update": "2026-05-11T21:34:43.961499+00:00",
     "transport": "mqtt-wokwi-hardware",
     "version": 1
   },
   "outside": {
-    "temperature": 29.0,
-    "humidity": 45,
-    "source": "default",
-    "updated_at": "2026-05-11T20:19:11.362877+00:00"
+    "temperature": 17.0,
+    "humidity": 72,
+    "source": "Rabat",
+    "updated_at": "2026-05-11T21:34:14.492053+00:00"
   },
   "rooms": {
     "living_room": {
@@ -18,9 +18,9 @@
           "id": "light_main",
           "type": "light",
           "name": "Main Light",
-          "state": "off",
-          "brightness": 0,
-          "power_w": 0
+          "state": "on",
+          "brightness": 80,
+          "power_w": 10
         },
         "ac_main": {
           "id": "ac_main",
@@ -49,7 +49,7 @@
         "temperature": 25,
         "humidity": 50,
         "occupancy": true,
-        "light_level": 227,
+        "light_level": 550,
         "gas_ppm": 50
       },
       "environment": {
@@ -165,6 +165,41 @@
       "environment": {
         "insulation_factor": 0.76,
         "sun_exposure": 0.1
+      }
+    },
+    "garage": {
+      "name": "garage",
+      "devices": {
+        "light_main": {
+          "id": "light_main",
+          "type": "light",
+          "name": "Garage Light",
+          "state": "off",
+          "brightness": 0,
+          "power_w": 0
+        },
+        "door_main": {
+          "id": "door_main",
+          "type": "door",
+          "name": "Garage Door",
+          "state": "locked"
+        },
+        "buzzer_main": {
+          "id": "buzzer_main",
+          "type": "buzzer",
+          "name": "Gas Safety Buzzer",
+          "state": "off"
+        }
+      },
+      "sensors": {
+        "temperature": 22.6,
+        "humidity": 53,
+        "occupancy": false,
+        "light_level": 20
+      },
+      "environment": {
+        "insulation_factor": 0.58,
+        "sun_exposure": 0.08
       }
     }
   },

@@ -158,6 +158,41 @@ HOUSE_ROOMS = {
             "sun_exposure": 0.1,
         },
     },
+    "garage": {
+        "name": "Garage",
+        "devices": {
+            "light_main": {
+                "id": "light_main",
+                "type": "light",
+                "name": "Garage Light",
+                "state": "off",
+                "brightness": 0,
+                "power_w": 0,
+            },
+            "door_main": {
+                "id": "door_main",
+                "type": "door",
+                "name": "Garage Door",
+                "state": "locked",
+            },
+            "buzzer_main": {
+                "id": "buzzer_main",
+                "type": "buzzer",
+                "name": "Garage Safety Buzzer",
+                "state": "off",
+            },
+        },
+        "sensors": {
+            "temperature": 22.6,
+            "humidity": 51,
+            "occupancy": False,
+            "light_level": 60,
+        },
+        "environment": {
+            "insulation_factor": 0.58,
+            "sun_exposure": 0.08,
+        },
+    },
 }
 
 
@@ -181,6 +216,10 @@ SIMULATION_LAYOUT = {
         "rect": (760, 160, 120, 140),
         "door": ((760, 214), (760, 255)),
     },
+    "garage": {
+        "rect": (760, 340, 180, 190),
+        "door": ((760, 420), (760, 468)),
+    },
 }
 
 
@@ -193,6 +232,7 @@ ROBOT_SIMULATION_WORLD = {
         {"id": "kitchen", "label": "Kitchen", "x1": 4.0, "y1": 50.0, "x2": 170.0, "y2": 180.0},
         {"id": "bedroom", "label": "Bedroom", "x1": 4.0, "y1": -140.0, "x2": 170.0, "y2": 30.0},
         {"id": "toilet", "label": "Toilet", "x1": 146.0, "y1": 60.0, "x2": 250.0, "y2": 145.0},
+        {"id": "garage", "label": "Garage", "x1": 146.0, "y1": -140.0, "x2": 300.0, "y2": 30.0},
     ],
     "obstacles": [
         {"id": "sofa", "label": "Sofa", "x1": -195.0, "y1": 35.0, "x2": -145.0, "y2": 95.0},
@@ -203,6 +243,8 @@ ROBOT_SIMULATION_WORLD = {
         {"id": "bed", "label": "Bed", "x1": 82.0, "y1": -120.0, "x2": 156.0, "y2": -44.0},
         {"id": "wardrobe", "label": "Wardrobe", "x1": 108.0, "y1": -10.0, "x2": 158.0, "y2": 24.0},
         {"id": "sink", "label": "Sink", "x1": 208.0, "y1": 108.0, "x2": 238.0, "y2": 136.0},
+        {"id": "car", "label": "Car", "x1": 192.0, "y1": -126.0, "x2": 280.0, "y2": -48.0},
+        {"id": "shelf", "label": "Shelf", "x1": 246.0, "y1": -12.0, "x2": 292.0, "y2": 24.0},
     ],
     "components": [
         {"room_id": "living_room", "component_id": "light_main", "kind": "light", "label": "L", "x": -120.0, "y": 170.0},
@@ -221,6 +263,9 @@ ROBOT_SIMULATION_WORLD = {
         {"room_id": "toilet", "component_id": "light_main", "kind": "light", "label": "L", "x": 210.0, "y": 138.0},
         {"room_id": "toilet", "component_id": "door_main", "kind": "door", "label": "D", "x": 170.0, "y": 94.0},
         {"room_id": "toilet", "component_id": "buzzer_main", "kind": "buzzer", "label": "BZ", "x": 244.0, "y": 138.0},
+        {"room_id": "garage", "component_id": "light_main", "kind": "light", "label": "L", "x": 212.0, "y": 18.0},
+        {"room_id": "garage", "component_id": "door_main", "kind": "door", "label": "D", "x": 170.0, "y": -56.0},
+        {"room_id": "garage", "component_id": "buzzer_main", "kind": "buzzer", "label": "BZ", "x": 286.0, "y": 18.0},
     ],
 }
 
