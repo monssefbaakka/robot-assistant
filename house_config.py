@@ -184,6 +184,47 @@ SIMULATION_LAYOUT = {
 }
 
 
+ROBOT_SIMULATION_WORLD = {
+    "spawn": {"x": -70.0, "y": 60.0},
+    "robot_radius_cm": 12.0,
+    "walkable_areas": [
+        {"id": "living_room", "label": "Living Room", "x1": -220.0, "y1": 10.0, "x2": -4.0, "y2": 180.0},
+        {"id": "hallway", "label": "Hallway", "x1": -32.0, "y1": -140.0, "x2": 32.0, "y2": 180.0},
+        {"id": "kitchen", "label": "Kitchen", "x1": 4.0, "y1": 50.0, "x2": 170.0, "y2": 180.0},
+        {"id": "bedroom", "label": "Bedroom", "x1": 4.0, "y1": -140.0, "x2": 170.0, "y2": 30.0},
+        {"id": "toilet", "label": "Toilet", "x1": 146.0, "y1": 60.0, "x2": 250.0, "y2": 145.0},
+    ],
+    "obstacles": [
+        {"id": "sofa", "label": "Sofa", "x1": -195.0, "y1": 35.0, "x2": -145.0, "y2": 95.0},
+        {"id": "coffee_table", "label": "Coffee Table", "x1": -130.0, "y1": 82.0, "x2": -82.0, "y2": 120.0},
+        {"id": "tv_console", "label": "TV Console", "x1": -205.0, "y1": 142.0, "x2": -115.0, "y2": 166.0},
+        {"id": "kitchen_counter", "label": "Counter", "x1": 95.0, "y1": 126.0, "x2": 158.0, "y2": 168.0},
+        {"id": "dining_table", "label": "Dining", "x1": 48.0, "y1": 78.0, "x2": 92.0, "y2": 118.0},
+        {"id": "bed", "label": "Bed", "x1": 82.0, "y1": -120.0, "x2": 156.0, "y2": -44.0},
+        {"id": "wardrobe", "label": "Wardrobe", "x1": 108.0, "y1": -10.0, "x2": 158.0, "y2": 24.0},
+        {"id": "sink", "label": "Sink", "x1": 208.0, "y1": 108.0, "x2": 238.0, "y2": 136.0},
+    ],
+    "components": [
+        {"room_id": "living_room", "component_id": "light_main", "kind": "light", "label": "L", "x": -120.0, "y": 170.0},
+        {"room_id": "living_room", "component_id": "ac_main", "kind": "ac", "label": "AC", "x": -208.0, "y": 110.0},
+        {"room_id": "living_room", "component_id": "door_main", "kind": "door", "label": "D", "x": -20.0, "y": 84.0},
+        {"room_id": "living_room", "component_id": "buzzer_main", "kind": "buzzer", "label": "BZ", "x": -48.0, "y": 165.0},
+        {"room_id": "living_room", "component_id": "temperature", "kind": "sensor", "label": "T", "x": -58.0, "y": 148.0},
+        {"room_id": "living_room", "component_id": "gas_ppm", "kind": "gas", "label": "G", "x": -48.0, "y": 34.0},
+        {"room_id": "kitchen", "component_id": "light_main", "kind": "light", "label": "L", "x": 95.0, "y": 170.0},
+        {"room_id": "kitchen", "component_id": "buzzer_main", "kind": "buzzer", "label": "BZ", "x": 152.0, "y": 170.0},
+        {"room_id": "kitchen", "component_id": "gas_ppm", "kind": "gas", "label": "G", "x": 44.0, "y": 112.0},
+        {"room_id": "bedroom", "component_id": "light_main", "kind": "light", "label": "L", "x": 95.0, "y": 20.0},
+        {"room_id": "bedroom", "component_id": "ac_main", "kind": "ac", "label": "AC", "x": 28.0, "y": -24.0},
+        {"room_id": "bedroom", "component_id": "door_main", "kind": "door", "label": "D", "x": 20.0, "y": -56.0},
+        {"room_id": "bedroom", "component_id": "buzzer_main", "kind": "buzzer", "label": "BZ", "x": 160.0, "y": 16.0},
+        {"room_id": "toilet", "component_id": "light_main", "kind": "light", "label": "L", "x": 210.0, "y": 138.0},
+        {"room_id": "toilet", "component_id": "door_main", "kind": "door", "label": "D", "x": 170.0, "y": 94.0},
+        {"room_id": "toilet", "component_id": "buzzer_main", "kind": "buzzer", "label": "BZ", "x": 244.0, "y": 138.0},
+    ],
+}
+
+
 def default_rooms_payload():
     return deepcopy(HOUSE_ROOMS)
 

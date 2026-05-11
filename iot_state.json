@@ -1,14 +1,14 @@
 {
   "meta": {
-    "last_update": "2026-05-07T02:54:38.540935+00:00",
+    "last_update": "2026-05-10T20:04:09.857454+00:00",
     "transport": "mqtt-wokwi-hardware",
     "version": 1
   },
   "outside": {
-    "temperature": 22.0,
-    "humidity": 50,
+    "temperature": 18.0,
+    "humidity": 83,
     "source": "Rabat",
-    "updated_at": "2026-05-07T02:50:19.751018+00:00"
+    "updated_at": "2026-05-10T20:04:09.857554+00:00"
   },
   "rooms": {
     "living_room": {
@@ -20,7 +20,7 @@
           "name": "Main Light",
           "state": "on",
           "brightness": 80,
-          "power_w": 10
+          "power_w": 9
         },
         "ac_main": {
           "id": "ac_main",
@@ -36,7 +36,7 @@
           "id": "door_main",
           "type": "door",
           "name": "Front Door",
-          "state": "unlocked"
+          "state": "locked"
         },
         "buzzer_main": {
           "id": "buzzer_main",
@@ -46,11 +46,11 @@
         }
       },
       "sensors": {
-        "temperature": 25,
+        "temperature": 25.0,
         "humidity": 50,
         "occupancy": true,
-        "light_level": 550,
-        "gas_ppm": 1000
+        "light_level": 500,
+        "gas_ppm": 50
       },
       "environment": {
         "insulation_factor": 0.72,
@@ -79,8 +79,8 @@
         "temperature": 26.2,
         "humidity": 54,
         "occupancy": false,
-        "light_level": 40,
-        "gas_ppm": 1000
+        "light_level": 140,
+        "gas_ppm": 50
       },
       "environment": {
         "insulation_factor": 0.68,
@@ -96,7 +96,7 @@
           "name": "Bedroom Light",
           "state": "on",
           "brightness": 80,
-          "power_w": 10
+          "power_w": 9
         },
         "ac_main": {
           "id": "ac_main",
@@ -122,10 +122,10 @@
         }
       },
       "sensors": {
-        "temperature": 24.3,
+        "temperature": 23.0,
         "humidity": 47,
-        "occupancy": true,
-        "light_level": 380
+        "occupancy": false,
+        "light_level": 500
       },
       "environment": {
         "insulation_factor": 0.8,
@@ -139,15 +139,15 @@
           "id": "light_main",
           "type": "light",
           "name": "Toilet Light",
-          "state": "off",
-          "brightness": 0,
-          "power_w": 0
+          "state": "on",
+          "brightness": 80,
+          "power_w": 9
         },
         "door_main": {
           "id": "door_main",
           "type": "door",
           "name": "Toilet Door",
-          "state": "locked"
+          "state": "unlocked"
         },
         "buzzer_main": {
           "id": "buzzer_main",
@@ -160,7 +160,7 @@
         "temperature": 23.8,
         "humidity": 58,
         "occupancy": false,
-        "light_level": 35
+        "light_level": 500
       },
       "environment": {
         "insulation_factor": 0.76,
@@ -169,15 +169,15 @@
     }
   },
   "alerts": {
-    "gas": true,
-    "gas_unconfirmed": true,
+    "gas": false,
+    "gas_unconfirmed": false,
     "gas_buzzer": false
   },
   "safety": {
     "gas_confirmation": {
-      "active": true,
-      "pending": true,
-      "armed_at": "2026-05-07T02:52:25.215902+00:00",
+      "active": false,
+      "pending": false,
+      "armed_at": null,
       "confirmed": false
     }
   }

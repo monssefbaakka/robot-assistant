@@ -1,190 +1,256 @@
-# robot.py - Le robot virtuel avec ses fonctions de base
+# robot.py - Virtual robot with simple indoor navigation rules
 import math
-import random
 from datetime import datetime
 
+from house_config import ROBOT_SIMULATION_WORLD
+
+
+def _clamp(value, minimum, maximum):
+    return max(minimum, min(maximum, value))
+
+
 class RobotVirtuel:
-    """Un robot qui existe en mémoire avec position et capteurs simulés"""
-    
+    """Virtual robot with collision-aware movement and map-based scanning."""
+
     def __init__(self):
-        self.position = {"x": 0, "y": 0}  # Position sur la carte (en cm)
-        self.direction = 0  # Angle en degrés (0 = Nord, 90 = Est)
-        self.vitesse = 10  # cm par mouvement
-        self.batterie = 100  # Pourcentage
-        self.historique = []  # Logs des actions
-        self.etat_actuel = "idle"  # idle, moving, scanning, charging
-        
+        spawn = ROBOT_SIMULATION_WORLD["spawn"]
+        self.position = {"x": float(spawn["x"]), "y": float(spawn["y"])}
+        self.direction = 0
+        self.vitesse = 20
+        self.batterie = 100
+        self.historique = []
+        self.etat_actuel = "idle"
+        self.robot_radius_cm = float(ROBOT_SIMULATION_WORLD.get("robot_radius_cm", 12.0))
+        self.walkable_areas = list(ROBOT_SIMULATION_WORLD.get("walkable_areas", []))
+        self.obstacles = list(ROBOT_SIMULATION_WORLD.get("obstacles", []))
+        self.last_scan = None
+
     def avancer(self, distance_cm=None):
-        """Avance le robot d'une certaine distance"""
+        """Move forward or backward while respecting walls and obstacles."""
         if distance_cm is None:
             distance_cm = self.vitesse
-            
+
         if self.batterie < 5:
-            return "⚠️ Batterie trop faible pour avancer !"
-            
-        # Calculer nouvelle position selon la direction
-        rad = math.radians(self.direction)
-        self.position["x"] += distance_cm * math.sin(rad)
-        self.position["y"] += distance_cm * math.cos(rad)
-        
-        self.batterie -= abs(distance_cm) * 0.1
+            return "Battery too low to move."
+
+        requested_distance = float(distance_cm)
+        step_size = 4.0
+        moved_distance = 0.0
+        remaining = abs(requested_distance)
+        direction_sign = 1.0 if requested_distance >= 0 else -1.0
+        angle_rad = math.radians(self.direction)
+        blocked = False
+
         self.etat_actuel = "moving"
-        
-        message = f"✓ Avancé de {distance_cm}cm → Position: ({self.position['x']:.1f}, {self.position['y']:.1f})"
-        self.historique.append({
-            "timestamp": datetime.now().strftime("%H:%M:%S"),
-            "action": "avancer",
-            "message": message
-        })
+
+        while remaining > 0:
+            step = min(step_size, remaining)
+            delta = step * direction_sign
+            candidate_x = self.position["x"] + delta * math.sin(angle_rad)
+            candidate_y = self.position["y"] + delta * math.cos(angle_rad)
+            if not self._can_place(candidate_x, candidate_y):
+                blocked = True
+                break
+
+            self.position["x"] = round(candidate_x, 1)
+            self.position["y"] = round(candidate_y, 1)
+            moved_distance += step
+            remaining -= step
+
+        battery_cost = moved_distance * 0.08
+        self.batterie = max(0.0, self.batterie - battery_cost)
+        zone = self._get_current_zone_label()
+        signed_moved = moved_distance * direction_sign
+
+        if moved_distance == 0 and blocked:
+            message = f"Blocked by wall or furniture in {zone}."
+        elif blocked:
+            message = (
+                f"Moved {signed_moved:.0f}cm, then stopped by an obstacle in {zone} "
+                f"at ({self.position['x']:.1f}, {self.position['y']:.1f})."
+            )
+        else:
+            message = (
+                f"Moved {signed_moved:.0f}cm in {zone} -> "
+                f"({self.position['x']:.1f}, {self.position['y']:.1f})"
+            )
+
+        self._log("move", message)
+        self.etat_actuel = "idle"
         return message
-    
+
     def reculer(self, distance_cm=None):
-        """Recule le robot"""
+        """Move backward."""
         if distance_cm is None:
             distance_cm = self.vitesse
         return self.avancer(-distance_cm)
-    
+
     def tourner_droite(self, angle_degres=90):
-        """Tourne à droite"""
+        """Turn right."""
         return self.tourner(angle_degres)
-    
+
     def tourner_gauche(self, angle_degres=90):
-        """Tourne à gauche"""
+        """Turn left."""
         return self.tourner(-angle_degres)
-    
+
     def tourner(self, angle_degres):
-        """Tourne le robot (positif = droite, négatif = gauche)"""
+        """Rotate the robot in place."""
         self.direction = (self.direction + angle_degres) % 360
+        self.batterie = max(0.0, self.batterie - abs(angle_degres) * 0.015)
         direction_text = self._get_direction_text()
-        message = f"↻ Tourné de {angle_degres}° → Direction: {self.direction}° ({direction_text})"
-        self.historique.append({
-            "timestamp": datetime.now().strftime("%H:%M:%S"),
-            "action": "tourner",
-            "message": message
-        })
+        zone = self._get_current_zone_label()
+        message = f"Turned {angle_degres}deg in {zone} -> {self.direction}deg ({direction_text})"
+        self._log("turn", message)
         return message
-    
+
     def scanner(self):
-        """Simule un scan des obstacles autour"""
+        """Return scan distances based on the current map."""
         self.etat_actuel = "scanning"
-        # Pour l'instant on simule des distances aléatoires
         distances = {
-            "avant": random.randint(20, 200),
-            "droite": random.randint(20, 200),
-            "gauche": random.randint(20, 200),
-            "arriere": random.randint(20, 200)
+            "avant": self._raycast(self.direction),
+            "droite": self._raycast(self.direction + 90),
+            "gauche": self._raycast(self.direction - 90),
+            "arriere": self._raycast(self.direction + 180),
         }
-        
-        message = f"📡 Scan complet:\n"
-        message += f"   Avant: {distances['avant']}cm\n"
-        message += f"   Droite: {distances['droite']}cm\n"
-        message += f"   Gauche: {distances['gauche']}cm\n"
-        message += f"   Arrière: {distances['arriere']}cm"
-        
-        self.historique.append({
-            "timestamp": datetime.now().strftime("%H:%M:%S"),
-            "action": "scanner",
-            "message": message
-        })
-        
+        self.last_scan = distances
+
+        zone = self._get_current_zone_label()
+        message = (
+            f"Scan in {zone}:\n"
+            f"   Front: {distances['avant']}cm\n"
+            f"   Right: {distances['droite']}cm\n"
+            f"   Left: {distances['gauche']}cm\n"
+            f"   Back: {distances['arriere']}cm"
+        )
+        self._log("scan", message)
         self.etat_actuel = "idle"
+        self.batterie = max(0.0, self.batterie - 0.5)
         return message, distances
-    
+
     def recharger(self):
-        """Recharge la batterie"""
+        """Recharge battery."""
         self.etat_actuel = "charging"
         old_bat = self.batterie
         self.batterie = 100
-        message = f"🔋 Batterie rechargée: {old_bat:.0f}% → 100%"
-        self.historique.append({
-            "timestamp": datetime.now().strftime("%H:%M:%S"),
-            "action": "recharger",
-            "message": message
-        })
+        message = f"Battery recharged: {old_bat:.0f}% -> 100%"
+        self._log("charge", message)
         self.etat_actuel = "idle"
         return message
-    
+
     def etat(self):
-        """Retourne l'état complet du robot"""
+        """Return the full robot state."""
         return {
             "position": self.position,
             "direction": self.direction,
             "direction_text": self._get_direction_text(),
             "batterie": round(self.batterie, 1),
             "etat": self.etat_actuel,
-            "nb_actions": len(self.historique)
+            "nb_actions": len(self.historique),
+            "zone": self._get_current_zone_id(),
+            "zone_label": self._get_current_zone_label(),
+            "last_scan": self.last_scan,
         }
-    
-    def _get_direction_text(self):
-        """Convertit l'angle en direction textuelle"""
-        angle = self.direction % 360
-        if 337.5 <= angle or angle < 22.5:
-            return "Nord"
-        elif 22.5 <= angle < 67.5:
-            return "Nord-Est"
-        elif 67.5 <= angle < 112.5:
-            return "Est"
-        elif 112.5 <= angle < 157.5:
-            return "Sud-Est"
-        elif 157.5 <= angle < 202.5:
-            return "Sud"
-        elif 202.5 <= angle < 247.5:
-            return "Sud-Ouest"
-        elif 247.5 <= angle < 292.5:
-            return "Ouest"
-        else:
-            return "Nord-Ouest"
-    
+
     def afficher_historique(self):
-        """Affiche toutes les actions effectuées"""
-        print("\n📜 HISTORIQUE DES ACTIONS:")
-        for i, entry in enumerate(self.historique, 1):
-            print(f"  {i}. [{entry['timestamp']}] {entry['message']}")
-    
+        """Print action history."""
+        print("\nACTION HISTORY:")
+        for index, entry in enumerate(self.historique, 1):
+            print(f"  {index}. [{entry['timestamp']}] {entry['message']}")
+
     def reset(self):
-        """Remet le robot à zéro"""
-        self.position = {"x": 0, "y": 0}
+        """Reset the robot to the default spawn point."""
+        spawn = ROBOT_SIMULATION_WORLD["spawn"]
+        self.position = {"x": float(spawn["x"]), "y": float(spawn["y"])}
         self.direction = 0
         self.batterie = 100
         self.historique = []
         self.etat_actuel = "idle"
-        return "🔄 Robot réinitialisé"
+        self.last_scan = None
+        return "Robot reset."
+
+    def _log(self, action, message):
+        self.historique.append(
+            {
+                "timestamp": datetime.now().strftime("%H:%M:%S"),
+                "action": action,
+                "message": message,
+            }
+        )
+
+    def _get_direction_text(self):
+        angle = self.direction % 360
+        if 337.5 <= angle or angle < 22.5:
+            return "North"
+        if 22.5 <= angle < 67.5:
+            return "North-East"
+        if 67.5 <= angle < 112.5:
+            return "East"
+        if 112.5 <= angle < 157.5:
+            return "South-East"
+        if 157.5 <= angle < 202.5:
+            return "South"
+        if 202.5 <= angle < 247.5:
+            return "South-West"
+        if 247.5 <= angle < 292.5:
+            return "West"
+        return "North-West"
+
+    def _can_place(self, x, y):
+        if not any(self._circle_inside_rect(x, y, area) for area in self.walkable_areas):
+            return False
+        return not any(self._circle_intersects_rect(x, y, obstacle) for obstacle in self.obstacles)
+
+    def _circle_inside_rect(self, x, y, rect):
+        radius = self.robot_radius_cm
+        return (
+            x - radius >= rect["x1"]
+            and x + radius <= rect["x2"]
+            and y - radius >= rect["y1"]
+            and y + radius <= rect["y2"]
+        )
+
+    def _circle_intersects_rect(self, x, y, rect):
+        nearest_x = _clamp(x, rect["x1"], rect["x2"])
+        nearest_y = _clamp(y, rect["y1"], rect["y2"])
+        dx = x - nearest_x
+        dy = y - nearest_y
+        return dx * dx + dy * dy < self.robot_radius_cm * self.robot_radius_cm
+
+    def _get_current_zone_id(self):
+        for area in self.walkable_areas:
+            if area["x1"] <= self.position["x"] <= area["x2"] and area["y1"] <= self.position["y"] <= area["y2"]:
+                return area["id"]
+        return "unknown"
+
+    def _get_current_zone_label(self):
+        for area in self.walkable_areas:
+            if area["x1"] <= self.position["x"] <= area["x2"] and area["y1"] <= self.position["y"] <= area["y2"]:
+                return area["label"]
+        return "Unknown Area"
+
+    def _raycast(self, angle_degrees, max_distance=240):
+        angle_rad = math.radians(angle_degrees)
+        step = 2.0
+        distance = 0.0
+        while distance <= max_distance:
+            probe_x = self.position["x"] + math.sin(angle_rad) * distance
+            probe_y = self.position["y"] + math.cos(angle_rad) * distance
+            if not self._can_place(probe_x, probe_y):
+                return max(0, int(distance - step))
+            distance += step
+        return int(max_distance)
 
 
-# ========== TEST DU ROBOT ==========
 if __name__ == "__main__":
     print("=" * 50)
-    print("🤖 DÉMARRAGE DU ROBOT VIRTUEL")
+    print("ROBOT SIMULATION TEST")
     print("=" * 50)
-    
+
     robot = RobotVirtuel()
-    
-    # Scénario de test: navigation en carré
-    print("\n🎯 Scénario: Navigation en carré\n")
-    
-    print(robot.avancer(50))
+    print(robot.avancer(60))
     print(robot.tourner_droite(90))
-    print(robot.avancer(50))
-    print(robot.tourner_droite(90))
-    print(robot.avancer(50))
-    print(robot.tourner_droite(90))
-    print(robot.avancer(50))
-    
-    print("\n🔍 Scan de l'environnement:\n")
+    print(robot.avancer(40))
     message, distances = robot.scanner()
     print(message)
-    
-    print("\n📊 ÉTAT FINAL DU ROBOT:")
-    print("-" * 50)
-    etat = robot.etat()
-    print(f"  Position: ({etat['position']['x']:.1f}, {etat['position']['y']:.1f})")
-    print(f"  Direction: {etat['direction']}° ({etat['direction_text']})")
-    print(f"  Batterie: {etat['batterie']}%")
-    print(f"  État: {etat['etat']}")
-    print(f"  Actions effectuées: {etat['nb_actions']}")
-    
-    robot.afficher_historique()
-    
-    print("\n" + "=" * 50)
-    print("✅ Test terminé !")
-    print("=" * 50)
+    print(robot.recharger())
+    print(robot.etat())
