@@ -2446,3 +2446,47 @@ Also prepared the repository to stop tracking generated Python cache files by ad
 - The current transport is a local loopback MQTT simulation, not a real broker.
 - The current implementation uses one room only: `living_room`.
 - No real hardware documentation is kept in this branch because the current implementation is fully simulated.
+
+## Task: Resolve Profile Branch Merge Conflicts
+
+### Status
+Completed
+
+### Goal
+Merge the incoming UI branch without pulling in generated state, local machine files, or transport regressions.
+
+### What Was Implemented
+- Merged the animated robot interface changes into the Streamlit apps
+- Kept the current MQTT client transport import in the controller
+- Resolved the `iot_state.json` conflict by keeping the repository's current runtime state instead of the incoming branch snapshot
+- Excluded local-only and generated artifacts from the merge
+
+### How It Works
+1. The merge keeps the robot HTML/CSS component used by `app.py` and `app_complet.py`.
+2. The dashboard can switch to a focused robot-plus-chat layout without removing the existing room and robot controls.
+3. The controller still uses the current MQTT client path, so transport behavior does not change.
+4. The persisted IoT state file stays aligned with the current branch instead of importing another developer's temporary simulator values.
+
+### Files Changed
+- `app.py`
+- `app_complet.py`
+- `iot_controller.py`
+- `iot_state.json`
+- `robot_realistic.html`
+- `docs/task-log.md`
+
+### MQTT Topics
+- No MQTT topic changes
+
+### Hardware Involved
+- None
+
+### How To Test
+1. Run `streamlit run app.py` and confirm the animated robot panel appears.
+2. Send a chat message and confirm the robot panel switches to the speaking state.
+3. Run `streamlit run app_complet.py` and confirm both the full dashboard and focus mode still render.
+4. Trigger a few IoT commands and confirm device state updates still work normally.
+
+### Notes / Limitations
+- The incoming branch also contained unused profile-management files and local artifacts; they were intentionally excluded from the merge.
+- `iot_state.json` remains a runtime snapshot, so future feature branches should avoid modifying it unless the task explicitly requires a baseline state change.

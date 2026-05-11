@@ -15,6 +15,66 @@ from objets_connectes import MaisonConnectee
 from tts import RobotVoix
 
 
+@st.cache_data
+def _get_robot_css():
+    with open('robot_realistic.html', 'r', encoding='utf-8') as f:
+        content = f.read()
+    css_start = content.index('<style>') + len('<style>')
+    css_end = content.index('</style>')
+    return content[css_start:css_end]
+
+
+def get_robot_html(state='idle'):
+    css = _get_robot_css()
+    return (
+        '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>'
+        + css
+        + 'body{background:transparent!important;min-height:unset!important;'
+        'height:360px!important;overflow:hidden!important;padding:0!important;'
+        'align-items:flex-start!important;}'
+        '.robot-display{transform:scale(0.58);transform-origin:top center;}'
+        '</style></head><body>'
+        '<div class="robot-display">'
+        '<div class="robot-3d">'
+        '<div class="robot idle" id="robot">'
+        '<div class="antenna-base"><div class="antenna-light"></div></div>'
+        '<div class="head-3d">'
+        '<div class="screen-panel">'
+        '<div class="eyes-display">'
+        '<div class="eye-lcd"></div><div class="eye-lcd"></div>'
+        '</div></div>'
+        '<div class="mouth-lcd"></div>'
+        '</div>'
+        '<div class="body-metal">'
+        '<div class="status-indicator"></div>'
+        '<div class="vent"></div><div class="vent"></div>'
+        '<div class="vent"></div><div class="vent"></div>'
+        '</div></div></div>'
+        '<div class="control-panel" style="width:300px;margin-top:20px;">'
+        '<div class="status-display" id="statusDisplay">STANDBY MODE</div>'
+        '<div class="status-info" id="statusInfo">Awaiting instructions...</div>'
+        '</div></div>'
+        '<script>'
+        'const robot=document.getElementById("robot");'
+        'const statusDisplay=document.getElementById("statusDisplay");'
+        'const statusInfo=document.getElementById("statusInfo");'
+        'const states={'
+        'idle:{display:"STANDBY MODE",info:"Awaiting instructions..."},'
+        'listening:{display:"LISTENING MODE",info:"Audio input active..."},'
+        'thinking:{display:"PROCESSING",info:"Computing response..."},'
+        'speaking:{display:"SPEAKING MODE",info:"Audio output active..."}'
+        '};'
+        'function setState(s){'
+        'robot.className="robot "+s;'
+        'statusDisplay.textContent=states[s].display;'
+        'statusInfo.textContent=states[s].info;'
+        'if(s==="speaking")setTimeout(()=>setState("idle"),3500);'
+        '}'
+        f'setState("{state}");'
+        '</script></body></html>'
+    )
+
+
 st.set_page_config(
     page_title="RoboCompagnon — Command Center",
     page_icon="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='20' font-size='20'>◈</text></svg>",
@@ -937,6 +997,10 @@ div[data-testid="stSpinner"] { color: var(--teal) !important; }
 
 def init_session():
     load_env_file()
+    if "robot_state" not in st.session_state:
+        st.session_state.robot_state = "idle"
+    if "focus_mode" not in st.session_state:
+        st.session_state.focus_mode = False
     if "agent" not in st.session_state:
         st.session_state.agent = AgentRobot(nom_utilisateur="Monssef")
         st.session_state.historique_chat = []
@@ -1461,6 +1525,7 @@ def submit_chat_message(user_input):
     with st.spinner("Processing..."):
         response = st.session_state.agent.repondre(cleaned)
     st.session_state.historique_chat.append({"role": "robot", "message": response, "timestamp": datetime.now().strftime("%H:%M")})
+    st.session_state.robot_state = "speaking"
     st.rerun()
 
 
@@ -1506,6 +1571,10 @@ def event_row(event):
 
 init_session()
 refresh_weather()
+
+current_robot_state = st.session_state.robot_state
+if current_robot_state == "speaking":
+    st.session_state.robot_state = "idle"
 
 snapshot_for_ui = st.session_state.agent.iot_controller.get_snapshot()
 room_ids, room_label_map = _room_choices(snapshot_for_ui)
@@ -1577,6 +1646,12 @@ with st.sidebar:
         st.session_state.historique_chat = []
         st.rerun()
 
+    st.markdown("<div style='height:5px'></div>", unsafe_allow_html=True)
+    focus_label = "🤖 Exit Focus Mode" if st.session_state.focus_mode else "🤖 Focus Mode (Robot + Chat)"
+    if st.button(focus_label, use_container_width=True, type="primary" if st.session_state.focus_mode else "secondary"):
+        st.session_state.focus_mode = not st.session_state.focus_mode
+        st.rerun()
+
     st.markdown('<div class="sb-divider"></div>', unsafe_allow_html=True)
     st.markdown('<p class="sb-section-label">// Live Data</p>', unsafe_allow_html=True)
     desired_room_label = next(
@@ -1601,36 +1676,37 @@ with st.sidebar:
 
 # ── TOP BAR ──────────────────────────────────────────────────────────────────
 
-st.markdown(
-    f"""
-    <div class="rc-topbar">
-        <div class="rc-topbar-left">
-            <div>
-                <h2 class="rc-topbar-title">System Dashboard</h2>
-                <p class="rc-breadcrumb">
-                    <span class="material-symbols-outlined icon-sm">home</span>
-                    RoboCompagnon &rsaquo; {escape(selected_room_label)}
-                </p>
+if not st.session_state.focus_mode:
+    st.markdown(
+        f"""
+        <div class="rc-topbar">
+            <div class="rc-topbar-left">
+                <div>
+                    <h2 class="rc-topbar-title">System Dashboard</h2>
+                    <p class="rc-breadcrumb">
+                        <span class="material-symbols-outlined icon-sm">home</span>
+                        RoboCompagnon &rsaquo; {escape(selected_room_label)}
+                    </p>
+                </div>
+            </div>
+            <div class="rc-topbar-right">
+                <div class="rc-pill rc-pill-green">
+                    <span class="rc-live-dot"></span>
+                    LIVE
+                </div>
+                <div class="rc-pill rc-pill-teal">
+                    <span class="material-symbols-outlined" style="font-size:13px;">memory</span>
+                    {escape(_mode)}
+                </div>
+                <div class="rc-pill">
+                    <span class="material-symbols-outlined" style="font-size:13px;">dns</span>
+                    {escape(_broker)}
+                </div>
             </div>
         </div>
-        <div class="rc-topbar-right">
-            <div class="rc-pill rc-pill-green">
-                <span class="rc-live-dot"></span>
-                LIVE
-            </div>
-            <div class="rc-pill rc-pill-teal">
-                <span class="material-symbols-outlined" style="font-size:13px;">memory</span>
-                {escape(_mode)}
-            </div>
-            <div class="rc-pill">
-                <span class="material-symbols-outlined" style="font-size:13px;">dns</span>
-                {escape(_broker)}
-            </div>
-        </div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+        """,
+        unsafe_allow_html=True,
+    )
 
 # ── LIVE PANEL (partial refresh) ─────────────────────────────────────────────
 
@@ -2158,93 +2234,98 @@ def live_panel():
         )
 
 
-live_panel()
+if not st.session_state.focus_mode:
+    live_panel()
 
-st.markdown("<div style='margin-top:1.1rem;'></div>", unsafe_allow_html=True)
-
-# ── ROW 3: Chat ───────────────────────────────────────────────────────────────
+# ── ROW 3: Chat + Robot ───────────────────────────────────────────────────────
 
 _mode_val   = os.environ.get("IOT_MODE", "simulator").upper()
 _broker_val = os.environ.get("MQTT_HOST", "localhost")
 
-st.markdown(
-    f"""<div class="rc-chat-frame">
-        <div class="rc-chat-header">
-            <div class="rc-chat-agent">
-                <div class="rc-agent-avatar">
-                    <span class="material-symbols-outlined icon-fill">smart_toy</span>
+col_robot_chat, col_chat_main = st.columns([1, 2], gap="medium")
+
+with col_robot_chat:
+    components.html(get_robot_html(current_robot_state), height=400)
+
+with col_chat_main:
+    st.markdown(
+        f"""<div class="rc-chat-frame">
+            <div class="rc-chat-header">
+                <div class="rc-chat-agent">
+                    <div class="rc-agent-avatar">
+                        <span class="material-symbols-outlined icon-fill">smart_toy</span>
+                    </div>
+                    <div>
+                        <p class="rc-agent-name">RoboCompagnon AI</p>
+                        <p class="rc-agent-status">
+                            <span class="material-symbols-outlined icon-fill">fiber_manual_record</span>
+                            Neural Engine Online
+                        </p>
+                    </div>
                 </div>
-                <div>
-                    <p class="rc-agent-name">RoboCompagnon AI</p>
-                    <p class="rc-agent-status">
-                        <span class="material-symbols-outlined icon-fill">fiber_manual_record</span>
-                        Neural Engine Online
-                    </p>
+                <div class="rc-chat-meta">
+                    <div class="rc-chat-meta-item">
+                        <p class="rc-chat-meta-label">Mode</p>
+                        <p class="rc-chat-meta-val">{escape(_mode_val)}</p>
+                    </div>
+                    <div class="rc-chat-meta-item">
+                        <p class="rc-chat-meta-label">Broker</p>
+                        <p class="rc-chat-meta-val accent">{escape(_broker_val)}</p>
+                    </div>
                 </div>
             </div>
-            <div class="rc-chat-meta">
-                <div class="rc-chat-meta-item">
-                    <p class="rc-chat-meta-label">Mode</p>
-                    <p class="rc-chat-meta-val">{escape(_mode_val)}</p>
-                </div>
-                <div class="rc-chat-meta-item">
-                    <p class="rc-chat-meta-label">Broker</p>
-                    <p class="rc-chat-meta-val accent">{escape(_broker_val)}</p>
-                </div>
-            </div>
-        </div>
-    </div>""",
-    unsafe_allow_html=True,
-)
+        </div>""",
+        unsafe_allow_html=True,
+    )
 
-chat_history   = st.session_state.historique_chat
-chat_container = st.container(height=320)
-with chat_container:
-    if not chat_history:
-        st.markdown(
-            '<div class="rc-msg-ai">'
-            '<div class="rc-msg-icon">'
-            '<span class="material-symbols-outlined icon-fill" style="font-size:14px;color:var(--teal);">smart_toy</span>'
-            '</div>'
-            '<div class="rc-bubble-ai">Hello, Developer. All systems are in operational mode. '
-            'Try: "turn on the light", "lock the door", or "what is the gas level?"</div>'
-            '</div>',
-            unsafe_allow_html=True,
-        )
-    for msg in chat_history:
-        if msg["role"] == "robot":
+    chat_history   = st.session_state.historique_chat
+    chat_container = st.container(height=320)
+    with chat_container:
+        if not chat_history:
             st.markdown(
-                f'<div class="rc-msg-ai">'
-                f'<div class="rc-msg-icon">'
-                f'<span class="material-symbols-outlined icon-fill" style="font-size:14px;color:var(--teal);">smart_toy</span>'
-                f'</div>'
-                f'<div class="rc-bubble-ai">{escape(msg["message"])}</div>'
-                f'</div>',
+                '<div class="rc-msg-ai">'
+                '<div class="rc-msg-icon">'
+                '<span class="material-symbols-outlined icon-fill" style="font-size:14px;color:var(--teal);">smart_toy</span>'
+                '</div>'
+                '<div class="rc-bubble-ai">Hello, Developer. All systems are in operational mode. '
+                'Try: "turn on the light", "lock the door", or "what is the gas level?"</div>'
+                '</div>',
                 unsafe_allow_html=True,
             )
-        else:
-            st.markdown(
-                f'<div class="rc-msg-user">'
-                f'<div class="rc-msg-icon">'
-                f'<span class="material-symbols-outlined" style="font-size:14px;">person</span>'
-                f'</div>'
-                f'<div class="rc-bubble-user">{escape(msg["message"])}</div>'
-                f'</div>',
-                unsafe_allow_html=True,
-            )
+        for msg in chat_history:
+            if msg["role"] == "robot":
+                st.markdown(
+                    f'<div class="rc-msg-ai">'
+                    f'<div class="rc-msg-icon">'
+                    f'<span class="material-symbols-outlined icon-fill" style="font-size:14px;color:var(--teal);">smart_toy</span>'
+                    f'</div>'
+                    f'<div class="rc-bubble-ai">{escape(msg["message"])}</div>'
+                    f'</div>',
+                    unsafe_allow_html=True,
+                )
+            else:
+                st.markdown(
+                    f'<div class="rc-msg-user">'
+                    f'<div class="rc-msg-icon">'
+                    f'<span class="material-symbols-outlined" style="font-size:14px;">person</span>'
+                    f'</div>'
+                    f'<div class="rc-bubble-user">{escape(msg["message"])}</div>'
+                    f'</div>',
+                    unsafe_allow_html=True,
+                )
 
-# Quick action buttons
-quick_actions = [
-    ("lightbulb", "Turn On Light"),
-    ("co2",       "Gas Level"),
-    ("lock",      "Lock All Doors"),
-    ("videocam",  "Robot View"),
-]
-qa_cols = st.columns([1, 1, 1, 1, 2])
-for idx, (icon, label) in enumerate(quick_actions):
-    with qa_cols[idx]:
-        if st.button(label, key=f"qa_{idx}", use_container_width=True):
-            submit_chat_message(label)
+    # Quick action buttons
+    quick_actions = [
+        ("lightbulb", "Turn On Light"),
+        ("co2",       "Gas Level"),
+        ("lock",      "Lock All Doors"),
+        ("videocam",  "Robot View"),
+    ]
+    qa_cols = st.columns(4)
+    for idx, (icon, label) in enumerate(quick_actions):
+        with qa_cols[idx]:
+            if st.button(label, key=f"qa_{idx}", use_container_width=True):
+                submit_chat_message(label)
 
 user_input = st.chat_input("Type a command or ask a question...")
 if user_input:
