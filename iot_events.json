@@ -1,32 +1,6 @@
 {
   "events": [
     {
-      "timestamp": 14289,
-      "source": "wokwi-esp32-home-node",
-      "topic": "robocompagnon/home/commands",
-      "room": "living_room",
-      "action": "turn_on",
-      "target": "ac",
-      "status": "success",
-      "raw_text": "turn on ac",
-      "details": {
-        "message": "Living Room Main AC turned on."
-      }
-    },
-    {
-      "timestamp": 26818,
-      "source": "wokwi-esp32-home-node",
-      "topic": "robocompagnon/home/commands",
-      "room": "living_room",
-      "action": "turn_off",
-      "target": "light",
-      "status": "success",
-      "raw_text": "turn off light",
-      "details": {
-        "message": "Living Room Main Light turned off."
-      }
-    },
-    {
       "timestamp": 31719,
       "source": "wokwi-esp32-home-node",
       "topic": "robocompagnon/home/commands",
@@ -4375,6 +4349,32 @@
       "raw_text": "turn on all the lights",
       "details": {
         "message": "Living Room Main Light turned on."
+      }
+    },
+    {
+      "timestamp": 6532,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_off",
+      "target": "light",
+      "status": "success",
+      "raw_text": "turn off the living room light",
+      "details": {
+        "message": "Living Room Main Light turned off."
+      }
+    },
+    {
+      "timestamp": 6532,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_off",
+      "target": "light",
+      "status": "success",
+      "raw_text": "turn off the living room light",
+      "details": {
+        "message": "Living Room Main Light turned off."
       }
     }
   ]

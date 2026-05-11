@@ -1,8 +1,13 @@
 # agent.py - Agent IA conversationnel pour le robot assistant
+import json
+import os
+import requests
+
 try:
     from langchain_community.llms import Ollama
 except Exception:
     Ollama = None
+from config_env import load_env_file
 from robot import RobotVirtuel
 from rappels import SystemeRappels
 from pomodoro import SessionPomodoro
@@ -11,12 +16,59 @@ from iot_controller import get_iot_controller
 from datetime import datetime, timedelta
 import re
 
+
+class GroqLLM:
+    """Small Groq chat client using the OpenAI-compatible HTTP API."""
+
+    def __init__(self):
+        self.api_key = os.environ.get("GROQ_API_KEY")
+        self.model = os.environ.get("GROQ_MODEL", "openai/gpt-oss-20b")
+        self.temperature = float(os.environ.get("GROQ_TEMPERATURE", "0.7"))
+        self.max_tokens = int(os.environ.get("GROQ_MAX_TOKENS", "350"))
+        self.url = "https://api.groq.com/openai/v1/chat/completions"
+
+    def invoke(self, prompt):
+        if not self.api_key:
+            raise RuntimeError("GROQ_API_KEY is not configured.")
+
+        payload = {
+            "model": self.model,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": self.temperature,
+            "max_completion_tokens": self.max_tokens,
+        }
+        try:
+            response = requests.post(
+                self.url,
+                json=payload,
+                headers={
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json",
+                    "User-Agent": "RoboCompagnon/1.0",
+                },
+                timeout=25,
+            )
+        except requests.RequestException as exc:
+            raise RuntimeError(f"Groq connection error: {exc}") from exc
+
+        if not response.ok:
+            raise RuntimeError(f"Groq API error {response.status_code}: {response.text}")
+
+        result = response.json()
+
+        return result["choices"][0]["message"]["content"].strip()
+
+
 class AgentRobot:
     """Agent IA qui contrôle le robot et interagit avec l'utilisateur"""
     
     def __init__(self, nom_utilisateur="Monssef"):
         # Initialiser le modèle LLM
-        self.llm = Ollama(model="llama3.2", temperature=0.7) if Ollama else None
+        load_env_file()
+
+        # Initialiser le modele LLM
+        self.llm_provider = "none"
+        self.llm = self._initialiser_llm()
         
         # Robot virtuel
         self.robot = RobotVirtuel()
@@ -83,6 +135,19 @@ Message de {nom_utilisateur}: {message}
 
 Réponse (naturelle et amicale):"""
     
+    def _initialiser_llm(self):
+        provider = os.environ.get("LLM_PROVIDER", "auto").strip().lower()
+
+        if provider in ("auto", "groq") and os.environ.get("GROQ_API_KEY"):
+            self.llm_provider = "groq"
+            return GroqLLM()
+
+        if provider in ("auto", "ollama") and Ollama:
+            self.llm_provider = "ollama"
+            return Ollama(model=os.environ.get("OLLAMA_MODEL", "llama3.2"), temperature=0.7)
+
+        return None
+
     def detecter_commande_robot(self, message):
         """Détecte si le message contient une commande pour le robot"""
         message_lower = message.lower()

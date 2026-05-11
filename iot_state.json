@@ -1,14 +1,14 @@
 {
   "meta": {
-    "last_update": "2026-05-10T20:04:09.857454+00:00",
+    "last_update": "2026-05-11T20:19:17.261468+00:00",
     "transport": "mqtt-wokwi-hardware",
     "version": 1
   },
   "outside": {
-    "temperature": 18.0,
-    "humidity": 83,
-    "source": "Rabat",
-    "updated_at": "2026-05-10T20:04:09.857554+00:00"
+    "temperature": 29.0,
+    "humidity": 45,
+    "source": "default",
+    "updated_at": "2026-05-11T20:19:11.362877+00:00"
   },
   "rooms": {
     "living_room": {
@@ -18,9 +18,9 @@
           "id": "light_main",
           "type": "light",
           "name": "Main Light",
-          "state": "on",
-          "brightness": 80,
-          "power_w": 9
+          "state": "off",
+          "brightness": 0,
+          "power_w": 0
         },
         "ac_main": {
           "id": "ac_main",
@@ -46,10 +46,10 @@
         }
       },
       "sensors": {
-        "temperature": 25.0,
+        "temperature": 25,
         "humidity": 50,
         "occupancy": true,
-        "light_level": 500,
+        "light_level": 227,
         "gas_ppm": 50
       },
       "environment": {
@@ -79,7 +79,7 @@
         "temperature": 26.2,
         "humidity": 54,
         "occupancy": false,
-        "light_level": 140,
+        "light_level": 40,
         "gas_ppm": 50
       },
       "environment": {
@@ -94,25 +94,25 @@
           "id": "light_main",
           "type": "light",
           "name": "Bedroom Light",
-          "state": "on",
-          "brightness": 80,
-          "power_w": 9
+          "state": "off",
+          "brightness": 0,
+          "power_w": 0
         },
         "ac_main": {
           "id": "ac_main",
           "type": "ac",
           "name": "Bedroom AC",
-          "state": "on",
+          "state": "off",
           "mode": "cool",
           "target_temp": 23,
           "fan_speed": 1,
-          "power_w": 1200
+          "power_w": 0
         },
         "door_main": {
           "id": "door_main",
           "type": "door",
           "name": "Bedroom Door",
-          "state": "locked"
+          "state": "unlocked"
         },
         "buzzer_main": {
           "id": "buzzer_main",
@@ -122,10 +122,10 @@
         }
       },
       "sensors": {
-        "temperature": 23.0,
+        "temperature": 24.3,
         "humidity": 47,
-        "occupancy": false,
-        "light_level": 500
+        "occupancy": true,
+        "light_level": 40
       },
       "environment": {
         "insulation_factor": 0.8,
@@ -139,9 +139,9 @@
           "id": "light_main",
           "type": "light",
           "name": "Toilet Light",
-          "state": "on",
-          "brightness": 80,
-          "power_w": 9
+          "state": "off",
+          "brightness": 0,
+          "power_w": 0
         },
         "door_main": {
           "id": "door_main",
@@ -160,7 +160,7 @@
         "temperature": 23.8,
         "humidity": 58,
         "occupancy": false,
-        "light_level": 500
+        "light_level": 35
       },
       "environment": {
         "insulation_factor": 0.76,

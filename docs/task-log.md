@@ -2280,6 +2280,52 @@ Fix the Streamlit interface so it reflects the current MQTT simulator state clea
 - Voice playback still depends on `gTTS` network availability.
 - The legacy connected-light code still exists in the repo for compatibility, but it is no longer shown as a primary dashboard control.
 
+## Task: Add Optional Groq Cloud LLM
+
+### Status
+Completed
+
+### Goal
+Allow RoboCompagnon to use an online LLM when the robot/server cannot run the local Ollama model.
+
+### What Was Implemented
+- Added a small Groq HTTP client in `agent.py`
+- Added automatic LLM selection:
+- use Groq when `GROQ_API_KEY` exists
+- otherwise keep the existing Ollama fallback
+- Added `.env.example` entries for Groq configuration
+
+### How It Works
+1. `AgentRobot` loads local `.env` values at startup.
+2. If `GROQ_API_KEY` is configured, the agent uses Groq chat completions.
+3. The default cloud model is `openai/gpt-oss-20b`.
+4. If no Groq key exists, the previous local Ollama path remains available.
+5. IoT actions still use the existing parser and MQTT controller.
+
+### Files Changed
+- `agent.py`
+- `.env.example`
+- `docs/task-log.md`
+
+### MQTT Topics
+- No MQTT topic changes
+
+### Hardware Involved
+- None
+
+### How To Test
+1. Add `GROQ_API_KEY=your_key_here` to local `.env`.
+2. Run `python chat.py`.
+3. Send a normal conversation message such as `bonjour`.
+4. Confirm the assistant replies using the cloud LLM.
+5. Send `turn on the kitchen light`.
+6. Confirm the existing MQTT IoT command flow still handles the device action.
+
+### Notes / Limitations
+- The API key must stay in local `.env` only.
+- The exposed test key should be revoked and replaced before real use.
+- The ESP32 must not store the Groq API key directly.
+
 ## Task: Phase 2 - Gas Detection + Door Lock + Edge Rules
 
 ### Status
