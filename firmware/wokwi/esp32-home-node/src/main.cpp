@@ -7,17 +7,19 @@
 
 #include "../config.h"
 
-static const int ROOM_COUNT = 4;
+static const int ROOM_COUNT = 5;
 static const int LIVING_ROOM_INDEX = 0;
 static const int KITCHEN_INDEX = 1;
 static const int BEDROOM_INDEX = 2;
 static const int TOILET_INDEX = 3;
+static const int GARAGE_INDEX = 4;
 
 static const char *ROOM_IDS[ROOM_COUNT] = {
   "living_room",
   "kitchen",
   "bedroom",
   "toilet",
+  "garage",
 };
 
 static const char *ROOM_NAMES[ROOM_COUNT] = {
@@ -25,27 +27,30 @@ static const char *ROOM_NAMES[ROOM_COUNT] = {
   "Kitchen",
   "Bedroom",
   "Toilet",
+  "Garage",
 };
 
-static const int LIGHT_PINS[ROOM_COUNT] = {26, 21, 14, 22};
-static const int AC_PINS[ROOM_COUNT] = {27, -1, 13, -1};
-static const int DOOR_PINS[ROOM_COUNT] = {18, -1, 23, 15};
+static const int LIGHT_PINS[ROOM_COUNT] = {26, 21, 14, 22, 17};
+static const int AC_PINS[ROOM_COUNT] = {27, -1, 13, -1, -1};
+static const int DOOR_PINS[ROOM_COUNT] = {18, -1, 23, 15, 16};
 
-static const bool ROOM_HAS_AC[ROOM_COUNT] = {true, false, true, false};
-static const bool ROOM_HAS_DOOR[ROOM_COUNT] = {true, false, true, true};
-static const bool ROOM_HAS_GAS_SENSOR[ROOM_COUNT] = {true, true, false, false};
+static const bool ROOM_HAS_AC[ROOM_COUNT] = {true, false, true, false, false};
+static const bool ROOM_HAS_DOOR[ROOM_COUNT] = {true, false, true, true, true};
+static const bool ROOM_HAS_GAS_SENSOR[ROOM_COUNT] = {true, true, false, false, false};
 
 static const char *LIGHT_NAMES[ROOM_COUNT] = {
   "Main Light",
   "Kitchen Light",
   "Bedroom Light",
   "Toilet Light",
+  "Garage Light",
 };
 
 static const char *AC_NAMES[ROOM_COUNT] = {
   "Main AC",
   "",
   "Bedroom AC",
+  "",
   "",
 };
 
@@ -54,6 +59,7 @@ static const char *DOOR_NAMES[ROOM_COUNT] = {
   "",
   "Bedroom Door",
   "Toilet Door",
+  "Garage Door",
 };
 
 static const int DHT_PIN = 4;
@@ -80,14 +86,16 @@ DHTesp dht;
 Servo livingDoorServo;
 Servo bedroomDoorServo;
 Servo toiletDoorServo;
-Servo *doorServos[ROOM_COUNT] = {&livingDoorServo, nullptr, &bedroomDoorServo, &toiletDoorServo};
+Servo garageDoorServo;
+Servo *doorServos[ROOM_COUNT] = {&livingDoorServo, nullptr, &bedroomDoorServo, &toiletDoorServo, &garageDoorServo};
 
-bool lightOn[ROOM_COUNT] = {true, false, false, false};
-int lightBrightness[ROOM_COUNT] = {80, 0, 0, 0};
-bool acOn[ROOM_COUNT] = {false, false, false, false};
-int acTargetTemp[ROOM_COUNT] = {22, 0, 23, 0};
-String doorState[ROOM_COUNT] = {"locked", "", "unlocked", "unlocked"};
+bool lightOn[ROOM_COUNT] = {true, false, false, false, false};
+int lightBrightness[ROOM_COUNT] = {80, 0, 0, 0, 0};
+bool acOn[ROOM_COUNT] = {false, false, false, false, false};
+int acTargetTemp[ROOM_COUNT] = {22, 0, 23, 0, 0};
+String doorState[ROOM_COUNT] = {"locked", "", "unlocked", "unlocked", "locked"};
 int doorServoAngle[ROOM_COUNT] = {
+  DOOR_UNLOCKED_ANGLE,
   DOOR_UNLOCKED_ANGLE,
   DOOR_UNLOCKED_ANGLE,
   DOOR_UNLOCKED_ANGLE,
@@ -103,11 +111,11 @@ unsigned long gasArmedMs = 0;
 unsigned long lastBuzzerToggleMs = 0;
 unsigned long lastSensorPublishMs = 0;
 
-float sensorTemperature[ROOM_COUNT] = {25.0f, 26.2f, 24.3f, 23.8f};
-int sensorHumidity[ROOM_COUNT] = {50, 52, 47, 58};
-bool sensorOccupancy[ROOM_COUNT] = {true, false, true, false};
-int sensorLightLevel[ROOM_COUNT] = {600, 210, 120, 90};
-int sensorGasPpm[ROOM_COUNT] = {50, 120, 0, 0};
+float sensorTemperature[ROOM_COUNT] = {25.0f, 26.2f, 24.3f, 23.8f, 22.6f};
+int sensorHumidity[ROOM_COUNT] = {50, 52, 47, 58, 51};
+bool sensorOccupancy[ROOM_COUNT] = {true, false, true, false, false};
+int sensorLightLevel[ROOM_COUNT] = {600, 210, 120, 90, 60};
+int sensorGasPpm[ROOM_COUNT] = {50, 120, 0, 0, 0};
 
 int roomIndexFromId(const char *roomId) {
   for (int index = 0; index < ROOM_COUNT; index++) {
@@ -225,26 +233,31 @@ void updateSensorCache() {
   sensorTemperature[KITCHEN_INDEX] = baseTemperature + 1.2f;
   sensorTemperature[BEDROOM_INDEX] = baseTemperature - 0.7f;
   sensorTemperature[TOILET_INDEX] = baseTemperature - 1.2f;
+  sensorTemperature[GARAGE_INDEX] = baseTemperature - 2.4f;
 
   sensorHumidity[LIVING_ROOM_INDEX] = (int)roundf(baseHumidity);
   sensorHumidity[KITCHEN_INDEX] = min(90, sensorHumidity[LIVING_ROOM_INDEX] + 4);
   sensorHumidity[BEDROOM_INDEX] = max(25, sensorHumidity[LIVING_ROOM_INDEX] - 3);
   sensorHumidity[TOILET_INDEX] = min(95, sensorHumidity[LIVING_ROOM_INDEX] + 8);
+  sensorHumidity[GARAGE_INDEX] = min(90, max(25, sensorHumidity[LIVING_ROOM_INDEX] + 3));
 
   sensorOccupancy[LIVING_ROOM_INDEX] = true;
   sensorOccupancy[KITCHEN_INDEX] = false;
   sensorOccupancy[BEDROOM_INDEX] = occupancySwitchOn;
   sensorOccupancy[TOILET_INDEX] = false;
+  sensorOccupancy[GARAGE_INDEX] = false;
 
   sensorLightLevel[LIVING_ROOM_INDEX] = lightOn[LIVING_ROOM_INDEX] ? max(livingLux, 550) : livingLux;
   sensorLightLevel[KITCHEN_INDEX] = lightOn[KITCHEN_INDEX] ? 400 : 40;
   sensorLightLevel[BEDROOM_INDEX] = lightOn[BEDROOM_INDEX] ? 380 : 40;
   sensorLightLevel[TOILET_INDEX] = lightOn[TOILET_INDEX] ? 400 : 35;
+  sensorLightLevel[GARAGE_INDEX] = lightOn[GARAGE_INDEX] ? 320 : 20;
 
   sensorGasPpm[LIVING_ROOM_INDEX] = gasPpm;
   sensorGasPpm[KITCHEN_INDEX] = gasPpm;
   sensorGasPpm[BEDROOM_INDEX] = 0;
   sensorGasPpm[TOILET_INDEX] = 0;
+  sensorGasPpm[GARAGE_INDEX] = 0;
 
   digitalWrite(GAS_ALERT_PIN, gasPpm > 400 ? HIGH : LOW);
 }

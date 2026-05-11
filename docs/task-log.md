@@ -2490,3 +2490,403 @@ Merge the incoming UI branch without pulling in generated state, local machine f
 ### Notes / Limitations
 - The incoming branch also contained unused profile-management files and local artifacts; they were intentionally excluded from the merge.
 - `iot_state.json` remains a runtime snapshot, so future feature branches should avoid modifying it unless the task explicitly requires a baseline state change.
+
+## Task: Add Hide All Button In Chat Section
+
+### Status
+Completed
+
+### Goal
+Let the user hide the rest of the page from the chat section while keeping only the robot UI and chat visible.
+
+### What Was Implemented
+- Added a `Hide All` button inside the chat section
+- Reused the existing focus-mode layout to keep only the robot and chat area visible
+- Added focus-mode CSS so the sidebar also disappears when the page is hidden
+- Added a `Show All` state on the same button to restore the full dashboard
+
+### How It Works
+1. The user clicks `Hide All` in the chat section.
+2. The page switches into focus mode.
+3. The top bar, live dashboard panels, and sidebar disappear.
+4. The robot UI and chat section remain visible.
+5. Clicking `Show All` restores the normal dashboard.
+
+### Files Changed
+- `app_complet.py`
+- `docs/task-log.md`
+
+### MQTT Topics
+- No MQTT topic changes
+
+### Hardware Involved
+- None
+
+### How To Test
+1. Run `py -m streamlit run app_complet.py`.
+2. Scroll to the robot and chat section.
+3. Click `Hide All`.
+4. Confirm only the robot UI and chat remain visible.
+5. Click `Show All`.
+6. Confirm the full dashboard returns.
+
+### Notes / Limitations
+- This uses the same session flag as the existing sidebar focus mode, so both controls affect the same hidden-layout state.
+
+## Task: Add Voice Command Options To Chat
+
+### Status
+Completed
+
+### Goal
+Let the user send robot commands by microphone from the chat section without changing the existing command flow.
+
+### What Was Implemented
+- Added two voice command buttons in the chat section
+- Reused the existing `voix.py` speech-recognition module through lazy loading
+- Added a direct listen mode and a wake-word mode using `robot` as the trigger
+- Added status feedback for captured voice commands and missing microphone dependencies
+
+### How It Works
+1. `Voice Command` starts immediate microphone capture.
+2. `Wake Word: "robot"` listens for the wake word and then extracts the command.
+3. The recognized text is passed into the existing `submit_chat_message()` flow.
+4. The assistant handles the spoken text exactly like typed chat input.
+5. If voice dependencies or microphone access are unavailable, the UI shows a safe error instead of crashing.
+
+### Files Changed
+- `app_complet.py`
+- `docs/task-log.md`
+
+### MQTT Topics
+- No MQTT topic changes
+
+### Hardware Involved
+- Microphone
+
+### How To Test
+1. Install the speech dependencies used by `voix.py`.
+2. Run `py -m streamlit run app_complet.py`.
+3. In the chat section, click `Voice Command`.
+4. Speak a command such as `turn on the light`.
+5. Confirm the recognized text is added to the chat flow and the robot responds.
+6. Click `Wake Word: "robot"` and say `robot lock the door`.
+7. Confirm the command is recognized and executed.
+
+### Notes / Limitations
+- Voice capture uses the local machine microphone where the Streamlit app is running.
+- If `speech_recognition`, `pyaudio`, or microphone permissions are missing, the buttons will show an unavailable message.
+
+## Task: Improve Voice Recognition And Room Light Commands
+
+### Status
+Completed
+
+### Goal
+Make spoken home commands more reliable, especially room-specific light commands such as `turn on bedroom light` and `living room light on`.
+
+### What Was Implemented
+- Added multi-language speech-recognition fallback in `voix.py`
+- Prioritized English and French recognition for mixed voice commands
+- Expanded IoT parser support for voice-style `device on` and `device off` phrasing
+- Kept the existing command routing flow unchanged after transcription
+
+### How It Works
+1. The microphone captures the spoken command once.
+2. The speech recognizer now tries multiple languages instead of only `fr-FR`.
+3. The parser accepts both classic forms like `turn on bedroom light` and shorter voice-style forms like `bedroom light on`.
+4. The recognized command is sent through the same MQTT-backed chat command path.
+
+### Files Changed
+- `voix.py`
+- `iot_parser.py`
+- `app_complet.py`
+- `docs/task-log.md`
+
+### MQTT Topics
+- No MQTT topic changes
+
+### Hardware Involved
+- Microphone
+
+### How To Test
+1. Run `py -m streamlit run app_complet.py`.
+2. Click `Voice Command`.
+3. Say `turn on bedroom light`.
+4. Confirm the bedroom light command is recognized and executed.
+5. Repeat with `turn on living room light` and `living room light on`.
+6. Repeat with `lock the door` and confirm door commands still work.
+
+### Notes / Limitations
+- Recognition quality still depends on microphone quality and installed audio drivers.
+- The app now handles mixed English/French voice commands better, but highly noisy environments can still cause bad transcriptions.
+
+## Task: Add Garage Room To Simulation And Dashboard
+
+### Status
+Completed
+
+### Goal
+Add a garage as a new simulated room and make it visible and controllable from the website.
+
+### What Was Implemented
+- Added a `garage` room to the digital twin room model
+- Added a garage light, garage door, and garage safety buzzer
+- Added garage sensors for temperature, humidity, occupancy, and light level
+- Added the garage to the robot map, route guidance, and destination selector
+- Added garage MQTT room topic coverage to documentation
+
+### How It Works
+1. The default room payload now includes a `garage` room like the other simulated rooms.
+2. The persisted IoT state file includes the garage so it appears immediately in the dashboard.
+3. The dashboard room picker and overview cards read the extra room from the shared state snapshot.
+4. The robot simulation world includes a garage walkable area and map markers.
+5. The parser now recognizes `garage` as a valid room name for device commands.
+
+### Files Changed
+- `house_config.py`
+- `iot_parser.py`
+- `app_complet.py`
+- `iot_state.json`
+- `docs/mqtt-topics.md`
+- `docs/task-log.md`
+
+### MQTT Topics
+- `robocompagnon/home/rooms/garage/devices/light_main/state`
+- `robocompagnon/home/rooms/garage/devices/door_main/state`
+- `robocompagnon/home/rooms/garage/devices/buzzer_main/state`
+- `robocompagnon/home/rooms/garage/sensors/temperature`
+- `robocompagnon/home/rooms/garage/sensors/humidity`
+- `robocompagnon/home/rooms/garage/sensors/occupancy`
+- `robocompagnon/home/rooms/garage/sensors/light_level`
+
+### Hardware Involved
+- None. The garage is simulated using the existing light, door, and buzzer device types.
+
+### How To Test
+1. Run `py -m streamlit run app_complet.py`.
+2. Confirm `Garage` appears in the room overview and active room selector.
+3. Select `Garage` and confirm the garage light and garage door controls appear.
+4. Use chat with a command such as `turn on garage light`.
+5. Confirm the garage state updates and the robot `Guide To` selector also includes `Garage`.
+
+### Notes / Limitations
+- The garage uses existing simulated device types only; no new hardware class was introduced.
+- The garage does not currently include a gas sensor or AC.
+
+## Task: Fix Garage Controls In Hardware Mode
+
+### Status
+Completed
+
+### Goal
+Make the garage light and garage door work even when the app is running in hardware mode.
+
+### What Was Implemented
+- Marked the garage as a simulation-only room in the MQTT controller
+- Routed garage commands through the local simulator fallback instead of waiting for a hardware node response
+
+### How It Works
+1. The app checks the target room before sending a command.
+2. If the room is `garage` and the app is in hardware mode, it skips the hardware wait path.
+3. The controller applies the command locally, saves the updated state, and republishes the room state topics.
+4. The dashboard updates immediately for garage light and garage door actions.
+
+### Files Changed
+- `iot_controller.py`
+- `docs/task-log.md`
+
+### MQTT Topics
+- `robocompagnon/home/rooms/garage/devices/light_main/state`
+- `robocompagnon/home/rooms/garage/devices/door_main/state`
+- `robocompagnon/home/snapshot`
+
+### Hardware Involved
+- None for the garage. The garage remains simulated even when the rest of the system is in hardware mode.
+
+### How To Test
+1. Keep `IOT_MODE=hardware` in `.env`.
+2. Run `py -m streamlit run app_complet.py`.
+3. Select `Garage`.
+4. Click `Turn On` for the garage light and confirm the state changes immediately.
+5. Click `Action: Unlock Door` or `Action: Lock Door` and confirm the garage door state updates.
+6. Try chat commands such as `turn on garage light` and `lock garage door`.
+
+### Notes / Limitations
+- The garage is intentionally simulator-owned because there is no matching ESP32 or Wokwi node for it yet.
+
+## Task: Improve Voice Commands For Garage
+
+### Status
+Completed
+
+### Goal
+Make garage voice commands work more reliably when speech recognition produces imperfect wording.
+
+### What Was Implemented
+- Added more garage room aliases in the parser
+- Added parser defaults so garage on/off commands map to the garage light
+- Added parser defaults so garage open/close or lock/unlock commands map to the garage door
+- Added a voice text cleanup step for common garage recognition mistakes before sending text into chat handling
+
+### How It Works
+1. The speech recognizer returns the raw spoken text.
+2. The app normalizes common garage-related mistakes such as `garrage`, `garaj`, or `garage late`.
+3. The parser also treats garage commands without an explicit device name as the most likely garage device.
+4. The cleaned command then follows the normal chat and MQTT control path.
+
+### Files Changed
+- `iot_parser.py`
+- `app_complet.py`
+- `docs/task-log.md`
+
+### MQTT Topics
+- No MQTT topic changes
+
+### Hardware Involved
+- Microphone
+
+### How To Test
+1. Run `py -m streamlit run app_complet.py`.
+2. Click `Voice Command`.
+3. Say `turn on garage light`.
+4. Say `turn on the garage`.
+5. Say `open garage`.
+6. Confirm the recognized commands control the garage light or garage door correctly.
+
+### Notes / Limitations
+- This improves likely speech mistakes, but extremely inaccurate transcriptions can still fail.
+
+## Task: Connect Garage Devices In Wokwi Diagram
+
+### Status
+Completed
+
+### Goal
+Connect the garage light and garage door in the Wokwi hardware simulation so they behave like real mapped devices instead of disconnected visuals.
+
+### What Was Implemented
+- Added garage GPIO assignments in the ESP32 firmware
+- Extended the firmware room tables from 4 rooms to 5 rooms
+- Wired the garage light LED to GPIO17 in `diagram.json`
+- Wired the garage door servo to GPIO16 in `diagram.json`
+- Updated the Wokwi README to document the new garage pins
+
+### How It Works
+1. The firmware now includes `garage` in its room arrays.
+2. Garage light commands drive GPIO17.
+3. Garage door lock and unlock commands drive a servo on GPIO16.
+4. The Wokwi diagram now physically connects those parts to the ESP32 so the movement and light state are visible during simulation.
+
+### Files Changed
+- `firmware/wokwi/esp32-home-node/src/main.cpp`
+- `firmware/wokwi/esp32-home-node/diagram.json`
+- `firmware/wokwi/esp32-home-node/README.md`
+- `docs/task-log.md`
+
+### MQTT Topics
+- `robocompagnon/home/rooms/garage/devices/light_main/state`
+- `robocompagnon/home/rooms/garage/devices/door_main/state`
+
+### Hardware Involved
+- ESP32 GPIO17
+- ESP32 GPIO16
+- Wokwi LED
+- Wokwi servo
+
+### How To Test
+1. Open `firmware/wokwi/esp32-home-node/diagram.json` in Wokwi.
+2. Start the simulation.
+3. Send `turn on garage light`.
+4. Confirm the garage LED turns on.
+5. Send `unlock garage door`.
+6. Confirm the garage servo moves.
+
+### Notes / Limitations
+- The garage still uses shared simulated sensors rather than dedicated physical garage sensors.
+
+## Task: Connect Garage Website Controls To Wokwi Simulation
+
+### Status
+Completed
+
+### Goal
+Make the garage buttons and website commands use the Wokwi garage simulation path instead of the old local Python fallback.
+
+### What Was Implemented
+- Removed the garage-only bypass in the MQTT controller
+- Kept the existing hardware-mode topic wait logic so garage commands now complete when the Wokwi device publishes updated garage state topics
+
+### How It Works
+1. The website sends the garage command to the normal MQTT command topic.
+2. In hardware mode, the Python controller now waits for the garage device state topic instead of applying the command locally.
+3. The Wokwi ESP32 simulation updates the garage light or garage door and publishes the new state.
+4. The website refreshes from those published garage topics.
+
+### Files Changed
+- `iot_controller.py`
+- `docs/task-log.md`
+
+### MQTT Topics
+- `robocompagnon/home/commands`
+- `robocompagnon/home/rooms/garage/devices/light_main/state`
+- `robocompagnon/home/rooms/garage/devices/door_main/state`
+
+### Hardware Involved
+- ESP32
+- Wokwi garage light on GPIO17
+- Wokwi garage door servo on GPIO16
+
+### How To Test
+1. Open the Wokwi ESP32 garage project and start the simulation.
+2. Confirm the serial monitor shows MQTT connected and subscribed to `robocompagnon/home/commands`.
+3. Run the website with `IOT_MODE=hardware`.
+4. In the website, select `Garage`.
+5. Click the garage light or door controls.
+6. Confirm the Wokwi garage LED or servo changes and the website state updates from MQTT.
+
+### Notes / Limitations
+- This depends on the Wokwi project using the same public MQTT broker configured in `.env`.
+- If Wokwi is not running, garage commands will now time out instead of silently falling back to the local simulator.
+
+## Task: Add Garage Hardware Timeout Fallback
+
+### Status
+Completed
+
+### Goal
+Keep the garage buttons and website controls usable even when the Wokwi garage node does not answer over MQTT.
+
+### What Was Implemented
+- Added a garage-specific fallback after hardware timeout
+- Kept the normal hardware-first MQTT flow for garage commands
+- Reused the existing local simulator path only when no garage hardware response arrives
+
+### How It Works
+1. The website sends the garage command through MQTT in hardware mode.
+2. If the Wokwi garage node publishes the expected state update, that hardware result is used.
+3. If no garage response arrives, the controller falls back to the local simulator for the garage room.
+4. The dashboard still updates from the saved room state and published room topics.
+
+### Files Changed
+- `iot_controller.py`
+- `docs/task-log.md`
+
+### MQTT Topics
+- `robocompagnon/home/commands`
+- `robocompagnon/home/rooms/garage/devices/light_main/state`
+- `robocompagnon/home/rooms/garage/devices/door_main/state`
+- `robocompagnon/home/snapshot`
+
+### Hardware Involved
+- Optional Wokwi ESP32 garage node
+
+### How To Test
+1. Run the website in hardware mode.
+2. Click `Turn On` for the garage light while Wokwi is running.
+3. Confirm the Wokwi garage LED changes, or the dashboard still updates through fallback if Wokwi does not answer.
+4. Repeat with the garage door buttons.
+
+### Notes / Limitations
+- Garage now prefers hardware, but it is no longer blocked by a missing Wokwi response.
+- Other rooms still remain strict hardware-mode rooms when `IOT_MODE=hardware`.

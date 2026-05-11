@@ -1,487 +1,6 @@
 {
   "events": [
     {
-      "timestamp": 31719,
-      "source": "wokwi-esp32-home-node",
-      "topic": "robocompagnon/home/commands",
-      "room": "living_room",
-      "action": "turn_on",
-      "target": "",
-      "status": "error",
-      "raw_text": "turn on gas simulation",
-      "details": {
-        "message": "Unsupported command for Wokwi home node."
-      }
-    },
-    {
-      "timestamp": 31719,
-      "source": "wokwi-esp32-home-node",
-      "topic": "robocompagnon/home/commands",
-      "room": "living_room",
-      "action": "turn_on",
-      "target": "",
-      "status": "error",
-      "raw_text": "turn on gas simulation",
-      "details": {
-        "message": "Unsupported command for Wokwi home node."
-      }
-    },
-    {
-      "timestamp": 31719,
-      "source": "wokwi-esp32-home-node",
-      "topic": "robocompagnon/home/commands",
-      "room": "living_room",
-      "action": "turn_on",
-      "target": "",
-      "status": "error",
-      "raw_text": "turn on gas simulation",
-      "details": {
-        "message": "Unsupported command for Wokwi home node."
-      }
-    },
-    {
-      "timestamp": 31719,
-      "source": "wokwi-esp32-home-node",
-      "topic": "robocompagnon/home/commands",
-      "room": "living_room",
-      "action": "turn_on",
-      "target": "",
-      "status": "error",
-      "raw_text": "turn on gas simulation",
-      "details": {
-        "message": "Unsupported command for Wokwi home node."
-      }
-    },
-    {
-      "timestamp": 11896,
-      "source": "wokwi-esp32-home-node",
-      "topic": "robocompagnon/home/commands",
-      "room": "living_room",
-      "action": "unlock",
-      "target": "door",
-      "status": "success",
-      "raw_text": "dashboard:unlock:door",
-      "details": {
-        "message": "Living Room Front Door unlocked."
-      }
-    },
-    {
-      "timestamp": 143907,
-      "source": "wokwi-esp32-home-node",
-      "topic": "robocompagnon/home/commands",
-      "room": "living_room",
-      "action": "turn_on",
-      "target": "ac",
-      "status": "success",
-      "raw_text": "dashboard:turn_on:ac",
-      "details": {
-        "message": "Living Room Main AC turned on."
-      }
-    },
-    {
-      "timestamp": 6160,
-      "source": "wokwi-esp32-home-node",
-      "topic": "robocompagnon/home/commands",
-      "room": "living_room",
-      "action": "unlock",
-      "target": "door",
-      "status": "success",
-      "raw_text": "dashboard:unlock:door",
-      "details": {
-        "message": "Living Room Front Door unlocked."
-      }
-    },
-    {
-      "timestamp": 46119,
-      "source": "wokwi-esp32-home-node",
-      "topic": "robocompagnon/home/commands",
-      "room": "living_room",
-      "action": "turn_on",
-      "target": "ac",
-      "status": "success",
-      "raw_text": "dashboard:turn_on:ac",
-      "details": {
-        "message": "Living Room Main AC turned on."
-      }
-    },
-    {
-      "timestamp": 47177,
-      "source": "wokwi-esp32-home-node",
-      "topic": "robocompagnon/home/commands",
-      "room": "living_room",
-      "action": "lock",
-      "target": "door",
-      "status": "success",
-      "raw_text": "dashboard:lock:door",
-      "details": {
-        "message": "Living Room Front Door locked."
-      }
-    },
-    {
-      "timestamp": 47177,
-      "source": "wokwi-esp32-home-node",
-      "topic": "robocompagnon/home/commands",
-      "room": "living_room",
-      "action": "lock",
-      "target": "door",
-      "status": "success",
-      "raw_text": "dashboard:lock:door",
-      "details": {
-        "message": "Living Room Front Door locked."
-      }
-    },
-    {
-      "timestamp": 5777,
-      "source": "wokwi-esp32-home-node",
-      "topic": "robocompagnon/home/commands",
-      "room": "living_room",
-      "action": "unlock",
-      "target": "door",
-      "status": "success",
-      "raw_text": "dashboard:unlock:door",
-      "details": {
-        "message": "Living Room Front Door unlocked."
-      }
-    },
-    {
-      "timestamp": 9978,
-      "source": "wokwi-esp32-home-node",
-      "topic": "robocompagnon/home/commands",
-      "room": "living_room",
-      "action": "lock",
-      "target": "door",
-      "status": "success",
-      "raw_text": "dashboard:lock:door",
-      "details": {
-        "message": "Living Room Front Door locked."
-      }
-    },
-    {
-      "timestamp": 9978,
-      "source": "wokwi-esp32-home-node",
-      "topic": "robocompagnon/home/commands",
-      "room": "living_room",
-      "action": "lock",
-      "target": "door",
-      "status": "success",
-      "raw_text": "dashboard:lock:door",
-      "details": {
-        "message": "Living Room Front Door locked."
-      }
-    },
-    {
-      "timestamp": 9978,
-      "source": "wokwi-esp32-home-node",
-      "topic": "robocompagnon/home/commands",
-      "room": "living_room",
-      "action": "lock",
-      "target": "door",
-      "status": "success",
-      "raw_text": "dashboard:lock:door",
-      "details": {
-        "message": "Living Room Front Door locked."
-      }
-    },
-    {
-      "timestamp": 9978,
-      "source": "wokwi-esp32-home-node",
-      "topic": "robocompagnon/home/commands",
-      "room": "living_room",
-      "action": "lock",
-      "target": "door",
-      "status": "success",
-      "raw_text": "dashboard:lock:door",
-      "details": {
-        "message": "Living Room Front Door locked."
-      }
-    },
-    {
-      "timestamp": 67093,
-      "source": "wokwi-esp32-home-node",
-      "topic": "robocompagnon/home/commands",
-      "room": "living_room",
-      "action": "turn_on",
-      "target": "light",
-      "status": "success",
-      "raw_text": "Turn On Light",
-      "details": {
-        "message": "Living Room Main Light turned on."
-      }
-    },
-    {
-      "timestamp": 70426,
-      "source": "wokwi-esp32-home-node",
-      "topic": "robocompagnon/home/commands",
-      "room": "living_room",
-      "action": "lock",
-      "target": "door",
-      "status": "success",
-      "raw_text": "Lock All Doors",
-      "details": {
-        "message": "Living Room Front Door locked."
-      }
-    },
-    {
-      "timestamp": 78315,
-      "source": "wokwi-esp32-home-node",
-      "topic": "robocompagnon/home/commands",
-      "room": "living_room",
-      "action": "unlock",
-      "target": "door",
-      "status": "success",
-      "raw_text": "dashboard:unlock:door",
-      "details": {
-        "message": "Living Room Front Door unlocked."
-      }
-    },
-    {
-      "timestamp": 78315,
-      "source": "wokwi-esp32-home-node",
-      "topic": "robocompagnon/home/commands",
-      "room": "living_room",
-      "action": "unlock",
-      "target": "door",
-      "status": "success",
-      "raw_text": "dashboard:unlock:door",
-      "details": {
-        "message": "Living Room Front Door unlocked."
-      }
-    },
-    {
-      "timestamp": 146478,
-      "source": "wokwi-esp32-home-node",
-      "topic": "robocompagnon/home/commands",
-      "room": "living_room",
-      "action": "lock",
-      "target": "door",
-      "status": "success",
-      "raw_text": "dashboard:lock:door",
-      "details": {
-        "message": "Living Room Front Door locked."
-      }
-    },
-    {
-      "timestamp": 146478,
-      "source": "wokwi-esp32-home-node",
-      "topic": "robocompagnon/home/commands",
-      "room": "living_room",
-      "action": "lock",
-      "target": "door",
-      "status": "success",
-      "raw_text": "dashboard:lock:door",
-      "details": {
-        "message": "Living Room Front Door locked."
-      }
-    },
-    {
-      "timestamp": 209215,
-      "source": "wokwi-esp32-home-node",
-      "topic": "robocompagnon/home/commands",
-      "room": "living_room",
-      "action": "turn_on",
-      "target": "ac",
-      "status": "success",
-      "raw_text": "dashboard:turn_on:ac",
-      "details": {
-        "message": "Living Room Main AC turned on."
-      }
-    },
-    {
-      "timestamp": 225552,
-      "source": "wokwi-esp32-home-node",
-      "topic": "robocompagnon/home/commands",
-      "room": "living_room",
-      "action": "turn_off",
-      "target": "ac",
-      "status": "success",
-      "raw_text": "dashboard:turn_off:ac",
-      "details": {
-        "message": "Living Room Main AC turned off."
-      }
-    },
-    {
-      "timestamp": 226794,
-      "source": "wokwi-esp32-home-node",
-      "topic": "robocompagnon/home/commands",
-      "room": "living_room",
-      "action": "turn_off",
-      "target": "light",
-      "status": "success",
-      "raw_text": "dashboard:turn_off:light",
-      "details": {
-        "message": "Living Room Main Light turned off."
-      }
-    },
-    {
-      "timestamp": 226794,
-      "source": "wokwi-esp32-home-node",
-      "topic": "robocompagnon/home/commands",
-      "room": "living_room",
-      "action": "turn_off",
-      "target": "light",
-      "status": "success",
-      "raw_text": "dashboard:turn_off:light",
-      "details": {
-        "message": "Living Room Main Light turned off."
-      }
-    },
-    {
-      "timestamp": 16238,
-      "source": "wokwi-esp32-home-node",
-      "topic": "robocompagnon/home/commands",
-      "room": "living_room",
-      "action": "unlock",
-      "target": "door",
-      "status": "success",
-      "raw_text": "dashboard:unlock:door",
-      "details": {
-        "message": "Living Room Front Door unlocked."
-      }
-    },
-    {
-      "timestamp": 14119,
-      "source": "wokwi-esp32-home-node",
-      "topic": "robocompagnon/home/commands",
-      "room": "living_room",
-      "action": "unlock",
-      "target": "door",
-      "status": "success",
-      "raw_text": "unlock the door",
-      "details": {
-        "message": "Living Room Front Door unlocked."
-      }
-    },
-    {
-      "timestamp": 14119,
-      "source": "wokwi-esp32-home-node",
-      "topic": "robocompagnon/home/commands",
-      "room": "living_room",
-      "action": "unlock",
-      "target": "door",
-      "status": "success",
-      "raw_text": "unlock the door",
-      "details": {
-        "message": "Living Room Front Door unlocked."
-      }
-    },
-    {
-      "timestamp": 8880,
-      "source": "wokwi-esp32-home-node",
-      "topic": "robocompagnon/home/commands",
-      "room": "living_room",
-      "action": "unlock",
-      "target": "door",
-      "status": "success",
-      "raw_text": "dashboard:unlock:door",
-      "details": {
-        "message": "Living Room Front Door unlocked."
-      }
-    },
-    {
-      "timestamp": 30342,
-      "source": "wokwi-esp32-home-node",
-      "topic": "robocompagnon/home/commands",
-      "room": "living_room",
-      "action": "lock",
-      "target": "door",
-      "status": "success",
-      "raw_text": "lock the door",
-      "details": {
-        "message": "Living Room Front Door locked."
-      }
-    },
-    {
-      "timestamp": 30342,
-      "source": "wokwi-esp32-home-node",
-      "topic": "robocompagnon/home/commands",
-      "room": "living_room",
-      "action": "lock",
-      "target": "door",
-      "status": "success",
-      "raw_text": "lock the door",
-      "details": {
-        "message": "Living Room Front Door locked."
-      }
-    },
-    {
-      "timestamp": 30342,
-      "source": "wokwi-esp32-home-node",
-      "topic": "robocompagnon/home/commands",
-      "room": "living_room",
-      "action": "lock",
-      "target": "door",
-      "status": "success",
-      "raw_text": "lock the door",
-      "details": {
-        "message": "Living Room Front Door locked."
-      }
-    },
-    {
-      "timestamp": 5856,
-      "source": "wokwi-esp32-home-node",
-      "topic": "robocompagnon/home/commands",
-      "room": "living_room",
-      "action": "unlock",
-      "target": "door",
-      "status": "success",
-      "raw_text": "dashboard:unlock:door",
-      "details": {
-        "message": "Living Room Front Door unlocked."
-      }
-    },
-    {
-      "timestamp": 5856,
-      "source": "wokwi-esp32-home-node",
-      "topic": "robocompagnon/home/commands",
-      "room": "living_room",
-      "action": "unlock",
-      "target": "door",
-      "status": "success",
-      "raw_text": "dashboard:unlock:door",
-      "details": {
-        "message": "Living Room Front Door unlocked."
-      }
-    },
-    {
-      "timestamp": 18179,
-      "source": "wokwi-esp32-home-node",
-      "topic": "robocompagnon/home/commands",
-      "room": "living_room",
-      "action": "unlock",
-      "target": "door",
-      "status": "success",
-      "raw_text": "dashboard:unlock:door",
-      "details": {
-        "message": "Living Room Front Door unlocked."
-      }
-    },
-    {
-      "timestamp": 20662,
-      "source": "wokwi-esp32-home-node",
-      "topic": "robocompagnon/home/commands",
-      "room": "living_room",
-      "action": "lock",
-      "target": "door",
-      "status": "success",
-      "raw_text": "dashboard:lock:door",
-      "details": {
-        "message": "Living Room Front Door locked."
-      }
-    },
-    {
-      "timestamp": 100939,
-      "source": "wokwi-esp32-home-node",
-      "topic": "robocompagnon/home/commands",
-      "room": "living_room",
-      "action": "turn_on",
-      "target": "light",
-      "status": "success",
-      "raw_text": "turn on light",
-      "details": {
-        "message": "Living Room Main Light turned on."
-      }
-    },
-    {
       "timestamp": 102506,
       "source": "wokwi-esp32-home-node",
       "topic": "robocompagnon/home/commands",
@@ -4375,6 +3894,605 @@
       "raw_text": "turn off the living room light",
       "details": {
         "message": "Living Room Main Light turned off."
+      }
+    },
+    {
+      "timestamp": 6532,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_off",
+      "target": "light",
+      "status": "success",
+      "raw_text": "turn off the living room light",
+      "details": {
+        "message": "Living Room Main Light turned off."
+      }
+    },
+    {
+      "timestamp": 6532,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_off",
+      "target": "light",
+      "status": "success",
+      "raw_text": "turn off the living room light",
+      "details": {
+        "message": "Living Room Main Light turned off."
+      }
+    },
+    {
+      "timestamp": 6532,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_off",
+      "target": "light",
+      "status": "success",
+      "raw_text": "turn off the living room light",
+      "details": {
+        "message": "Living Room Main Light turned off."
+      }
+    },
+    {
+      "timestamp": 608575,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "unlock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "ouvre la porte ouvre la",
+      "details": {
+        "message": "Living Room Front Door unlocked."
+      }
+    },
+    {
+      "timestamp": 608575,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "unlock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "ouvre la porte ouvre la",
+      "details": {
+        "message": "Living Room Front Door unlocked."
+      }
+    },
+    {
+      "timestamp": 608575,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "unlock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "ouvre la porte ouvre la",
+      "details": {
+        "message": "Living Room Front Door unlocked."
+      }
+    },
+    {
+      "timestamp": 615318,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "lock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "ferme la porte",
+      "details": {
+        "message": "Living Room Front Door locked."
+      }
+    },
+    {
+      "timestamp": 615318,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "lock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "ferme la porte",
+      "details": {
+        "message": "Living Room Front Door locked."
+      }
+    },
+    {
+      "timestamp": 615318,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "lock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "ferme la porte",
+      "details": {
+        "message": "Living Room Front Door locked."
+      }
+    },
+    {
+      "timestamp": 629496,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "bedroom",
+      "action": "turn_on",
+      "target": "light",
+      "status": "success",
+      "raw_text": "dashboard:bedroom:turn_on:light",
+      "details": {
+        "message": "Bedroom Bedroom Light turned on."
+      }
+    },
+    {
+      "timestamp": 629496,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "bedroom",
+      "action": "turn_on",
+      "target": "light",
+      "status": "success",
+      "raw_text": "dashboard:bedroom:turn_on:light",
+      "details": {
+        "message": "Bedroom Bedroom Light turned on."
+      }
+    },
+    {
+      "timestamp": 664466,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_on",
+      "target": "light",
+      "status": "success",
+      "raw_text": "turn on the lights",
+      "details": {
+        "message": "Living Room Main Light turned on."
+      }
+    },
+    {
+      "timestamp": 664466,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_on",
+      "target": "light",
+      "status": "success",
+      "raw_text": "turn on the lights",
+      "details": {
+        "message": "Living Room Main Light turned on."
+      }
+    },
+    {
+      "timestamp": 664466,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_on",
+      "target": "light",
+      "status": "success",
+      "raw_text": "turn on the lights",
+      "details": {
+        "message": "Living Room Main Light turned on."
+      }
+    },
+    {
+      "timestamp": 664466,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_on",
+      "target": "light",
+      "status": "success",
+      "raw_text": "turn on the lights",
+      "details": {
+        "message": "Living Room Main Light turned on."
+      }
+    },
+    {
+      "timestamp": "2026-05-11T21:19:54.806236+00:00",
+      "source": "chat",
+      "topic": "robocompagnon/home/commands",
+      "room": "garage",
+      "action": "turn_on",
+      "target": "light",
+      "status": "success",
+      "raw_text": "turn on garage lights",
+      "details": {
+        "ok": true,
+        "action": "turn_on",
+        "room": "garage",
+        "device_id": "light_main",
+        "device_type": "light",
+        "old_state": {
+          "id": "light_main",
+          "type": "light",
+          "name": "Garage Light",
+          "state": "off",
+          "brightness": 0,
+          "power_w": 0
+        },
+        "new_state": {
+          "id": "light_main",
+          "type": "light",
+          "name": "Garage Light",
+          "state": "on",
+          "brightness": 80,
+          "power_w": 9
+        },
+        "message": "Garage Garage Light turned on."
+      }
+    },
+    {
+      "timestamp": "2026-05-11T21:19:54.806236+00:00",
+      "source": "chat",
+      "topic": "robocompagnon/home/commands",
+      "room": "garage",
+      "action": "turn_on",
+      "target": "light",
+      "status": "success",
+      "raw_text": "turn on garage lights",
+      "details": {
+        "ok": true,
+        "action": "turn_on",
+        "room": "garage",
+        "device_id": "light_main",
+        "device_type": "light",
+        "old_state": {
+          "id": "light_main",
+          "type": "light",
+          "name": "Garage Light",
+          "state": "off",
+          "brightness": 0,
+          "power_w": 0
+        },
+        "new_state": {
+          "id": "light_main",
+          "type": "light",
+          "name": "Garage Light",
+          "state": "on",
+          "brightness": 80,
+          "power_w": 9
+        },
+        "message": "Garage Garage Light turned on."
+      }
+    },
+    {
+      "timestamp": 664466,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_on",
+      "target": "light",
+      "status": "success",
+      "raw_text": "turn on the lights",
+      "details": {
+        "message": "Living Room Main Light turned on."
+      }
+    },
+    {
+      "timestamp": 664466,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_on",
+      "target": "light",
+      "status": "success",
+      "raw_text": "turn on the lights",
+      "details": {
+        "message": "Living Room Main Light turned on."
+      }
+    },
+    {
+      "timestamp": "2026-05-11T21:22:21.671868+00:00",
+      "source": "dashboard",
+      "topic": "robocompagnon/home/commands",
+      "room": "garage",
+      "action": "unlock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "dashboard:garage:unlock:door",
+      "details": {
+        "ok": true,
+        "action": "unlock",
+        "room": "garage",
+        "device_id": "door_main",
+        "device_type": "door",
+        "old_state": {
+          "id": "door_main",
+          "type": "door",
+          "name": "Garage Door",
+          "state": "locked"
+        },
+        "new_state": {
+          "id": "door_main",
+          "type": "door",
+          "name": "Garage Door",
+          "state": "unlocked"
+        },
+        "message": "garage Garage Door unlocked."
+      }
+    },
+    {
+      "timestamp": "2026-05-11T21:22:21.671868+00:00",
+      "source": "dashboard",
+      "topic": "robocompagnon/home/commands",
+      "room": "garage",
+      "action": "unlock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "dashboard:garage:unlock:door",
+      "details": {
+        "ok": true,
+        "action": "unlock",
+        "room": "garage",
+        "device_id": "door_main",
+        "device_type": "door",
+        "old_state": {
+          "id": "door_main",
+          "type": "door",
+          "name": "Garage Door",
+          "state": "locked"
+        },
+        "new_state": {
+          "id": "door_main",
+          "type": "door",
+          "name": "Garage Door",
+          "state": "unlocked"
+        },
+        "message": "garage Garage Door unlocked."
+      }
+    },
+    {
+      "timestamp": "2026-05-11T21:22:33.618259+00:00",
+      "source": "dashboard",
+      "topic": "robocompagnon/home/commands",
+      "room": "garage",
+      "action": "turn_on",
+      "target": "light",
+      "status": "success",
+      "raw_text": "dashboard:garage:turn_on:light",
+      "details": {
+        "ok": true,
+        "action": "turn_on",
+        "room": "garage",
+        "device_id": "light_main",
+        "device_type": "light",
+        "old_state": {
+          "id": "light_main",
+          "type": "light",
+          "name": "Garage Light",
+          "state": "off",
+          "brightness": 0,
+          "power_w": 0
+        },
+        "new_state": {
+          "id": "light_main",
+          "type": "light",
+          "name": "Garage Light",
+          "state": "on",
+          "brightness": 80,
+          "power_w": 9
+        },
+        "message": "garage Garage Light turned on."
+      }
+    },
+    {
+      "timestamp": "2026-05-11T21:22:33.618259+00:00",
+      "source": "dashboard",
+      "topic": "robocompagnon/home/commands",
+      "room": "garage",
+      "action": "turn_on",
+      "target": "light",
+      "status": "success",
+      "raw_text": "dashboard:garage:turn_on:light",
+      "details": {
+        "ok": true,
+        "action": "turn_on",
+        "room": "garage",
+        "device_id": "light_main",
+        "device_type": "light",
+        "old_state": {
+          "id": "light_main",
+          "type": "light",
+          "name": "Garage Light",
+          "state": "off",
+          "brightness": 0,
+          "power_w": 0
+        },
+        "new_state": {
+          "id": "light_main",
+          "type": "light",
+          "name": "Garage Light",
+          "state": "on",
+          "brightness": 80,
+          "power_w": 9
+        },
+        "message": "garage Garage Light turned on."
+      }
+    },
+    {
+      "timestamp": 664466,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_on",
+      "target": "light",
+      "status": "success",
+      "raw_text": "turn on the lights",
+      "details": {
+        "message": "Living Room Main Light turned on."
+      }
+    },
+    {
+      "timestamp": 103667,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_off",
+      "target": "light",
+      "status": "success",
+      "raw_text": "Living Room light off",
+      "details": {
+        "message": "Living Room Main Light turned off."
+      }
+    },
+    {
+      "timestamp": 103667,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "turn_off",
+      "target": "light",
+      "status": "success",
+      "raw_text": "Living Room light off",
+      "details": {
+        "message": "Living Room Main Light turned off."
+      }
+    },
+    {
+      "timestamp": 108168,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "bedroom",
+      "action": "turn_on",
+      "target": "light",
+      "status": "success",
+      "raw_text": "turn on bedroom lights",
+      "details": {
+        "message": "Bedroom Bedroom Light turned on."
+      }
+    },
+    {
+      "timestamp": 108168,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "bedroom",
+      "action": "turn_on",
+      "target": "light",
+      "status": "success",
+      "raw_text": "turn on bedroom lights",
+      "details": {
+        "message": "Bedroom Bedroom Light turned on."
+      }
+    },
+    {
+      "timestamp": 110505,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "bedroom",
+      "action": "turn_off",
+      "target": "light",
+      "status": "success",
+      "raw_text": "turn off bedroom lights",
+      "details": {
+        "message": "Bedroom Bedroom Light turned off."
+      }
+    },
+    {
+      "timestamp": 110505,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "bedroom",
+      "action": "turn_off",
+      "target": "light",
+      "status": "success",
+      "raw_text": "turn off bedroom lights",
+      "details": {
+        "message": "Bedroom Bedroom Light turned off."
+      }
+    },
+    {
+      "timestamp": 110505,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "bedroom",
+      "action": "turn_off",
+      "target": "light",
+      "status": "success",
+      "raw_text": "turn off bedroom lights",
+      "details": {
+        "message": "Bedroom Bedroom Light turned off."
+      }
+    },
+    {
+      "timestamp": 7333,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "garage",
+      "action": "unlock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "dashboard:garage:unlock:door",
+      "details": {
+        "message": "Garage Garage Door unlocked."
+      }
+    },
+    {
+      "timestamp": 8887,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "garage",
+      "action": "turn_on",
+      "target": "light",
+      "status": "success",
+      "raw_text": "dashboard:garage:turn_on:light",
+      "details": {
+        "message": "Garage Garage Light turned on."
+      }
+    },
+    {
+      "timestamp": 10950,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "garage",
+      "action": "turn_off",
+      "target": "light",
+      "status": "success",
+      "raw_text": "turn off garage lights",
+      "details": {
+        "message": "Garage Garage Light turned off."
+      }
+    },
+    {
+      "timestamp": 14769,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "garage",
+      "action": "lock",
+      "target": "door",
+      "status": "success",
+      "raw_text": "lock garage door",
+      "details": {
+        "message": "Garage Garage Door locked."
+      }
+    },
+    {
+      "timestamp": 33849,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "get_sensor",
+      "target": "temperature",
+      "status": "success",
+      "raw_text": "tell me the tell me the temperature",
+      "details": {
+        "message": "The current temperature in the Living Room is 25.0C."
+      }
+    },
+    {
+      "timestamp": 42488,
+      "source": "wokwi-esp32-home-node",
+      "topic": "robocompagnon/home/commands",
+      "room": "living_room",
+      "action": "get_sensor",
+      "target": "temperature",
+      "status": "success",
+      "raw_text": "what is the temperature of the room",
+      "details": {
+        "message": "The current temperature in the Living Room is 25.0C."
       }
     }
   ]

@@ -28,6 +28,15 @@ ROOM_ALIASES = {
         "toilets",
         "salle de bain",
     ],
+    "garage": [
+        "garage",
+        "car garage",
+        "parking",
+        "garrage",
+        "garaj",
+        "garadge",
+        "garash",
+    ],
 }
 
 DEVICE_ALIASES = {
@@ -40,7 +49,7 @@ DEVICE_ALIASES = {
         "clim",
         "climatiseur",
     ],
-    "door": ["door", "porte", "front door"],
+    "door": ["door", "porte", "front door", "garage door", "gate", "shutter"],
 }
 
 SENSOR_ALIASES = {
@@ -62,6 +71,7 @@ SET_PATTERNS = [
 TURN_ON_PATTERNS = [
     r"\bturn on\b",
     r"\bswitch on\b",
+    r"\bpower on\b",
     r"\ballume\b",
     r"\bactive\b",
     r"\bstart\b",
@@ -70,6 +80,7 @@ TURN_ON_PATTERNS = [
 TURN_OFF_PATTERNS = [
     r"\bturn off\b",
     r"\bswitch off\b",
+    r"\bpower off\b",
     r"\beteins\b",
     r"\beteint\b",
     r"\bdesactive\b",
@@ -78,12 +89,14 @@ TURN_OFF_PATTERNS = [
 
 LOCK_PATTERNS = [
     r"\block\b",
+    r"\bclose\b",
     r"\bverrouille\b",
     r"\bferme\b",
 ]
 
 UNLOCK_PATTERNS = [
     r"\bunlock\b",
+    r"\bopen\b",
     r"\bdeverrouille\b",
     r"\bouvre\b",
 ]
@@ -199,6 +212,14 @@ def parse_iot_command(message, source="chat"):
                 "raw_text": message,
             }
 
+    if room == "garage" and device_type is None:
+        if _matches_any(text, TURN_ON_PATTERNS) or text.endswith(" on"):
+            device_type = "light"
+        elif _matches_any(text, TURN_OFF_PATTERNS) or text.endswith(" off"):
+            device_type = "light"
+        elif _matches_any(text, LOCK_PATTERNS) or _matches_any(text, UNLOCK_PATTERNS):
+            device_type = "door"
+
     if device_type and _matches_any(text, TURN_ON_PATTERNS):
         return {
             "action": "turn_on",
@@ -211,7 +232,39 @@ def parse_iot_command(message, source="chat"):
             "raw_text": message,
         }
 
+    if device_type and (
+        text.endswith(" on")
+        or re.search(r"\bon please\b", text)
+        or re.search(r"\bon now\b", text)
+    ):
+        return {
+            "action": "turn_on",
+            "room": room,
+            "target_type": "device",
+            "device_type": device_type,
+            "device_id": None,
+            "parameters": {},
+            "source": source,
+            "raw_text": message,
+        }
+
     if device_type and _matches_any(text, TURN_OFF_PATTERNS):
+        return {
+            "action": "turn_off",
+            "room": room,
+            "target_type": "device",
+            "device_type": device_type,
+            "device_id": None,
+            "parameters": {},
+            "source": source,
+            "raw_text": message,
+        }
+
+    if device_type and (
+        text.endswith(" off")
+        or re.search(r"\boff please\b", text)
+        or re.search(r"\boff now\b", text)
+    ):
         return {
             "action": "turn_off",
             "room": room,

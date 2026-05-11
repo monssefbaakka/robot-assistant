@@ -13,6 +13,10 @@ from iot_store import load_state
 from meteo import MeteoAPI
 from objets_connectes import MaisonConnectee
 from tts import RobotVoix
+try:
+    from voix import AssistantVocal
+except Exception:
+    AssistantVocal = None
 
 
 @st.cache_data
@@ -1001,6 +1005,10 @@ def init_session():
         st.session_state.robot_state = "idle"
     if "focus_mode" not in st.session_state:
         st.session_state.focus_mode = False
+    if "voice_status_message" not in st.session_state:
+        st.session_state.voice_status_message = None
+    if "voice_assistant" not in st.session_state:
+        st.session_state.voice_assistant = None
     if "agent" not in st.session_state:
         st.session_state.agent = AgentRobot(nom_utilisateur="Monssef")
         st.session_state.historique_chat = []
@@ -1020,6 +1028,31 @@ def init_session():
         st.session_state.agent.mettre_a_jour_maison(st.session_state.maison)
     if "last_robot_result" not in st.session_state:
         st.session_state.last_robot_result = None
+
+
+def apply_focus_mode_styles():
+    if not st.session_state.get("focus_mode"):
+        return
+
+    st.markdown(
+        """
+        <style>
+        section[data-testid="stSidebar"] {
+            display: none !important;
+        }
+        [data-testid="stSidebarCollapsedControl"] {
+            display: none !important;
+        }
+        .main .block-container {
+            max-width: 1200px !important;
+            padding-top: 1.5rem !important;
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
     if "robot_trace" not in st.session_state:
         robot_state = st.session_state.agent.robot.etat()
         st.session_state.robot_trace = [(robot_state["position"]["x"], robot_state["position"]["y"])]
@@ -1130,6 +1163,7 @@ def _navigation_route_points(etat_robot, target_zone):
         "kitchen": {"entry": (20.0, 95.0), "center": (95.0, 115.0)},
         "bedroom": {"entry": (20.0, -55.0), "center": (95.0, -55.0)},
         "toilet": {"entry": (170.0, 95.0), "center": (210.0, 100.0)},
+        "garage": {"entry": (170.0, -55.0), "center": (228.0, -55.0)},
     }
     hallway_hubs = {
         "upper": (0.0, 95.0),
@@ -1156,9 +1190,10 @@ def _navigation_route_points(etat_robot, target_zone):
         "kitchen": "upper",
         "toilet": "upper",
         "bedroom": "lower",
+        "garage": "lower",
         "hallway": "upper",
     }
-    target_hub = "lower" if target_zone == "bedroom" else "upper"
+    target_hub = "lower" if target_zone in {"bedroom", "garage"} else "upper"
 
     if current_zone in route_nodes and current_zone != "hallway":
         add_if_new(route_nodes[current_zone]["entry"])
@@ -1516,6 +1551,7 @@ def submit_chat_message(user_input):
     if not user_input or not user_input.strip():
         return
     cleaned = user_input.strip()
+    st.session_state.voice_status_message = None
     if st.session_state.meteo_data:
         st.session_state.agent.mettre_a_jour_meteo(st.session_state.meteo_data)
     st.session_state.agent.mettre_a_jour_maison(st.session_state.maison)
@@ -1527,6 +1563,81 @@ def submit_chat_message(user_input):
     st.session_state.historique_chat.append({"role": "robot", "message": response, "timestamp": datetime.now().strftime("%H:%M")})
     st.session_state.robot_state = "speaking"
     st.rerun()
+
+
+def get_voice_assistant():
+    if AssistantVocal is None:
+        return None, "Voice commands unavailable: install speech recognition dependencies."
+
+    existing = st.session_state.get("voice_assistant")
+    if existing is not None:
+        return existing, None
+
+    try:
+        assistant = AssistantVocal()
+    except Exception as exc:
+        return None, f"Voice commands unavailable: {exc}"
+
+    st.session_state.voice_assistant = assistant
+    return assistant, None
+
+
+def cleanup_voice_text(spoken_text):
+    cleaned = spoken_text.strip()
+    replacements = {
+        "garrage": "garage",
+        "garaj": "garage",
+        "garadge": "garage",
+        "garash": "garage",
+        "garage gate": "garage door",
+        "garage shutter": "garage door",
+        "garage lamp": "garage light",
+        "garage late": "garage light",
+        "turn on the garage": "turn on garage light",
+        "turn off the garage": "turn off garage light",
+        "open the garage": "unlock garage door",
+        "close the garage": "lock garage door",
+        "open garage": "unlock garage door",
+        "close garage": "lock garage door",
+    }
+    lowered = cleaned.lower()
+    for wrong, right in replacements.items():
+        lowered = lowered.replace(wrong, right)
+    return lowered
+
+
+def handle_voice_command(use_wake_word=False):
+    assistant, error = get_voice_assistant()
+    if error:
+        st.session_state.voice_status_message = error
+        return
+
+    st.session_state.robot_state = "listening"
+    prompt = 'Say "robot" and then your command...' if use_wake_word else "Listening for your command..."
+
+    with st.spinner(prompt):
+        if use_wake_word:
+            spoken_text = assistant.ecouter_avec_mot_cle(
+                mot_cle="robot",
+                timeout=20,
+                langues=["en-US", "fr-FR", "en-GB"],
+            )
+        else:
+            spoken_text = assistant.ecouter(
+                timeout=5,
+                phrase_time_limit=8,
+                langues=["en-US", "fr-FR", "en-GB"],
+            )
+
+    if not spoken_text:
+        st.session_state.robot_state = "idle"
+        st.session_state.voice_status_message = "No voice command detected. Check the microphone and try again."
+        st.rerun()
+        return
+
+    normalized_voice_text = cleanup_voice_text(spoken_text)
+    st.session_state.voice_status_message = f'Voice command captured: "{normalized_voice_text}"'
+    submit_chat_message(normalized_voice_text)
 
 
 def _format_event_time(timestamp_value):
@@ -1571,6 +1682,7 @@ def event_row(event):
 
 init_session()
 refresh_weather()
+apply_focus_mode_styles()
 
 current_robot_state = st.session_state.robot_state
 if current_robot_state == "speaking":
@@ -2074,6 +2186,7 @@ def live_panel():
             "Kitchen": "kitchen",
             "Bedroom": "bedroom",
             "Toilet": "toilet",
+            "Garage": "garage",
         }
         current_target = st.session_state.get("robot_nav_target", "kitchen")
         navigation_points = _navigation_route_points(etat_robot, current_target)
@@ -2248,6 +2361,13 @@ with col_robot_chat:
     components.html(get_robot_html(current_robot_state), height=400)
 
 with col_chat_main:
+    header_actions_left, header_actions_right = st.columns([5, 1], gap="small")
+    with header_actions_right:
+        hide_all_label = "Show All" if st.session_state.focus_mode else "Hide All"
+        if st.button(hide_all_label, key="chat_hide_all", use_container_width=True):
+            st.session_state.focus_mode = not st.session_state.focus_mode
+            st.rerun()
+
     st.markdown(
         f"""<div class="rc-chat-frame">
             <div class="rc-chat-header">
@@ -2277,6 +2397,17 @@ with col_chat_main:
         </div>""",
         unsafe_allow_html=True,
     )
+
+    voice_col1, voice_col2 = st.columns(2, gap="small")
+    with voice_col1:
+        if st.button("Voice Command", key="voice_command_direct", use_container_width=True):
+            handle_voice_command(use_wake_word=False)
+    with voice_col2:
+        if st.button('Wake Word: "robot"', key="voice_command_wake_word", use_container_width=True):
+            handle_voice_command(use_wake_word=True)
+
+    if st.session_state.voice_status_message:
+        st.info(st.session_state.voice_status_message)
 
     chat_history   = st.session_state.historique_chat
     chat_container = st.container(height=320)

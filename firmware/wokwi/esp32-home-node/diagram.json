@@ -21,7 +21,7 @@
     { "type": "wokwi-text", "id": "toiletNote", "top": 460, "left": 520, "attrs": { "text": "Dashboard: light + door" } },
 
     { "type": "wokwi-text", "id": "garageLabel", "top": 120, "left": 950, "attrs": { "text": "GARAGE" } },
-    { "type": "wokwi-text", "id": "garageNote", "top": 150, "left": 950, "attrs": { "text": "Extra house area - visual extension" } },
+    { "type": "wokwi-text", "id": "garageNote", "top": 150, "left": 950, "attrs": { "text": "Dashboard: light + door" } },
 
     { "type": "wokwi-text", "id": "entryLabel", "top": 755, "left": 610, "attrs": { "text": "CONTROL / ENTRY AREA" } },
     { "type": "wokwi-text", "id": "entryNote", "top": 785, "left": 480, "attrs": { "text": "Connected Wokwi hardware proxies the same device types used by the website" } },
@@ -81,6 +81,9 @@
     [ "esp:22", "toiletLightVisual:A", "green", [ "v-10", "h-45", "v-5" ] ],
     [ "toiletLightVisual:C", "esp:GND.1", "black", [ "h20", "v35", "h45" ] ],
 
+    [ "esp:17", "garageLightVisual:A", "green", [ "v-360", "h370", "v-10" ] ],
+    [ "garageLightVisual:C", "esp:GND.1", "black", [ "h20", "v340", "h-380" ] ],
+
     [ "esp:27", "acLed:A", "blue", [ "v-275", "h-430", "v-10" ] ],
     [ "acLed:C", "esp:GND.1", "black", [ "h20", "v340", "h410" ] ],
 
@@ -106,6 +109,10 @@
     [ "esp:15", "toiletDoorVisual:PWM", "purple", [ "v55", "h-115", "v25" ] ],
     [ "esp:5V", "toiletDoorVisual:V+", "red", [ "v-190", "h-100", "v95" ] ],
     [ "esp:GND.1", "toiletDoorVisual:GND", "black", [ "v-155", "h-85", "v100" ] ],
+
+    [ "esp:16", "garageDoorVisual:PWM", "purple", [ "v-300", "h410", "v-20" ] ],
+    [ "esp:5V", "garageDoorVisual:V+", "red", [ "v-190", "h420", "v-90" ] ],
+    [ "esp:GND.1", "garageDoorVisual:GND", "black", [ "v-155", "h405", "v-80" ] ],
 
     [ "esp:19", "doorLockedLed:A", "red", [ "v-300", "h-355", "v5" ] ],
     [ "doorLockedLed:C", "esp:GND.1", "black", [ "h20", "v330", "h365" ] ],
