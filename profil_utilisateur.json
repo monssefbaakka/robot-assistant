@@ -1,0 +1,32 @@
+{
+    "nom": "Monssef",
+    "prenom": "Monssef",
+    "nom_complet": "Monssef BAAKKA",
+    "preferences": {
+        "matieres_preferees": [
+            "Mathématiques",
+            "Physique",
+            "Informatique"
+        ],
+        "objectifs": [
+            "Réussir mes examens",
+            "Améliorer ma productivité"
+        ],
+        "style_communication": "amical",
+        "langue": "fr"
+    },
+    "statistiques": {
+        "sessions_pomodoro_total": 1,
+        "temps_etude_total_minutes": 25,
+        "rappels_crees": 0,
+        "rappels_completes": 0
+    },
+    "parametres": {
+        "duree_pomodoro_minutes": 25,
+        "duree_pause_minutes": 5,
+        "notifications_actives": true,
+        "voix_robot_active": true
+    },
+    "date_creation": "2026-05-11 20:23:26",
+    "derniere_connexion": "2026-05-11 20:23:26"
+}
